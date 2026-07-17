@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -11,19 +12,16 @@ namespace Dynamic_CMS.Application
             // 1. Register AutoMapper — scans this assembly for all Profile classes
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
-            // 2. Register FluentValidation — scans this assembly for all AbstractValidator<T> classes
+            // 2. Register FluentValidation
+            services.AddFluentValidationAutoValidation();
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
+            // 3. Register Application Services
+            services.AddScoped<Dynamic_CMS.Application.Interfaces.IMenuItemService, Dynamic_CMS.Application.Services.MenuItemService>();
+            
             // 3. Register Application Services (will be added as we build them)
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IUserService, Dynamic_CMS.Application.Services.UserService>();
             // services.AddScoped<IAuthService, AuthService>();
-            // services.AddScoped<IRoleService, RoleService>();
-            // services.AddScoped<IPermissionService, PermissionService>();
-            // services.AddScoped<ITemplateService, TemplateService>();
-            // services.AddScoped<IClientSiteService, ClientSiteService>();
-            // services.AddScoped<IContentService, ContentService>();
-            // services.AddScoped<IMediaService, MediaService>();
-            // services.AddScoped<INavMenuService, NavMenuService>();
             // services.AddScoped<IThemeService, ThemeService>();
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IOrganizationService, Dynamic_CMS.Application.Services.OrganizationService>();
 

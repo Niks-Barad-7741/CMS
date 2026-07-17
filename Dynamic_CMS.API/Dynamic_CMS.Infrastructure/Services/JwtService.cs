@@ -49,8 +49,14 @@ namespace Dynamic_CMS.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim("UserId", user.Id.ToString()),
                 new Claim("Email", user.Email),
+                new Claim(ClaimTypes.Role, user.Role), // Required for [Authorize(Roles = "...")]
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            if (user.OrganizationId.HasValue)
+            {
+                claims.Add(new Claim("OrganizationId", user.OrganizationId.Value.ToString()));
+            }
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
 

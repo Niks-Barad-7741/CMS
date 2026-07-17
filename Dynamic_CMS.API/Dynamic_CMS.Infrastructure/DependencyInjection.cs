@@ -22,11 +22,9 @@ namespace Dynamic_CMS.Infrastructure
                     configuration.GetConnectionString("CmsDatabase"),
                     b => b.MigrationsAssembly("Dynamic_CMS.Infrastructure")));
 
-            // 2. Register Repositories (will be added as we build them)
-            // services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            // services.AddScoped<IRoleRepository, RoleRepository>();
-            // services.AddScoped<IPermissionRepository, PermissionRepository>();
+            // 2. Register Repositories
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IMenuItemRepository, MenuItemRepository>();
             // services.AddScoped<ITemplateRepository, TemplateRepository>();
             // services.AddScoped<IClientSiteRepository, ClientSiteRepository>();
             // services.AddScoped<IContentRepository, ContentRepository>();
