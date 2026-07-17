@@ -15,6 +15,7 @@ namespace Dynamic_CMS.Application
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
             // 3. Register Application Services (will be added as we build them)
+            services.AddScoped<Dynamic_CMS.Application.Interfaces.IUserService, Dynamic_CMS.Application.Services.UserService>();
             // services.AddScoped<IAuthService, AuthService>();
             // services.AddScoped<IRoleService, RoleService>();
             // services.AddScoped<IPermissionService, PermissionService>();
