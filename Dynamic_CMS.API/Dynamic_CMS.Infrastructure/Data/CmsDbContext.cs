@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Dynamic_CMS.Domain.Entities;
 
 namespace Dynamic_CMS.Infrastructure.Data
 {
@@ -14,8 +15,7 @@ namespace Dynamic_CMS.Infrastructure.Data
         // public DbSet<Role> Roles { get; set; }
         // public DbSet<Permission> Permissions { get; set; }
         // public DbSet<RolePermission> RolePermissions { get; set; }
-        // public DbSet<User> Users { get; set; }
-        // public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<User> Users { get; set; }
 
         // ========================
         // Template Engine Tables
@@ -40,8 +40,35 @@ namespace Dynamic_CMS.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Fluent API configurations and seed data will go here
-            // modelBuilder.ApplyConfigurationsFromAssembly(typeof(CmsDbContext).Assembly);
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("Users");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id)
+                    .ValueGeneratedNever();
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasMaxLength(256);
+
+                entity.HasIndex(e => e.Email)
+                    .IsUnique();
+
+                entity.Property(e => e.PasswordHash)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+            });
         }
     }
 }
