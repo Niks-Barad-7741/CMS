@@ -15,50 +15,16 @@ namespace Dynamic_CMS.API.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IJwtService _jwtService;
-        private readonly IValidator<RegisterDto> _registerValidator;
         private readonly IValidator<LoginDto> _loginValidator;
 
         public AuthController(
             IUserRepository userRepository,
             IJwtService jwtService,
-            IValidator<RegisterDto> registerValidator,
             IValidator<LoginDto> loginValidator)
         {
             _userRepository = userRepository;
             _jwtService = jwtService;
-            _registerValidator = registerValidator;
             _loginValidator = loginValidator;
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
-        {
-            var validationResult = await _registerValidator.ValidateAsync(dto);
-            if (!validationResult.IsValid)
-            {
-                return BadRequest(validationResult.ToDictionary());
-            }
-
-            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
-            if (existingUser != null)
-            {
-                return BadRequest(new { error = "Email is already registered." });
-            }
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Name = dto.Name,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            await _userRepository.AddAsync(user);
-            await _userRepository.SaveChangesAsync();
-
-            return Ok(new { message = "User registered successfully." });
         }
 
         [HttpPost("login")]

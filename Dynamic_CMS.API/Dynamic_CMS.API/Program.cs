@@ -1,5 +1,6 @@
 using Dynamic_CMS.Application;
 using Dynamic_CMS.Infrastructure;
+using Dynamic_CMS.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Seed Database
+await DataSeeder.SeedDataAsync(app.Services);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

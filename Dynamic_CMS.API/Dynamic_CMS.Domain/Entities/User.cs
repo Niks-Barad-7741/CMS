@@ -9,8 +9,12 @@ namespace Dynamic_CMS.Domain.Entities
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public bool IsActive { get; set; }
+        public string Role { get; set; } = "Client"; // "Admin" or "Client"
+        public Guid? OrganizationId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true;
 
+        // Navigation property
+        public Organization? Organization { get; set; }
     }
 }
