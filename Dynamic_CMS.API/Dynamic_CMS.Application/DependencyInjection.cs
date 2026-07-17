@@ -24,6 +24,7 @@ namespace Dynamic_CMS.Application
             // services.AddScoped<IMediaService, MediaService>();
             // services.AddScoped<INavMenuService, NavMenuService>();
             // services.AddScoped<IThemeService, ThemeService>();
+            services.AddScoped<Dynamic_CMS.Application.Interfaces.IOrganizationService, Dynamic_CMS.Application.Services.OrganizationService>();
 
             return services;
         }
