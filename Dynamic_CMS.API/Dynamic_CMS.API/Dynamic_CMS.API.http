@@ -1,6 +1,69 @@
 @Dynamic_CMS.API_HostAddress = http://localhost:5275
 
-GET {{Dynamic_CMS.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### 1. Register a valid user
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/register
+Content-Type: application/json
 
-###
+{
+  "name": "Jane Doe",
+  "email": "jane.doe@example.com",
+  "password": "Password123!"
+}
+
+### 2. Register with validation error (invalid name, invalid email, weak password)
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "J",
+  "email": "invalid-email",
+  "password": "weak"
+}
+
+### 3. Register with default "string" value validation check
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "string",
+  "email": "test@example.com",
+  "password": "Password123!"
+}
+
+### 4. Register with leading/trailing spaces validation check
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jane Doe ",
+  "email": "jane.doe@example.com",
+  "password": "Password123!"
+}
+
+### 5. Register same user again (Duplicate Email check - should return 400 Email already registered)
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "email": "jane.doe@example.com",
+  "password": "Password123!"
+}
+
+### 6. Login with valid credentials
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jane.doe@example.com",
+  "password": "Password123!"
+}
+
+### 7. Login with invalid password
+POST {{Dynamic_CMS.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jane.doe@example.com",
+  "password": "WrongPassword123!"
+}

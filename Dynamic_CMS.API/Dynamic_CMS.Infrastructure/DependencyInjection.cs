@@ -4,13 +4,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
+using Dynamic_CMS.Domain.Repositories;
+using Dynamic_CMS.Infrastructure.Repositories;
+using Dynamic_CMS.Application.Interfaces;
+using Dynamic_CMS.Infrastructure.Services;
 
 namespace Dynamic_CMS.Infrastructure
 {
     public static class DependencyInjection
     {
         public static IServiceCollection AddInfrastructureDI(this IServiceCollection services,
-            IConfiguration configuration)
+             IConfiguration configuration)
         {
             // 1. Register DbContext with SQL Server
             services.AddDbContext<Data.CmsDbContext>(options =>
@@ -22,14 +26,14 @@ namespace Dynamic_CMS.Infrastructure
             // services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             // services.AddScoped<IRoleRepository, RoleRepository>();
             // services.AddScoped<IPermissionRepository, PermissionRepository>();
-            // services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             // services.AddScoped<ITemplateRepository, TemplateRepository>();
             // services.AddScoped<IClientSiteRepository, ClientSiteRepository>();
             // services.AddScoped<IContentRepository, ContentRepository>();
             // services.AddScoped<IMediaRepository, MediaRepository>();
 
             // 3. Register External Infrastructure Services
-            // services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IJwtService, JwtService>();
 
             // 4. Configure JWT Authentication using RSA Public/Private Keys
             var jwtSection = configuration.GetSection("Jwt");
@@ -38,6 +42,8 @@ namespace Dynamic_CMS.Infrastructure
             var publicKeyText = File.ReadAllText(publicKeyPath);
             var rsa = RSA.Create();
             rsa.ImportFromPem(publicKeyText);
+            var rsaParameters = rsa.ExportParameters(false);
+            var rsaSecurityKey = new RsaSecurityKey(rsaParameters);
 
             services.AddAuthentication(options =>
             {
@@ -54,7 +60,7 @@ namespace Dynamic_CMS.Infrastructure
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtSection["Issuer"],
                     ValidAudience = jwtSection["Audience"],
-                    IssuerSigningKey = new RsaSecurityKey(rsa),
+                    IssuerSigningKey = rsaSecurityKey,
                     ClockSkew = TimeSpan.Zero
                 };
             });
