@@ -54,6 +54,9 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
+                
+                // Soft delete filter
+                entity.HasQueryFilter(e => !e.IsDeleted);
             });
 
             modelBuilder.Entity<PageContent>(entity =>

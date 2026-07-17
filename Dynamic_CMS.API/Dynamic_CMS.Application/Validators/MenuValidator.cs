@@ -27,8 +27,8 @@ namespace Dynamic_CMS.Application.Validators
                 .NotEmpty().WithMessage("Menu slug is required")
                 .MinimumLength(2).WithMessage("Menu slug must be at least 2 characters")
                 .MaximumLength(100).WithMessage("Menu slug cannot exceed 100 characters")
-                .Matches(@"^[a-z0-9\-]+$")
-                .WithMessage("Menu slug can only contain lowercase letters, numbers, and hyphens (no spaces or slashes)")
+                .Matches(@"^[a-z\-]+$")
+                .WithMessage("Menu slug can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
                 .WithMessage("Menu slug cannot be the default word 'string'.");
         }
@@ -57,8 +57,8 @@ namespace Dynamic_CMS.Application.Validators
                 .NotEmpty().WithMessage("Menu slug is required")
                 .MinimumLength(2).WithMessage("Menu slug must be at least 2 characters")
                 .MaximumLength(100).WithMessage("Menu slug cannot exceed 100 characters")
-                .Matches(@"^[a-z0-9\-]+$")
-                .WithMessage("Menu slug can only contain lowercase letters, numbers, and hyphens (no spaces or slashes)")
+                .Matches(@"^[a-z\-]+$")
+                .WithMessage("Menu slug can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
                 .WithMessage("Menu slug cannot be the default word 'string'.");
         }

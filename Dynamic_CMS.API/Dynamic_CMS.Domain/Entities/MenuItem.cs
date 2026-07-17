@@ -10,6 +10,7 @@ namespace Dynamic_CMS.Domain.Entities
         public string Slug { get; set; } = string.Empty;
         public int SortOrder { get; set; }
         public bool IsVisible { get; set; } = true;
+        public bool IsDeleted { get; set; } = false;
 
         // Navigation property
         public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();
