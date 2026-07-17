@@ -9,32 +9,11 @@ namespace Dynamic_CMS.Infrastructure.Data
         {
         }
 
-        // ========================
-        // RBAC Tables
-        // ========================
-        // public DbSet<Role> Roles { get; set; }
-        // public DbSet<Permission> Permissions { get; set; }
-        // public DbSet<RolePermission> RolePermissions { get; set; }
-        public DbSet<User> Users { get; set; }
-
-        // ========================
-        // Template Engine Tables
-        // ========================
-        // public DbSet<Template> Templates { get; set; }
-        // public DbSet<Section> Sections { get; set; }
-        // public DbSet<SectionField> SectionFields { get; set; }
-
-        // ========================
-        // Client Site Tables
-        // ========================
-        // public DbSet<ClientSite> ClientSites { get; set; }
-        // public DbSet<SiteSection> SiteSections { get; set; }
-        // public DbSet<SectionItem> SectionItems { get; set; }
-        // public DbSet<ContentValue> ContentValues { get; set; }
-        // public DbSet<ThemeConfig> ThemeConfigs { get; set; }
-        // public DbSet<NavMenuItem> NavMenuItems { get; set; }
-        // public DbSet<Media> Media { get; set; }
-        // public DbSet<SiteTeamMember> SiteTeamMembers { get; set; }
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Organization> Organizations { get; set; } = null!;
+        public DbSet<MenuItem> MenuItems { get; set; } = null!;
+        public DbSet<PageContent> PageContents { get; set; } = null!;
+        public DbSet<Media> Media { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,31 +22,80 @@ namespace Dynamic_CMS.Infrastructure.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");
-
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(e => e.PasswordHash).IsRequired();
+                entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-                entity.Property(e => e.Id)
-                    .ValueGeneratedNever();
+                // Navigation
+                entity.HasOne(u => u.Organization)
+                    .WithMany(o => o.Users)
+                    .HasForeignKey(u => u.OrganizationId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(100);
+            modelBuilder.Entity<Organization>(entity =>
+            {
+                entity.ToTable("Organizations");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.Slug).IsUnique();
+            });
 
-                entity.Property(e => e.Email)
-                    .IsRequired()
-                    .HasMaxLength(256);
+            modelBuilder.Entity<MenuItem>(entity =>
+            {
+                entity.ToTable("MenuItems");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
+            });
 
-                entity.HasIndex(e => e.Email)
-                    .IsUnique();
+            modelBuilder.Entity<PageContent>(entity =>
+            {
+                entity.ToTable("PageContents");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                
+                // Unique constraint
+                entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique();
 
-                entity.Property(e => e.PasswordHash)
-                    .IsRequired();
+                // Navigations
+                entity.HasOne(p => p.Organization)
+                    .WithMany(o => o.PageContents)
+                    .HasForeignKey(p => p.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.Property(e => e.CreatedAt)
-                    .IsRequired();
+                entity.HasOne(p => p.MenuItem)
+                    .WithMany(m => m.PageContents)
+                    .HasForeignKey(p => p.MenuItemId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-                entity.Property(e => e.IsActive)
-                    .HasDefaultValue(true);
+            modelBuilder.Entity<Media>(entity =>
+            {
+                entity.ToTable("Media");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.FilePath).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.FileType).IsRequired().HasMaxLength(100);
+
+                // Navigations
+                entity.HasOne(m => m.Organization)
+                    .WithMany(o => o.Media)
+                    .HasForeignKey(m => m.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(m => m.UploadedByUser)
+                    .WithMany()
+                    .HasForeignKey(m => m.UploadedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
