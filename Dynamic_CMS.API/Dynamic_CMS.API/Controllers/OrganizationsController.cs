@@ -8,7 +8,7 @@ using Dynamic_CMS.Application.Interfaces;
 using FluentValidation;
 using System.Collections.Generic;
 
-namespace Dynamic_CMS.API.Controllers.Admin
+namespace Dynamic_CMS.API.Controllers
 {
     [ApiController]
     [Route("api/admin/[controller]")]

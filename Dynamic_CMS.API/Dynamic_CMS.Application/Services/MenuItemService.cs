@@ -104,7 +104,9 @@ namespace Dynamic_CMS.Application.Services
             var menu = await _repository.GetByIdAsync(id);
             if (menu == null) return false;
 
-            await _repository.DeleteAsync(menu);
+            menu.IsDeleted = true;
+            await _repository.UpdateAsync(menu);
+            
             return true;
         }
     }
