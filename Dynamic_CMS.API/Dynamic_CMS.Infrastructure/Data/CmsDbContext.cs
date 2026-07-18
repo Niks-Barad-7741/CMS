@@ -66,6 +66,9 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
                 
+                // Soft delete filter
+                entity.HasQueryFilter(e => !e.IsDeleted);
+                
                 // Unique constraint
                 entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique();
 
