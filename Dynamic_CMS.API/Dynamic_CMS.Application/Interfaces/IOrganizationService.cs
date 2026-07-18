@@ -10,7 +10,7 @@ namespace Dynamic_CMS.Application.Interfaces
         Task<IEnumerable<OrganizationDto>> GetAllActiveAsync();
         Task<OrganizationDto?> GetByIdAsync(Guid id);
         Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto);
-        Task<OrganizationDto> UpdateAsync(UpdateOrganizationDto dto);
+        Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto);
         Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -47,12 +47,17 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<OrganizationDto>(organization);
         }
 
-        public async Task<OrganizationDto> UpdateAsync(UpdateOrganizationDto dto)
+        public async Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto)
         {
-            var organization = await _repository.GetByIdAsync(dto.Id);
+            var organization = await _repository.GetByIdAsync(id);
             if (organization == null)
             {
-                throw new KeyNotFoundException($"Organization with ID {dto.Id} not found.");
+                throw new KeyNotFoundException($"Organization with ID {id} not found.");
+            }
+
+            if (!organization.IsActive)
+            {
+                throw new InvalidOperationException("This organization has been deleted. You cannot update it.");
             }
 
             _mapper.Map(dto, organization);
@@ -67,6 +72,11 @@ namespace Dynamic_CMS.Application.Services
         {
             var organization = await _repository.GetByIdAsync(id);
             if (organization == null) return false;
+
+            if (!organization.IsActive)
+            {
+                throw new InvalidOperationException("Organization is already deleted.");
+            }
 
             organization.IsActive = false;
             _repository.Update(organization);
