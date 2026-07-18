@@ -12,10 +12,12 @@ namespace Dynamic_CMS.Application.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IOrganizationRepository _organizationRepository;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, IOrganizationRepository organizationRepository)
         {
             _userRepository = userRepository;
+            _organizationRepository = organizationRepository;
         }
 
         public async Task<IEnumerable<UserResponseDto>> GetAllAsync()
@@ -36,17 +38,44 @@ namespace Dynamic_CMS.Application.Services
 
         public async Task<ServiceResult<UserResponseDto>> CreateAsync(CreateUserDto dto)
         {
-            if (dto.Role == "Client" && dto.OrganizationId == null)
+            Guid? orgId = null;
+            if (!string.IsNullOrWhiteSpace(dto.OrganizationId))
+            {
+                if (Guid.TryParse(dto.OrganizationId, out var parsedOrgId))
+                {
+                    orgId = parsedOrgId;
+                }
+                else
+                {
+                    return ServiceResult<UserResponseDto>.Fail("Invalid OrganizationId format.");
+                }
+            }
+
+            if (dto.Role == "Client" && orgId == null)
             {
                 return ServiceResult<UserResponseDto>.Fail("Client users must belong to an organization.");
             }
 
-            if (dto.Role == "Admin" && dto.OrganizationId != null)
+            if (dto.Role == "Admin" && orgId != null)
             {
                 return ServiceResult<UserResponseDto>.Fail("Admin users cannot belong to an organization.");
             }
 
-            var lowerEmail = dto.Email.ToLowerInvariant();
+            if (orgId.HasValue)
+            {
+                var org = await _organizationRepository.GetByIdAsync(orgId.Value);
+                if (org == null)
+                {
+                    return ServiceResult<UserResponseDto>.Fail("Organization not found.");
+                }
+            }
+
+            var lowerEmail = dto.Email?.ToLowerInvariant() ?? string.Empty;
+            if (string.IsNullOrEmpty(lowerEmail))
+            {
+                return ServiceResult<UserResponseDto>.Fail("Email is required.");
+            }
+
             if (await _userRepository.EmailExistsAsync(lowerEmail))
             {
                 return ServiceResult<UserResponseDto>.Fail("Email address already exists.");
@@ -59,7 +88,7 @@ namespace Dynamic_CMS.Application.Services
                 Email = lowerEmail,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Role = dto.Role,
-                OrganizationId = dto.OrganizationId,
+                OrganizationId = orgId,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             };
@@ -88,7 +117,21 @@ namespace Dynamic_CMS.Application.Services
                 return ServiceResult<UserResponseDto>.Fail("Admin users cannot belong to an organization.");
             }
 
-            var lowerEmail = dto.Email.ToLowerInvariant();
+            if (dto.OrganizationId.HasValue)
+            {
+                var org = await _organizationRepository.GetByIdAsync(dto.OrganizationId.Value);
+                if (org == null)
+                {
+                    return ServiceResult<UserResponseDto>.Fail("Organization not found.");
+                }
+            }
+
+            var lowerEmail = dto.Email?.ToLowerInvariant() ?? string.Empty;
+            if (string.IsNullOrEmpty(lowerEmail))
+            {
+                return ServiceResult<UserResponseDto>.Fail("Email is required.");
+            }
+
             if (user.Email.ToLowerInvariant() != lowerEmail)
             {
                 if (await _userRepository.EmailExistsAsync(lowerEmail))
