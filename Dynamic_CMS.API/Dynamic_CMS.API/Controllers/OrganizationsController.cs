@@ -51,10 +51,6 @@ namespace Dynamic_CMS.API.Controllers
             var validationResult = await _createValidator.ValidateAsync(dto);
             if (!validationResult.IsValid)
             {
-                if (validationResult.Errors.Any(e => e.ErrorMessage.Contains("slug is already in use")))
-                {
-                    return Conflict(validationResult.ToDictionary());
-                }
                 return BadRequest(validationResult.ToDictionary());
             }
 
@@ -65,36 +61,41 @@ namespace Dynamic_CMS.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateOrganizationDto dto)
         {
-            if (id != dto.Id) return BadRequest(new { message = "ID in URL and body must match." });
-
             var validationResult = await _updateValidator.ValidateAsync(dto);
             if (!validationResult.IsValid)
             {
-                if (validationResult.Errors.Any(e => e.ErrorMessage.Contains("slug is already in use")))
-                {
-                    return Conflict(validationResult.ToDictionary());
-                }
                 return BadRequest(validationResult.ToDictionary());
             }
 
             try
             {
-                var organization = await _organizationService.UpdateAsync(dto);
+                var organization = await _organizationService.UpdateAsync(id, dto);
                 return Ok(organization);
             }
             catch (KeyNotFoundException)
             {
                 return NotFound();
             }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("deleted"))
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _organizationService.DeleteAsync(id);
-            if (!result) return NotFound();
+            try
+            {
+                var result = await _organizationService.DeleteAsync(id);
+                if (!result) return NotFound();
 
-            return NoContent();
+                return Ok(new { message = "Organization deleted successfully." });
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("deleted"))
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

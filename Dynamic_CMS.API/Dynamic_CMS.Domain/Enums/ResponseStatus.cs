@@ -11,6 +11,10 @@ namespace Dynamic_CMS.Domain.Enums
         MenuCreatedSuccessfully,
         MenuUpdatedSuccessfully,
         MenuDeletedSuccessfully,
+        PageContentRetrievedSuccessfully,
+        PageContentCreatedSuccessfully,
+        PageContentUpdatedSuccessfully,
+        PageContentDeletedSuccessfully,
 
         // Errors
         BadRequest,
@@ -23,6 +27,8 @@ namespace Dynamic_CMS.Domain.Enums
         
         MediaUploadedSuccessfully,
         MediaDeletedSuccessfully
+        PageContentNotFound,
+        PageContentAlreadyExists
     }
 
     public static class ResponseStatusExtensions
@@ -35,6 +41,10 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.MenuCreatedSuccessfully => 201,
             ResponseStatus.MenuUpdatedSuccessfully => 200,
             ResponseStatus.MenuDeletedSuccessfully => 200,
+            ResponseStatus.PageContentRetrievedSuccessfully => 200,
+            ResponseStatus.PageContentCreatedSuccessfully => 201,
+            ResponseStatus.PageContentUpdatedSuccessfully => 200,
+            ResponseStatus.PageContentDeletedSuccessfully => 200,
 
             ResponseStatus.MediaUploadedSuccessfully => 201,
             ResponseStatus.MediaDeletedSuccessfully => 200,
@@ -44,7 +54,9 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.Forbidden => 403,
             ResponseStatus.NotFound => 404,
             ResponseStatus.MenuNotFound => 404,
+            ResponseStatus.PageContentNotFound => 404,
             ResponseStatus.MenuAlreadyExists => 409,
+            ResponseStatus.PageContentAlreadyExists => 409,
             ResponseStatus.InternalServerError => 500,
             _ => 200
         };
@@ -57,6 +69,10 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.MenuCreatedSuccessfully => "Menu created successfully.",
             ResponseStatus.MenuUpdatedSuccessfully => "Menu updated successfully.",
             ResponseStatus.MenuDeletedSuccessfully => "Menu deleted successfully.",
+            ResponseStatus.PageContentRetrievedSuccessfully => "Page content retrieved successfully.",
+            ResponseStatus.PageContentCreatedSuccessfully => "Page content created successfully.",
+            ResponseStatus.PageContentUpdatedSuccessfully => "Page content updated successfully.",
+            ResponseStatus.PageContentDeletedSuccessfully => "Page content deleted successfully.",
             
             ResponseStatus.MediaUploadedSuccessfully => "Media file uploaded successfully.",
             ResponseStatus.MediaDeletedSuccessfully => "Media file deleted successfully.",
@@ -66,7 +82,9 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.Forbidden => "Forbidden. You do not have the required permissions.",
             ResponseStatus.NotFound => "Resource not found.",
             ResponseStatus.MenuNotFound => "Menu item not found.",
+            ResponseStatus.PageContentNotFound => "Page content not found.",
             ResponseStatus.MenuAlreadyExists => "A menu item with this slug or title already exists.",
+            ResponseStatus.PageContentAlreadyExists => "Page content for this menu item already exists.",
             ResponseStatus.InternalServerError => "An unexpected internal server error occurred.",
             
             _ => status.ToString()

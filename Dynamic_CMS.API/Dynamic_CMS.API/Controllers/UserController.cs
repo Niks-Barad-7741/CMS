@@ -8,6 +8,7 @@ namespace Dynamic_CMS.API.Controllers
 {
     [ApiController]
     [Route("api/admin/users")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -21,7 +22,7 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var users = await _userService.GetAllAsync();
-            return Ok(users);
+            return Ok(ApiResponse<IEnumerable<UserResponseDto>>.SuccessResponse(users));
         }
 
         [HttpGet("{id}")]
@@ -30,9 +31,9 @@ namespace Dynamic_CMS.API.Controllers
             var result = await _userService.GetByIdAsync(id);
             if (!result.Success)
             {
-                return NotFound(new { error = result.ErrorMessage });
+                return NotFound(ApiResponse<UserResponseDto>.FailureResponse(result.ErrorMessage, 404));
             }
-            return Ok(result.Data);
+            return Ok(ApiResponse<UserResponseDto>.SuccessResponse(result.Data!));
         }
 
         [HttpPost]
@@ -41,10 +42,10 @@ namespace Dynamic_CMS.API.Controllers
             var result = await _userService.CreateAsync(dto);
             if (!result.Success)
             {
-                return BadRequest(new { error = result.ErrorMessage });
+                return BadRequest(ApiResponse<UserResponseDto>.FailureResponse(result.ErrorMessage, 400));
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, ApiResponse<UserResponseDto>.SuccessResponse(result.Data));
         }
 
         [HttpPut("{id}")]
@@ -55,12 +56,12 @@ namespace Dynamic_CMS.API.Controllers
             {
                 if (result.ErrorMessage == "User not found.")
                 {
-                    return NotFound(new { error = result.ErrorMessage });
+                    return NotFound(ApiResponse<UserResponseDto>.FailureResponse(result.ErrorMessage, 404));
                 }
-                return BadRequest(new { error = result.ErrorMessage });
+                return BadRequest(ApiResponse<UserResponseDto>.FailureResponse(result.ErrorMessage, 400));
             }
 
-            return Ok(result.Data);
+            return Ok(ApiResponse<UserResponseDto>.SuccessResponse(result.Data!));
         }
 
         [HttpDelete("{id}")]
@@ -73,9 +74,9 @@ namespace Dynamic_CMS.API.Controllers
             {
                 if (result.ErrorMessage == "User not found.")
                 {
-                    return NotFound(new { error = result.ErrorMessage });
+                    return NotFound(ApiResponse<bool>.FailureResponse(result.ErrorMessage, 404));
                 }
-                return BadRequest(new { error = result.ErrorMessage });
+                return BadRequest(ApiResponse<bool>.FailureResponse(result.ErrorMessage, 400));
             }
 
             return NoContent();

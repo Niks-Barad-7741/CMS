@@ -11,6 +11,7 @@ namespace Dynamic_CMS.Domain.Entities
         public string BodyHtml { get; set; } = string.Empty;
         public string Status { get; set; } = "Draft"; // "Draft" or "Published"
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsDeleted { get; set; } = false;
 
         // Navigation properties
         public Organization Organization { get; set; } = null!;

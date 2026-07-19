@@ -16,9 +16,11 @@ namespace Dynamic_CMS.Application.Validators
                 .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
 
             RuleFor(x => x.Slug)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithMessage("Slug is required.")
                 .MaximumLength(100).WithMessage("Slug must not exceed 100 characters.")
-                .Matches("^[a-z0-9-]+$").WithMessage("Slug must be lowercase and URL-safe (only letters, numbers, and hyphens).")
+                .Must(slug => slug != ".").WithMessage("Website cannot be just '.'.")
+                .Matches(@"^\.[a-z0-9-]+(\.[a-z0-9-]+)*$").WithMessage("Slug must start with '.' and be a valid format.")
                 .Must(slug => !_reservedSlugs.Contains(slug)).WithMessage("This slug is reserved and cannot be used.");
         }
     }

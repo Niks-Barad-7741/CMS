@@ -10,7 +10,7 @@ namespace Dynamic_CMS.Application
         public static IServiceCollection AddApplicationDI(this IServiceCollection services)
         {
             // 1. Register AutoMapper — scans this assembly for all Profile classes
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
 
             // 2. Register FluentValidation
             services.AddFluentValidationAutoValidation();
@@ -25,6 +25,7 @@ namespace Dynamic_CMS.Application
             // services.AddScoped<IThemeService, ThemeService>();
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IMediaService, Dynamic_CMS.Application.Services.MediaService>();
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IOrganizationService, Dynamic_CMS.Application.Services.OrganizationService>();
+            services.AddScoped<Dynamic_CMS.Application.Interfaces.IPageContentService, Dynamic_CMS.Application.Services.PageContentService>();
 
             return services;
         }

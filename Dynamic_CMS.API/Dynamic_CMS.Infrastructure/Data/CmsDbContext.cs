@@ -45,7 +45,7 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Slug).IsRequired().HasMaxLength(100);
-                entity.HasIndex(e => e.Slug).IsUnique();
+                entity.HasIndex(e => e.Slug);
             });
 
             modelBuilder.Entity<MenuItem>(entity =>
@@ -65,6 +65,9 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                
+                // Soft delete filter
+                entity.HasQueryFilter(e => !e.IsDeleted);
                 
                 // Unique constraint
                 entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique();
