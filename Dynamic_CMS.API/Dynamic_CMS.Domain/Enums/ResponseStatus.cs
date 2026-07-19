@@ -24,6 +24,9 @@ namespace Dynamic_CMS.Domain.Enums
         InternalServerError,
         MenuNotFound,
         MenuAlreadyExists,
+        
+        MediaUploadedSuccessfully,
+        MediaDeletedSuccessfully
         PageContentNotFound,
         PageContentAlreadyExists
     }
@@ -42,6 +45,9 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.PageContentCreatedSuccessfully => 201,
             ResponseStatus.PageContentUpdatedSuccessfully => 200,
             ResponseStatus.PageContentDeletedSuccessfully => 200,
+
+            ResponseStatus.MediaUploadedSuccessfully => 201,
+            ResponseStatus.MediaDeletedSuccessfully => 200,
 
             ResponseStatus.BadRequest => 400,
             ResponseStatus.Unauthorized => 401,
@@ -67,6 +73,9 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.PageContentCreatedSuccessfully => "Page content created successfully.",
             ResponseStatus.PageContentUpdatedSuccessfully => "Page content updated successfully.",
             ResponseStatus.PageContentDeletedSuccessfully => "Page content deleted successfully.",
+            
+            ResponseStatus.MediaUploadedSuccessfully => "Media file uploaded successfully.",
+            ResponseStatus.MediaDeletedSuccessfully => "Media file deleted successfully.",
             
             ResponseStatus.BadRequest => "Bad Request. Please check your inputs.",
             ResponseStatus.Unauthorized => "Unauthorized. Please log in.",
