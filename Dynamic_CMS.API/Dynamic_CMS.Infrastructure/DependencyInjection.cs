@@ -28,7 +28,7 @@ namespace Dynamic_CMS.Infrastructure
             // services.AddScoped<ITemplateRepository, TemplateRepository>();
             // services.AddScoped<IClientSiteRepository, ClientSiteRepository>();
             // services.AddScoped<IContentRepository, ContentRepository>();
-            // services.AddScoped<IMediaRepository, MediaRepository>();
+            services.AddScoped<IMediaRepository, MediaRepository>();
             services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 
             // 3. Register External Infrastructure Services

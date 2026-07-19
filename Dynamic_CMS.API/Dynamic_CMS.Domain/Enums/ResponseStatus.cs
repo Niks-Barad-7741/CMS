@@ -19,7 +19,10 @@ namespace Dynamic_CMS.Domain.Enums
         NotFound,
         InternalServerError,
         MenuNotFound,
-        MenuAlreadyExists
+        MenuAlreadyExists,
+        
+        MediaUploadedSuccessfully,
+        MediaDeletedSuccessfully
     }
 
     public static class ResponseStatusExtensions
@@ -32,6 +35,9 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.MenuCreatedSuccessfully => 201,
             ResponseStatus.MenuUpdatedSuccessfully => 200,
             ResponseStatus.MenuDeletedSuccessfully => 200,
+
+            ResponseStatus.MediaUploadedSuccessfully => 201,
+            ResponseStatus.MediaDeletedSuccessfully => 200,
 
             ResponseStatus.BadRequest => 400,
             ResponseStatus.Unauthorized => 401,
@@ -51,6 +57,9 @@ namespace Dynamic_CMS.Domain.Enums
             ResponseStatus.MenuCreatedSuccessfully => "Menu created successfully.",
             ResponseStatus.MenuUpdatedSuccessfully => "Menu updated successfully.",
             ResponseStatus.MenuDeletedSuccessfully => "Menu deleted successfully.",
+            
+            ResponseStatus.MediaUploadedSuccessfully => "Media file uploaded successfully.",
+            ResponseStatus.MediaDeletedSuccessfully => "Media file deleted successfully.",
             
             ResponseStatus.BadRequest => "Bad Request. Please check your inputs.",
             ResponseStatus.Unauthorized => "Unauthorized. Please log in.",

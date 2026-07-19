@@ -23,6 +23,7 @@ namespace Dynamic_CMS.Application
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IUserService, Dynamic_CMS.Application.Services.UserService>();
             // services.AddScoped<IAuthService, AuthService>();
             // services.AddScoped<IThemeService, ThemeService>();
+            services.AddScoped<Dynamic_CMS.Application.Interfaces.IMediaService, Dynamic_CMS.Application.Services.MediaService>();
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IOrganizationService, Dynamic_CMS.Application.Services.OrganizationService>();
 
             return services;
