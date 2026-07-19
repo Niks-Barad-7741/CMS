@@ -26,7 +26,7 @@ namespace Dynamic_CMS.Domain.Enums
         MenuAlreadyExists,
         
         MediaUploadedSuccessfully,
-        MediaDeletedSuccessfully
+        MediaDeletedSuccessfully,
         PageContentNotFound,
         PageContentAlreadyExists
     }

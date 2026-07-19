@@ -9,12 +9,10 @@ namespace Dynamic_CMS.Application.Validators
         public CreatePageContentValidator()
         {
             RuleFor(x => x.OrganizationId)
-                .NotEmpty().WithMessage("OrganizationId is required and cannot be empty.")
-                .Must(x => Guid.TryParse(x, out _)).WithMessage("OrganizationId must be a valid GUID.");
+                .NotEmpty().WithMessage("OrganizationId is required and cannot be empty.");
 
             RuleFor(x => x.MenuItemId)
-                .NotEmpty().WithMessage("MenuItemId is required and cannot be empty.")
-                .Must(x => Guid.TryParse(x, out _)).WithMessage("MenuItemId must be a valid GUID.");
+                .NotEmpty().WithMessage("MenuItemId is required and cannot be empty.");
 
             RuleFor(x => x.Title)
                 .NotNull().WithMessage("Title is required.")

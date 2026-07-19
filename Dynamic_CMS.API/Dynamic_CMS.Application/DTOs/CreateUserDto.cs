@@ -8,6 +8,6 @@ namespace Dynamic_CMS.Application.DTOs
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Role { get; set; } = "Client";
-        public string? OrganizationId { get; set; }
+        public Guid? OrganizationId { get; set; }
     }
 }
