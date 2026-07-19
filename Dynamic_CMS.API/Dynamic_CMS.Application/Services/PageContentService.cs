@@ -69,11 +69,8 @@ namespace Dynamic_CMS.Application.Services
 
         public async Task<PageContentDto> CreateAsync(CreatePageContentDto dto, CancellationToken cancellationToken)
         {
-            if (!Guid.TryParse(dto.OrganizationId, out var orgId))
-                throw new InvalidOperationException("Invalid OrganizationId format.");
-                
-            if (!Guid.TryParse(dto.MenuItemId, out var menuId))
-                throw new InvalidOperationException("Invalid MenuItemId format.");
+            var orgId = dto.OrganizationId!.Value;
+            var menuId = dto.MenuItemId!.Value;
 
             var org = await _organizationRepository.GetByIdAsync(orgId);
             if (org == null)

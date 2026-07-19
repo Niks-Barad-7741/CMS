@@ -53,7 +53,7 @@ namespace Dynamic_CMS.Application.Services
 
         public async Task<(bool success, string? error, MediaDto? data)> UploadMediaAsync(UploadMediaDto dto, string webRootPath, Guid userId)
         {
-            var organization = await _organizationRepository.GetByIdAsync(dto.OrganizationId);
+            var organization = await _organizationRepository.GetByIdAsync(dto.OrganizationId!.Value);
             if (organization == null)
             {
                 return (false, "Organization not found.", null);
@@ -89,7 +89,7 @@ namespace Dynamic_CMS.Application.Services
             var mediaEntity = new Media
             {
                 Id = Guid.NewGuid(),
-                OrganizationId = dto.OrganizationId,
+                OrganizationId = dto.OrganizationId!.Value,
                 FileName = dto.File.FileName,
                 FilePath = relativeFilePath,
                 FileType = dto.File.ContentType,

@@ -38,28 +38,7 @@ namespace Dynamic_CMS.Application.Services
 
         public async Task<ServiceResult<UserResponseDto>> CreateAsync(CreateUserDto dto)
         {
-            Guid? orgId = null;
-            if (!string.IsNullOrWhiteSpace(dto.OrganizationId))
-            {
-                if (Guid.TryParse(dto.OrganizationId, out var parsedOrgId))
-                {
-                    orgId = parsedOrgId;
-                }
-                else
-                {
-                    return ServiceResult<UserResponseDto>.Fail("Invalid OrganizationId format.");
-                }
-            }
-
-            if (dto.Role == "Client" && orgId == null)
-            {
-                return ServiceResult<UserResponseDto>.Fail("Client users must belong to an organization.");
-            }
-
-            if (dto.Role == "Admin" && orgId != null)
-            {
-                return ServiceResult<UserResponseDto>.Fail("Admin users cannot belong to an organization.");
-            }
+            var orgId = dto.OrganizationId;
 
             if (orgId.HasValue)
             {
