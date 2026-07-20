@@ -18,8 +18,16 @@ namespace Dynamic_CMS.Application.Validators
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required.")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters.")
-                .MaximumLength(50).WithMessage("Password must not exceed 50 characters.");
+                .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
+                .MaximumLength(100).WithMessage("Password cannot exceed 100 characters.")
+                .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
+                .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter.")
+                .Matches(@"\d").WithMessage("Password must contain at least one number.")
+                .Matches(@"[!@#$%^&*(),.?':{}|<>]").WithMessage("Password must contain at least one special character.")
+                .Must(x => !string.Equals(x, "string", StringComparison.OrdinalIgnoreCase))
+                .WithMessage("Default 'string' value is not allowed.")
+                .Must(x => x == null || x.Trim() == x)
+                .WithMessage("Password cannot contain leading or trailing spaces.");
 
             RuleFor(x => x.Role)
                 .NotEmpty().WithMessage("Role is required.")

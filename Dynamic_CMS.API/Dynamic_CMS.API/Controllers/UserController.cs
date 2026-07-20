@@ -22,7 +22,10 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var users = await _userService.GetAllAsync();
-            return Ok(ApiResponse<IEnumerable<UserResponseDto>>.SuccessResponse(users));
+            if (users == null || !users.Any())
+                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+
+            return Ok(GetApiResponse.SuccessResponse("Users retrieved successfully."));
         }
 
         [HttpGet("{id}")]
@@ -31,9 +34,9 @@ namespace Dynamic_CMS.API.Controllers
             var result = await _userService.GetByIdAsync(id);
             if (!result.Success)
             {
-                return NotFound(ApiResponse<UserResponseDto>.FailureResponse(result.ErrorMessage, 404));
+                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
             }
-            return Ok(ApiResponse<UserResponseDto>.SuccessResponse(result.Data!));
+            return Ok(GetApiResponse.SuccessResponse("User retrieved successfully."));
         }
 
         [HttpPost]

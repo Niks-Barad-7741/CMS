@@ -25,7 +25,10 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> GetAllByOrganization(Guid organizationId)
         {
             var mediaList = await _mediaService.GetAllByOrganizationAsync(organizationId);
-            return Ok(ApiResponse<object>.SuccessResponse(mediaList, "Media retrieved successfully."));
+            if (mediaList == null || !mediaList.Any())
+                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+
+            return Ok(GetApiResponse.SuccessResponse("Media retrieved successfully."));
         }
 
         [HttpGet("{id}")]
@@ -33,9 +36,9 @@ namespace Dynamic_CMS.API.Controllers
         {
             var media = await _mediaService.GetByIdAsync(id);
             if (media == null)
-                return NotFound(ApiResponse<object>.FailureResponse("Media not found.", 404));
+                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
 
-            return Ok(ApiResponse<object>.SuccessResponse(media));
+            return Ok(GetApiResponse.SuccessResponse("Operation successful"));
         }
 
         [HttpPost("upload")]
