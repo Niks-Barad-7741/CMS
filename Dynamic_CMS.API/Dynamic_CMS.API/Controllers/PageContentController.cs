@@ -24,18 +24,19 @@ namespace Dynamic_CMS.API.Controllers
 
         // PUBLIC: GET /api/content/{orgSlug}/{menuSlug}
         [HttpGet("api/content/{orgSlug}/{menuSlug}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPublic(string orgSlug, string menuSlug, CancellationToken cancellationToken)
         {
             var content = await _service.GetPublicContentAsync(orgSlug, menuSlug, cancellationToken);
             
             if (content == null)
             {
-                var failResponse = ApiResponse<object>.FailureResponse("Content not found or not published.", 404);
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = ApiResponse<PageContentDto>.SuccessResponse(content, "Page content retrieved successfully.");
-            return StatusCode(response.StatusCodes, response);
+            var response = GetApiResponse.SuccessResponse("Page content retrieved successfully.");
+            return StatusCode(response.StatusCode, response);
         }
 
         // ADMIN: GET /api/admin/content/{organizationId}
@@ -44,8 +45,14 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> GetAllByOrganization(Guid organizationId, CancellationToken cancellationToken)
         {
             var contents = await _service.GetAllByOrganizationAsync(organizationId, cancellationToken);
-            var response = ApiResponse<IEnumerable<PageContentDto>>.SuccessResponse(contents, "Page content retrieved successfully.");
-            return StatusCode(response.StatusCodes, response);
+            if (contents == null || !contents.Any())
+            {
+                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
+            }
+
+            var response = GetApiResponse.SuccessResponse("Page content retrieved successfully.");
+            return StatusCode(response.StatusCode, response);
         }
 
         // ADMIN: GET /api/admin/content/detail/{id}
@@ -56,12 +63,12 @@ namespace Dynamic_CMS.API.Controllers
             var content = await _service.GetByIdAsync(id, cancellationToken);
             if (content == null)
             {
-                var failResponse = ApiResponse<object>.Create(ResponseStatus.PageContentNotFound, "Page content not found.");
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = ApiResponse<PageContentDto>.SuccessResponse(content, "Page content retrieved successfully.");
-            return StatusCode(response.StatusCodes, response);
+            var response = GetApiResponse.SuccessResponse("Page content retrieved successfully.");
+            return StatusCode(response.StatusCode, response);
         }
 
         // ADMIN: POST /api/admin/content

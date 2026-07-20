@@ -43,16 +43,20 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var organizations = await _organizationService.GetAllActiveAsync();
-            return Ok(organizations);
+            if (organizations == null || !organizations.Any())
+                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+
+            return Ok(GetApiResponse.SuccessResponse("Organizations retrieved successfully."));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var organization = await _organizationService.GetByIdAsync(id);
-            if (organization == null) return NotFound();
+            if (organization == null)
+                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
 
-            return Ok(organization);
+            return Ok(GetApiResponse.SuccessResponse("Organization retrieved successfully."));
         }
 
         [HttpPost]

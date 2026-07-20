@@ -24,11 +24,19 @@ namespace Dynamic_CMS.API.Controllers
 
         // PUBLIC: GET /api/menus
         [HttpGet("menus")]
+        [Authorize(Roles = "Admin")]
+        //[AllowAnonymous]
         public async Task<IActionResult> GetAllPublic()
         {
             var menus = await _service.GetAllMenusAsync();
-            var response = ApiResponse<IEnumerable<MenuItemDto>>.SuccessResponse(menus, "Menus retrieved successfully");
-            return StatusCode(response.StatusCodes, response);
+            if (menus == null || !menus.Any())
+            {
+                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
+            }
+
+            var response = GetApiResponse.SuccessResponse("Menus retrieved successfully");
+            return StatusCode(response.StatusCode, response);
         }
 
         // ADMIN: POST /api/admin/menus
