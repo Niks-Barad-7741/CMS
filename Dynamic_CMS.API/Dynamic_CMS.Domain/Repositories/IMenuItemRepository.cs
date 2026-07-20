@@ -10,6 +10,8 @@ namespace Dynamic_CMS.Domain.Repositories
         Task<IEnumerable<MenuItem>> GetAllAsync();
         Task<MenuItem?> GetByIdAsync(Guid id);
         Task<MenuItem?> GetBySlugAsync(string slug);
+        Task<MenuItem?> GetBySortOrderAsync(int sortOrder);
+        Task<MenuItem?> GetByTitleAsync(string title);
         Task<MenuItem> AddAsync(MenuItem menuItem);
         Task UpdateAsync(MenuItem menuItem);
         Task DeleteAsync(MenuItem menuItem);
