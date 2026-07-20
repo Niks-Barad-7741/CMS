@@ -58,12 +58,12 @@ namespace Dynamic_CMS.API.Controllers
             {
                 var created = await _service.CreateMenuAsync(dto);
                 var response = ApiResponse<MenuItemDto>.Create(ResponseStatus.MenuCreatedSuccessfully, created);
-                return StatusCode(response.StatusCodes, response);
+                return StatusCode(response.StatusCode, response);
             }
             catch (InvalidOperationException ex)
             {
                 var failResponse = ApiResponse<object>.FailureResponse(ex.Message, 400);
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
         }   
 
