@@ -1,7 +1,8 @@
-using Microsoft.OpenApi.Models;
+using Dynamic_CMS.API.Filters;
 using Dynamic_CMS.Application;
 using Dynamic_CMS.Infrastructure;
 using Dynamic_CMS.Infrastructure.Data;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,12 +32,15 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "OrgCMS API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "OrgCMS API",
+        Version = "v1"
+    });
 
-    // Configure Swagger to use JWT Bearer Auth
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Just paste your JWT token below (no need to type 'Bearer').",
+        Description = "Paste JWT token only.",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -44,23 +48,7 @@ builder.Services.AddSwaggerGen(c =>
         BearerFormat = "JWT"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
-                Scheme = "oauth2",
-                Name = "Bearer",
-                In = ParameterLocation.Header,
-            },
-            new List<string>()
-        }
-    });
+    c.OperationFilter<AuthorizeCheckOperationFilter>();
 });
 
 // Register Application Layer DI (AutoMapper, FluentValidation, Services)

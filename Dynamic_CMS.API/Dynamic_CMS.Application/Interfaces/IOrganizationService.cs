@@ -9,8 +9,8 @@ namespace Dynamic_CMS.Application.Interfaces
     {
         Task<IEnumerable<OrganizationDto>> GetAllActiveAsync();
         Task<OrganizationDto?> GetByIdAsync(Guid id);
-        Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto);
-        Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto);
-        Task<bool> DeleteAsync(Guid id);
+        Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto, string? userName = null);
+        Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto, string? userName = null);
+        Task<bool> DeleteAsync(Guid id, string? userName = null);
     }
 }

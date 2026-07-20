@@ -11,6 +11,7 @@ using Dynamic_CMS.Domain.Enums;
 
 namespace Dynamic_CMS.API.Controllers
 {
+    [Authorize]
     [ApiController]
     public class PageContentController : ControllerBase
     {
@@ -23,7 +24,6 @@ namespace Dynamic_CMS.API.Controllers
 
         // PUBLIC: GET /api/content/{orgSlug}/{menuSlug}
         [HttpGet("api/content/{orgSlug}/{menuSlug}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetPublic(string orgSlug, string menuSlug, CancellationToken cancellationToken)
         {
             var content = await _service.GetPublicContentAsync(orgSlug, menuSlug, cancellationToken);

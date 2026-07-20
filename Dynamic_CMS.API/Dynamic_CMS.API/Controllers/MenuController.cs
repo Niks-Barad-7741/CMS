@@ -10,6 +10,7 @@ using Dynamic_CMS.Domain.Enums;
 
 namespace Dynamic_CMS.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api")]
     public class MenuController : ControllerBase
@@ -23,7 +24,6 @@ namespace Dynamic_CMS.API.Controllers
 
         // PUBLIC: GET /api/menus
         [HttpGet("menus")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllPublic()
         {
             var menus = await _service.GetAllMenusAsync();
