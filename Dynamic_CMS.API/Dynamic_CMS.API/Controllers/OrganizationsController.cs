@@ -29,6 +29,16 @@ namespace Dynamic_CMS.API.Controllers
             _updateValidator = updateValidator;
         }
 
+        private string? GetCurrentUserName()
+        {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.IsNullOrEmpty(role))
+            {
+                return role; // Will return "Admin" based on the JWT role claim
+            }
+            return "Admin"; // Fallback
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -54,8 +64,15 @@ namespace Dynamic_CMS.API.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var organization = await _organizationService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = organization.Id }, organization);
+            try
+            {
+                var organization = await _organizationService.CreateAsync(dto, GetCurrentUserName());
+                return CreatedAtAction(nameof(GetById), new { id = organization.Id }, organization);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -69,14 +86,14 @@ namespace Dynamic_CMS.API.Controllers
 
             try
             {
-                var organization = await _organizationService.UpdateAsync(id, dto);
+                var organization = await _organizationService.UpdateAsync(id, dto, GetCurrentUserName());
                 return Ok(organization);
             }
             catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("deleted"))
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
@@ -87,12 +104,12 @@ namespace Dynamic_CMS.API.Controllers
         {
             try
             {
-                var result = await _organizationService.DeleteAsync(id);
+                var result = await _organizationService.DeleteAsync(id, GetCurrentUserName());
                 if (!result) return NotFound();
 
                 return Ok(new { message = "Organization deleted successfully." });
             }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("deleted"))
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }

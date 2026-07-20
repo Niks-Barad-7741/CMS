@@ -13,16 +13,13 @@ namespace Dynamic_CMS.Application.Validators
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Name is required.")
-                .NotEqual("string").WithMessage("Name cannot be 'string'.")
                 .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
 
             RuleFor(x => x.Slug)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithMessage("Slug is required.")
-                .NotEqual("string").WithMessage("Slug cannot be 'string'.")
                 .MaximumLength(100).WithMessage("Slug must not exceed 100 characters.")
-                .Must(slug => slug != ".").WithMessage("Website cannot be just '.'.")
-                .Matches(@"^\.[a-z0-9-]+(\.[a-z0-9-]+)*$").WithMessage("Slug must start with '.' and be a valid format.")
+                .Matches(@"^[a-zA-Z0-9][a-zA-Z0-9-]*(\.[a-zA-Z0-9-]+)*$").WithMessage("Slug must start with an alphanumeric character and be a valid format.")
                 .Must(slug => !_reservedSlugs.Contains(slug)).WithMessage("This slug is reserved and cannot be used.");
         }
     }

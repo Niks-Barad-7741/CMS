@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,9 +11,7 @@ namespace Dynamic_CMS.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Organizations_Slug",
-                table: "Organizations");
+            migrationBuilder.Sql("IF EXISTS (SELECT name FROM sys.indexes WHERE name = N'IX_Organizations_Slug' AND object_id = OBJECT_ID(N'Organizations')) DROP INDEX [IX_Organizations_Slug] ON [Organizations];");
 
             migrationBuilder.AddColumn<string>(
                 name: "RefreshToken",

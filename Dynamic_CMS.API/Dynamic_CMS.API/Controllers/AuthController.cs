@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using Dynamic_CMS.Application.DTOs;
 using Dynamic_CMS.Application.Interfaces;
@@ -11,6 +12,7 @@ namespace Dynamic_CMS.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
         private readonly IUserRepository _userRepository;

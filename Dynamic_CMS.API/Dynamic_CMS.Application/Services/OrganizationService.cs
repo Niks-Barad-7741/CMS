@@ -34,11 +34,18 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<OrganizationDto>(organization);
         }
 
-        public async Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto)
+        public async Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto, string? userName = null)
         {
+            var existingOrganization = await _repository.GetBySlugAsync(dto.Slug);
+            if (existingOrganization != null)
+            {
+                throw new InvalidOperationException($"An organization with the slug '{dto.Slug}' already exists.");
+            }
+
             var organization = _mapper.Map<Organization>(dto);
             organization.Id = Guid.NewGuid();
             organization.CreatedAt = DateTime.UtcNow;
+            organization.CreatedBy = userName;
             organization.IsActive = true;
 
             await _repository.AddAsync(organization);
@@ -47,7 +54,7 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<OrganizationDto>(organization);
         }
 
-        public async Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto)
+        public async Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto, string? userName = null)
         {
             var organization = await _repository.GetByIdAsync(id);
             if (organization == null)
@@ -60,7 +67,18 @@ namespace Dynamic_CMS.Application.Services
                 throw new InvalidOperationException("This organization has been deleted. You cannot update it.");
             }
 
+            if (dto.Slug != organization.Slug)
+            {
+                var existingOrganization = await _repository.GetBySlugAsync(dto.Slug);
+                if (existingOrganization != null)
+                {
+                    throw new InvalidOperationException($"An organization with the slug '{dto.Slug}' already exists.");
+                }
+            }
+
             _mapper.Map(dto, organization);
+            organization.ModifiedDate = DateTime.UtcNow;
+            organization.ModifiedBy = userName;
 
             _repository.Update(organization);
             await _repository.SaveChangesAsync();
@@ -68,7 +86,7 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<OrganizationDto>(organization);
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id, string? userName = null)
         {
             var organization = await _repository.GetByIdAsync(id);
             if (organization == null) return false;
@@ -79,6 +97,8 @@ namespace Dynamic_CMS.Application.Services
             }
 
             organization.IsActive = false;
+            organization.ModifiedDate = DateTime.UtcNow;
+            organization.ModifiedBy = userName;
             _repository.Update(organization);
             await _repository.SaveChangesAsync();
 
