@@ -9,5 +9,9 @@ namespace Dynamic_CMS.Application.DTOs.Menu
         public string Page { get; set; } = string.Empty;
         public int SortOrder { get; set; }
         public bool IsVisible { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
+        public DateTime? ModifiedAt { get; set; }
+        public string? ModifiedBy { get; set; }
     }
 }

@@ -51,10 +51,10 @@ namespace Dynamic_CMS.API.Controllers
             }
 
             var token = _jwtService.GenerateToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
+            //var refreshToken = _jwtService.GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // 7 days expiry
+            //user.RefreshToken = refreshToken;
+            //user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // 7 days expiry
 
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
@@ -62,58 +62,58 @@ namespace Dynamic_CMS.API.Controllers
             var response = new AuthResponseDto
             {
                 Token = token,
-                RefreshToken = refreshToken
+                //RefreshToken = refreshToken
             };
 
             return Ok(response);
         }
 
-        [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
-        {
-            if (string.IsNullOrEmpty(dto.Token) || string.IsNullOrEmpty(dto.RefreshToken))
-            {
-                return BadRequest(new { error = "Invalid client request" });
-            }
+        //[HttpPost("refresh-token")]
+        //public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
+        //{
+        //    if (string.IsNullOrEmpty(dto.Token) || string.IsNullOrEmpty(dto.RefreshToken))
+        //    {
+        //        return BadRequest(new { error = "Invalid client request" });
+        //    }
 
-            // We could decode the JWT to find the user id, but for simplicity we will just 
-            // find the user by their RefreshToken since it is a cryptographically secure 64-byte string.
-            // However, our IUserRepository doesn't have GetByRefreshToken. 
-            // So we need to decode the token.
+        //    // We could decode the JWT to find the user id, but for simplicity we will just 
+        //    // find the user by their RefreshToken since it is a cryptographically secure 64-byte string.
+        //    // However, our IUserRepository doesn't have GetByRefreshToken. 
+        //    // So we need to decode the token.
             
-            var principal = GetPrincipalFromExpiredToken(dto.Token);
-            if (principal == null)
-            {
-                return BadRequest(new { error = "Invalid access token or refresh token" });
-            }
+        //    var principal = GetPrincipalFromExpiredToken(dto.Token);
+        //    if (principal == null)
+        //    {
+        //        return BadRequest(new { error = "Invalid access token or refresh token" });
+        //    }
 
-            var userIdString = principal.FindFirst("UserId")?.Value;
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                return BadRequest(new { error = "Invalid token claims" });
-            }
+        //    var userIdString = principal.FindFirst("UserId")?.Value;
+        //    if (!Guid.TryParse(userIdString, out Guid userId))
+        //    {
+        //        return BadRequest(new { error = "Invalid token claims" });
+        //    }
 
-            var user = await _userRepository.GetByIdAsync(userId);
+        //    var user = await _userRepository.GetByIdAsync(userId);
 
-            if (user == null || user.RefreshToken != dto.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-            {
-                return BadRequest(new { error = "Invalid access token or refresh token" });
-            }
+        //    if (user == null || user.RefreshToken != dto.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        //    {
+        //        return BadRequest(new { error = "Invalid access token or refresh token" });
+        //    }
 
-            var newAccessToken = _jwtService.GenerateToken(user);
-            var newRefreshToken = _jwtService.GenerateRefreshToken();
+        //    var newAccessToken = _jwtService.GenerateToken(user);
+        //    var newRefreshToken = _jwtService.GenerateRefreshToken();
 
-            user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            _userRepository.Update(user);
-            await _userRepository.SaveChangesAsync();
+        //    user.RefreshToken = newRefreshToken;
+        //    user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        //    _userRepository.Update(user);
+        //    await _userRepository.SaveChangesAsync();
 
-            return Ok(new AuthResponseDto
-            {
-                Token = newAccessToken,
-                RefreshToken = newRefreshToken
-            });
-        }
+        //    return Ok(new AuthResponseDto
+        //    {
+        //        Token = newAccessToken,
+        //        RefreshToken = newRefreshToken
+        //    });
+        //}
 
         private System.Security.Claims.ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
         {

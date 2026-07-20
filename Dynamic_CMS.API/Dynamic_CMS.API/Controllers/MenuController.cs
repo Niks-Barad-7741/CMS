@@ -16,10 +16,12 @@ namespace Dynamic_CMS.API.Controllers
     public class MenuController : ControllerBase
     {
         private readonly IMenuItemService _service;
+        private readonly IOrganizationService _organizationService;
 
-        public MenuController(IMenuItemService service)
+        public MenuController(IMenuItemService service, IOrganizationService organizationService)
         {
             _service = service;
+            _organizationService = organizationService;
         }
 
         // PUBLIC: GET /api/menus
@@ -52,10 +54,18 @@ namespace Dynamic_CMS.API.Controllers
             if (exists)
                 return Conflict(ApiResponse.FailureResponse("A menu item with this page name already exists.", 409));
 
-            var created = await _service.CreateMenuAsync(dto);
-            var response = ApiResponse.CreatedResponse("Created successfully.");
-            return StatusCode(response.StatusCode, response);
-        }
+            try
+            {
+                var created = await _service.CreateMenuAsync(dto);
+                var response = ApiResponse<MenuItemDto>.Create(ResponseStatus.MenuCreatedSuccessfully, created);
+                return StatusCode(response.StatusCodes, response);
+            }
+            catch (InvalidOperationException ex)
+            {
+                var failResponse = ApiResponse<object>.FailureResponse(ex.Message, 400);
+                return StatusCode(failResponse.StatusCodes, failResponse);
+            }
+        }   
 
         // ADMIN: PUT /api/admin/menus/{id}
         [HttpPut("admin/menus/{id:guid}")]

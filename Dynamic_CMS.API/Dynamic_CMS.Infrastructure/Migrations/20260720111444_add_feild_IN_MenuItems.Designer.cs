@@ -4,6 +4,7 @@ using Dynamic_CMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dynamic_CMS.Infrastructure.Migrations
 {
     [DbContext(typeof(CmsDbContext))]
-    partial class CmsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260720111444_add_feild_IN_MenuItems")]
+    partial class add_feild_IN_MenuItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,7 +86,13 @@ namespace Dynamic_CMS.Infrastructure.Migrations
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Page")
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -149,24 +158,11 @@ namespace Dynamic_CMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<Guid>("MenuItemId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
