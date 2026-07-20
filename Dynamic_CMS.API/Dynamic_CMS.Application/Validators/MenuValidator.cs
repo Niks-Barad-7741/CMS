@@ -20,20 +20,17 @@ namespace Dynamic_CMS.Application.Validators
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
                 .WithMessage("Menu title cannot be the default word 'string'.");
 
-            RuleFor(x => x.Slug)
+            RuleFor(x => x.Page)
                 .Must(x => x == null || x.Trim() == x).WithMessage("This field cannot contain leading or trailing spaces.")
                 .Must(x => x == null || !x.Equals("string", StringComparison.OrdinalIgnoreCase)).WithMessage("Default 'string' value is not allowed.")
-                .NotNull().WithMessage("Menu slug cannot be null")
-                .NotEmpty().WithMessage("Menu slug is required")
-                .MinimumLength(2).WithMessage("Menu slug must be at least 2 characters")
-                .MaximumLength(100).WithMessage("Menu slug cannot exceed 100 characters")
+                .NotNull().WithMessage("Menu page cannot be null")
+                .NotEmpty().WithMessage("Menu page is required")
+                .MinimumLength(2).WithMessage("Menu page must be at least 2 characters")
+                .MaximumLength(100).WithMessage("Menu page cannot exceed 100 characters")
                 .Matches(@"^[a-z\-]+$")
-                .WithMessage("Menu slug can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
+                .WithMessage("Menu page can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
-                .WithMessage("Menu slug cannot be the default word 'string'.");
-
-            RuleFor(x => x.SortOrder)
-                .GreaterThan(0).WithMessage("Sort order must be greater than 0.");
+                .WithMessage("Menu page cannot be the default word 'string'.");
         }
     }
 
@@ -53,20 +50,17 @@ namespace Dynamic_CMS.Application.Validators
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
                 .WithMessage("Menu title cannot be the default word 'string'.");
 
-            RuleFor(x => x.Slug)
+            RuleFor(x => x.Page)
                 .Must(x => x == null || x.Trim() == x).WithMessage("This field cannot contain leading or trailing spaces.")
                 .Must(x => x == null || !x.Equals("string", StringComparison.OrdinalIgnoreCase)).WithMessage("Default 'string' value is not allowed.")
-                .NotNull().WithMessage("Menu slug cannot be null")
-                .NotEmpty().WithMessage("Menu slug is required")
-                .MinimumLength(2).WithMessage("Menu slug must be at least 2 characters")
-                .MaximumLength(100).WithMessage("Menu slug cannot exceed 100 characters")
+                .NotNull().WithMessage("Menu page cannot be null")
+                .NotEmpty().WithMessage("Menu page is required")
+                .MinimumLength(2).WithMessage("Menu page must be at least 2 characters")
+                .MaximumLength(100).WithMessage("Menu page cannot exceed 100 characters")
                 .Matches(@"^[a-z\-]+$")
-                .WithMessage("Menu slug can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
+                .WithMessage("Menu page can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
-                .WithMessage("Menu slug cannot be the default word 'string'.");
-
-            RuleFor(x => x.SortOrder)
-                .GreaterThan(0).WithMessage("Sort order must be greater than 0.");
+                .WithMessage("Menu page cannot be the default word 'string'.");
         }
     }
 }

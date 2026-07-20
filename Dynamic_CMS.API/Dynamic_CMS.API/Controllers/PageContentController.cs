@@ -22,20 +22,32 @@ namespace Dynamic_CMS.API.Controllers
             _service = service;
         }
 
-        // PUBLIC: GET /api/content/{orgSlug}/{menuSlug}
-        [HttpGet("api/content/{orgSlug}/{menuSlug}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetPublic(string orgSlug, string menuSlug, CancellationToken cancellationToken)
+        private string? GetCurrentUserName()
         {
-            var content = await _service.GetPublicContentAsync(orgSlug, menuSlug, cancellationToken);
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var name = User.Identity?.Name;
+            
+            if (!string.IsNullOrEmpty(name)) return name;
+            if (!string.IsNullOrEmpty(role)) return role;
+            
+            return "Admin"; // Fallback if no specific user claim is found
+        }
+
+        /*
+        // PUBLIC: GET /api/content/{orgSlug}/{menuPage}
+        [HttpGet("api/content/{orgSlug}/{menuPage}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublic(string orgSlug, string menuPage, CancellationToken cancellationToken)
+        {
+            var content = await _service.GetPublicContentAsync(orgSlug, menuPage, cancellationToken);
             
             if (content == null)
             {
-                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                var failResponse = ApiResponse.FailureResponse("No records found.", 404);
                 return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = GetApiResponse.SuccessResponse("Page content retrieved successfully.");
+            var response = ApiResponse<PageContentDto>.SuccessResponse(content, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
 
@@ -47,14 +59,14 @@ namespace Dynamic_CMS.API.Controllers
             var contents = await _service.GetAllByOrganizationAsync(organizationId, cancellationToken);
             if (contents == null || !contents.Any())
             {
-                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                var failResponse = ApiResponse.FailureResponse("No records found.", 404);
                 return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = GetApiResponse.SuccessResponse("Page content retrieved successfully.");
+            var response = ApiResponse<IEnumerable<PageContentDto>>.SuccessResponse(contents, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
-
+        */
         // ADMIN: GET /api/admin/content/detail/{id}
         [HttpGet("api/admin/content/detail/{id:guid}")]
         [Authorize(Roles = "Admin")]
@@ -63,11 +75,11 @@ namespace Dynamic_CMS.API.Controllers
             var content = await _service.GetByIdAsync(id, cancellationToken);
             if (content == null)
             {
-                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                var failResponse = ApiResponse.FailureResponse("No records found.", 404);
                 return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = GetApiResponse.SuccessResponse("Page content retrieved successfully.");
+            var response = ApiResponse<PageContentDto>.SuccessResponse(content, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
 
@@ -77,23 +89,23 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> Create([FromBody] CreatePageContentDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<object>.FailureResponse("Invalid payload", 400));
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
 
             try
             {
-                var created = await _service.CreateAsync(dto, cancellationToken);
-                var response = ApiResponse<PageContentDto>.Create(ResponseStatus.PageContentCreatedSuccessfully, created);
-                return StatusCode(response.StatusCodes, response);
+                var created = await _service.CreateAsync(dto, GetCurrentUserName(), cancellationToken);
+                var response = ApiResponse.CreatedResponse("Created successfully.");
+                return StatusCode(response.StatusCode, response);
             }
             catch (InvalidOperationException ex)
             {
-                var failResponse = ApiResponse<object>.FailureResponse(ex.Message, 400); // Wait, duplicate is 409
+                var failResponse = ApiResponse.FailureResponse(ex.Message, 400);
                 if (ex.Message.Contains("already exists"))
                 {
-                    failResponse = ApiResponse<object>.Create(ResponseStatus.PageContentAlreadyExists, ex.Message);
-                    return StatusCode(failResponse.StatusCodes, failResponse);
+                    failResponse = ApiResponse.FailureResponse(ex.Message, 400);
+                    return StatusCode(failResponse.StatusCode, failResponse);
                 }
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
         }
 
@@ -103,17 +115,17 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePageContentDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<object>.FailureResponse("Invalid payload", 400));
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
 
-            var (success, error) = await _service.UpdateAsync(id, dto, cancellationToken);
+            var (success, error) = await _service.UpdateAsync(id, dto, GetCurrentUserName(), cancellationToken);
             if (!success)
             {
-                var failResponse = ApiResponse<object>.FailureResponse(error ?? "Update failed", 404);
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                var failResponse = ApiResponse.FailureResponse("Resource not found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = ApiResponse<object>.Create(ResponseStatus.PageContentUpdatedSuccessfully);
-            return StatusCode(response.StatusCodes, response);
+            var response = ApiResponse.SuccessResponse("Updated successfully.");
+            return StatusCode(response.StatusCode, response);
         }
 
         // ADMIN: DELETE /api/admin/content/{id}
@@ -124,12 +136,12 @@ namespace Dynamic_CMS.API.Controllers
             var success = await _service.DeleteAsync(id, cancellationToken);
             if (!success)
             {
-                var failResponse = ApiResponse<object>.Create(ResponseStatus.PageContentNotFound, "Page content not found.");
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                var failResponse = ApiResponse.FailureResponse("Resource not found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = ApiResponse<object>.Create(ResponseStatus.PageContentDeletedSuccessfully);
-            return StatusCode(response.StatusCodes, response);
+            var response = ApiResponse.SuccessResponse("Deleted successfully.");
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

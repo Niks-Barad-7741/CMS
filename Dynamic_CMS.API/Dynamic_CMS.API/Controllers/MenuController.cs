@@ -33,11 +33,11 @@ namespace Dynamic_CMS.API.Controllers
             var menus = await _service.GetAllMenusAsync();
             if (menus == null || !menus.Any())
             {
-                var failResponse = GetApiResponse.FailureResponse("No records found.", 404);
+                var failResponse = ApiResponse.FailureResponse("No records found.", 404);
                 return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = GetApiResponse.SuccessResponse("Menus retrieved successfully");
+            var response = ApiResponse<IEnumerable<MenuItemDto>>.SuccessResponse(menus, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
 
@@ -47,14 +47,12 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> Create([FromBody] CreateMenuItemDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<object>.FailureResponse("Invalid payload", 400));
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
 
-            var exists = await _service.MenuExistsAsync(dto.Slug);
+            // Validate unique page name
+            var exists = await _service.MenuExistsAsync(dto.Page);
             if (exists)
-            {
-                var existsResponse = ApiResponse<object>.Create(ResponseStatus.MenuAlreadyExists, "A menu with this slug already exists");
-                return StatusCode(existsResponse.StatusCodes, existsResponse);
-            }
+                return Conflict(ApiResponse.FailureResponse("A menu item with this page name already exists.", 409));
 
             try
             {
@@ -67,7 +65,7 @@ namespace Dynamic_CMS.API.Controllers
                 var failResponse = ApiResponse<object>.FailureResponse(ex.Message, 400);
                 return StatusCode(failResponse.StatusCodes, failResponse);
             }
-        }
+        }   
 
         // ADMIN: PUT /api/admin/menus/{id}
         [HttpPut("admin/menus/{id:guid}")]
@@ -75,17 +73,17 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateMenuItemDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<object>.FailureResponse("Invalid payload", 400));
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
 
             var (success, error) = await _service.UpdateMenuAsync(id, dto);
             if (!success)
             {
-                var failResponse = ApiResponse<object>.FailureResponse(error ?? "Update failed", 400);
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                var failResponse = ApiResponse.FailureResponse("Resource not found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = ApiResponse<object>.Create(ResponseStatus.MenuUpdatedSuccessfully);
-            return StatusCode(response.StatusCodes, response);
+            var response = ApiResponse.SuccessResponse("Updated successfully.");
+            return StatusCode(response.StatusCode, response);
         }
 
         // ADMIN: DELETE /api/admin/menus/{id}
@@ -96,12 +94,12 @@ namespace Dynamic_CMS.API.Controllers
             var success = await _service.DeleteMenuAsync(id);
             if (!success)
             {
-                var failResponse = ApiResponse<object>.Create(ResponseStatus.MenuNotFound, "Menu not found");
-                return StatusCode(failResponse.StatusCodes, failResponse);
+                var failResponse = ApiResponse.FailureResponse("Resource not found.", 404);
+                return StatusCode(failResponse.StatusCode, failResponse);
             }
 
-            var response = ApiResponse<object>.Create(ResponseStatus.MenuDeletedSuccessfully);
-            return StatusCode(response.StatusCodes, response);
+            var response = ApiResponse.SuccessResponse("Deleted successfully.");
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

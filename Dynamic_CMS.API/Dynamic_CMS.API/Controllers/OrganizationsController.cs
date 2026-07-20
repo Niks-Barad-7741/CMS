@@ -44,9 +44,9 @@ namespace Dynamic_CMS.API.Controllers
         {
             var organizations = await _organizationService.GetAllActiveAsync();
             if (organizations == null || !organizations.Any())
-                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+                return NotFound(ApiResponse.FailureResponse("No records found.", 404));
 
-            return Ok(GetApiResponse.SuccessResponse("Organizations retrieved successfully."));
+            return Ok(ApiResponse<IEnumerable<OrganizationDto>>.SuccessResponse(organizations, "Operation successful"));
         }
 
         [HttpGet("{id}")]
@@ -54,9 +54,9 @@ namespace Dynamic_CMS.API.Controllers
         {
             var organization = await _organizationService.GetByIdAsync(id);
             if (organization == null)
-                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+                return NotFound(ApiResponse.FailureResponse("No records found.", 404));
 
-            return Ok(GetApiResponse.SuccessResponse("Organization retrieved successfully."));
+            return Ok(ApiResponse<OrganizationDto>.SuccessResponse(organization, "Operation successful"));
         }
 
         [HttpPost]
@@ -65,17 +65,17 @@ namespace Dynamic_CMS.API.Controllers
             var validationResult = await _createValidator.ValidateAsync(dto);
             if (!validationResult.IsValid)
             {
-                return BadRequest(validationResult.ToDictionary());
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
             }
 
             try
             {
                 var organization = await _organizationService.CreateAsync(dto, GetCurrentUserName());
-                return CreatedAtAction(nameof(GetById), new { id = organization.Id }, organization);
+                return CreatedAtAction(nameof(GetById), new { id = organization.Id }, ApiResponse.CreatedResponse("Created successfully."));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponse.FailureResponse(ex.Message, 400));
             }
         }
 
@@ -85,21 +85,21 @@ namespace Dynamic_CMS.API.Controllers
             var validationResult = await _updateValidator.ValidateAsync(dto);
             if (!validationResult.IsValid)
             {
-                return BadRequest(validationResult.ToDictionary());
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
             }
 
             try
             {
                 var organization = await _organizationService.UpdateAsync(id, dto, GetCurrentUserName());
-                return Ok(organization);
+                return Ok(ApiResponse.SuccessResponse("Updated successfully."));
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(ApiResponse.FailureResponse("Resource not found.", 404));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponse.FailureResponse(ex.Message, 400));
             }
         }
 
@@ -109,13 +109,13 @@ namespace Dynamic_CMS.API.Controllers
             try
             {
                 var result = await _organizationService.DeleteAsync(id, GetCurrentUserName());
-                if (!result) return NotFound();
+                if (!result) return NotFound(ApiResponse.FailureResponse("Resource not found.", 404));
 
-                return Ok(new { message = "Organization deleted successfully." });
+                return Ok(ApiResponse.SuccessResponse("Deleted successfully."));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponse.FailureResponse(ex.Message, 400));
             }
         }
     }

@@ -15,15 +15,17 @@ builder.Services.AddControllers()
         {
             var errors = context.ModelState
                 .Where(e => e.Value != null && e.Value.Errors.Count > 0)
-                .Select(e => e.Value!.Errors.First().ErrorMessage)
-                .ToList();
+                .ToDictionary(
+                    kvp => string.IsNullOrEmpty(kvp.Key) ? kvp.Key : char.ToLowerInvariant(kvp.Key[0]) + kvp.Key.Substring(1),
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
 
-            var response = Dynamic_CMS.Application.DTOs.ApiResponse<object>.FailureResponse(
-                string.Join(" | ", errors), 400);
+            var response = Dynamic_CMS.Application.DTOs.ApiResponse.FailureResponse(
+                "Validation failed.", 400, errors);
 
             return new Microsoft.AspNetCore.Mvc.ObjectResult(response)
             {
-                StatusCode = response.StatusCodes
+                StatusCode = response.StatusCode
             };
         };
     });
@@ -49,6 +51,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.OperationFilter<AuthorizeCheckOperationFilter>();
+    c.SchemaFilter<GuidEmptyExampleSchemaFilter>();
 });
 
 // Register Application Layer DI (AutoMapper, FluentValidation, Services)
@@ -80,6 +83,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<Dynamic_CMS.API.Middlewares.ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

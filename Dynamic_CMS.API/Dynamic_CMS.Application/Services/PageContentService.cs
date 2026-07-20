@@ -42,19 +42,19 @@ namespace Dynamic_CMS.Application.Services
         public async Task<PageContentDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var content = await _pageContentRepository.GetByIdAsync(id, cancellationToken);
-            if (content == null) return null;
+            if (content == null || content.Status != "Published") return null;
             return _mapper.Map<PageContentDto>(content);
         }
 
-        public async Task<PageContentDto?> GetPublicContentAsync(string orgSlug, string menuSlug, CancellationToken cancellationToken)
+        public async Task<PageContentDto?> GetPublicContentAsync(string orgSlug, string menuPage, CancellationToken cancellationToken)
         {
             try
             {
-                var content = await _pageContentRepository.GetByOrgSlugAndMenuSlugAsync(orgSlug, menuSlug, cancellationToken);
+                var content = await _pageContentRepository.GetByOrgSlugAndMenuPageAsync(orgSlug, menuPage, cancellationToken);
                 
                 if (content == null || content.Status != "Published")
                 {
-                    _logger.LogWarning("Public content retrieval failed or not published for Org: {OrgSlug}, Menu: {MenuSlug}", orgSlug, menuSlug);
+                    _logger.LogWarning("Public content retrieval failed or not published for Org: {OrgSlug}, Menu: {MenuPage}", orgSlug, menuPage);
                     return null;
                 }
 
@@ -62,12 +62,12 @@ namespace Dynamic_CMS.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error retrieving public content for Org: {OrgSlug}, Menu: {MenuSlug}", orgSlug, menuSlug);
+                _logger.LogError(ex, "Unexpected error retrieving public content for Org: {OrgSlug}, Menu: {MenuPage}", orgSlug, menuPage);
                 throw;
             }
         }
 
-        public async Task<PageContentDto> CreateAsync(CreatePageContentDto dto, CancellationToken cancellationToken)
+        public async Task<PageContentDto> CreateAsync(CreatePageContentDto dto, string? userName, CancellationToken cancellationToken)
         {
             var orgId = dto.OrganizationId!.Value;
             var menuId = dto.MenuItemId!.Value;
@@ -91,8 +91,12 @@ namespace Dynamic_CMS.Application.Services
                 MenuItemId = menuId,
                 Title = dto.Title,
                 BodyHtml = dto.BodyHtml,
-                Status = string.IsNullOrWhiteSpace(dto.Status) ? "Draft" : dto.Status,
-                UpdatedAt = DateTime.UtcNow
+                Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status,
+                UpdatedAt = DateTime.UtcNow,
+                CreatedBy = "Admin",
+                CreateDate = DateTime.UtcNow,
+                ModifiedBy = null,
+                ModifiedDate = null
             };
 
             var created = await _pageContentRepository.AddAsync(pageContent, cancellationToken);
@@ -100,7 +104,7 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<PageContentDto>(created);
         }
 
-        public async Task<(bool success, string? error)> UpdateAsync(Guid id, UpdatePageContentDto dto, CancellationToken cancellationToken)
+        public async Task<(bool success, string? error)> UpdateAsync(Guid id, UpdatePageContentDto dto, string? userName, CancellationToken cancellationToken)
         {
             var content = await _pageContentRepository.GetByIdAsync(id, cancellationToken);
             if (content == null)
@@ -110,8 +114,10 @@ namespace Dynamic_CMS.Application.Services
 
             content.Title = dto.Title;
             content.BodyHtml = dto.BodyHtml;
-            content.Status = dto.Status;
+            content.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status;
             content.UpdatedAt = DateTime.UtcNow;
+            content.ModifiedBy = "Admin";
+            content.ModifiedDate = DateTime.UtcNow;
 
             await _pageContentRepository.UpdateAsync(content, cancellationToken);
             _logger.LogInformation("Page content updated with ID: {Id}", id);
