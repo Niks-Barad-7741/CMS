@@ -32,6 +32,16 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             return await _context.MenuItems.FirstOrDefaultAsync(m => m.Slug == slug);
         }
 
+        public async Task<MenuItem?> GetBySortOrderAsync(int sortOrder)
+        {
+            return await _context.MenuItems.FirstOrDefaultAsync(m => m.SortOrder == sortOrder);
+        }
+
+        public async Task<MenuItem?> GetByTitleAsync(string title)
+        {
+            return await _context.MenuItems.FirstOrDefaultAsync(m => m.Title.ToLower() == title.ToLower());
+        }
+
         public async Task<MenuItem> AddAsync(MenuItem menuItem)
         {
             await _context.MenuItems.AddAsync(menuItem);

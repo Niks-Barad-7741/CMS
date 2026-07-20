@@ -16,10 +16,12 @@ namespace Dynamic_CMS.API.Controllers
     public class MenuController : ControllerBase
     {
         private readonly IMenuItemService _service;
+        private readonly IOrganizationService _organizationService;
 
-        public MenuController(IMenuItemService service)
+        public MenuController(IMenuItemService service, IOrganizationService organizationService)
         {
             _service = service;
+            _organizationService = organizationService;
         }
 
         // PUBLIC: GET /api/menus
@@ -54,9 +56,17 @@ namespace Dynamic_CMS.API.Controllers
                 return StatusCode(existsResponse.StatusCodes, existsResponse);
             }
 
-            var created = await _service.CreateMenuAsync(dto);
-            var response = ApiResponse<MenuItemDto>.Create(ResponseStatus.MenuCreatedSuccessfully, created);
-            return StatusCode(response.StatusCodes, response);
+            try
+            {
+                var created = await _service.CreateMenuAsync(dto);
+                var response = ApiResponse<MenuItemDto>.Create(ResponseStatus.MenuCreatedSuccessfully, created);
+                return StatusCode(response.StatusCodes, response);
+            }
+            catch (InvalidOperationException ex)
+            {
+                var failResponse = ApiResponse<object>.FailureResponse(ex.Message, 400);
+                return StatusCode(failResponse.StatusCodes, failResponse);
+            }
         }
 
         // ADMIN: PUT /api/admin/menus/{id}

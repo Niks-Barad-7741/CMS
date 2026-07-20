@@ -31,6 +31,9 @@ namespace Dynamic_CMS.Application.Validators
                 .WithMessage("Menu slug can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
                 .WithMessage("Menu slug cannot be the default word 'string'.");
+
+            RuleFor(x => x.SortOrder)
+                .GreaterThan(0).WithMessage("Sort order must be greater than 0.");
         }
     }
 
@@ -61,6 +64,9 @@ namespace Dynamic_CMS.Application.Validators
                 .WithMessage("Menu slug can only contain lowercase letters and hyphens (no numbers, spaces, or slashes)")
                 .NotEqual("string", StringComparer.OrdinalIgnoreCase)
                 .WithMessage("Menu slug cannot be the default word 'string'.");
+
+            RuleFor(x => x.SortOrder)
+                .GreaterThan(0).WithMessage("Sort order must be greater than 0.");
         }
     }
 }

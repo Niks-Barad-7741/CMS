@@ -12,6 +12,11 @@ namespace Dynamic_CMS.Domain.Entities
         public bool IsVisible { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string CreatedBy { get; set; } = "Admin";
+        public DateTime? ModifiedAt { get; set; }
+        public string? ModifiedBy { get; set; }
+
         // Navigation property
         public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();
     }

@@ -34,6 +34,14 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<OrganizationDto>(organization);
         }
 
+        public async Task<OrganizationDto?> GetBySlugAsync(string slug)
+        {
+            var organization = await _repository.GetBySlugAsync(slug);
+            if (organization == null) return null;
+
+            return _mapper.Map<OrganizationDto>(organization);
+        }
+
         public async Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto, string? userName = null)
         {
             var existingOrganization = await _repository.GetBySlugAsync(dto.Slug);
