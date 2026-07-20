@@ -27,7 +27,7 @@ namespace Dynamic_CMS.Application.Services
             {
                 Id = m.Id,
                 Title = m.Title,
-                Slug = m.Slug,
+                Page = m.Page,
                 SortOrder = m.SortOrder,
                 IsVisible = m.IsVisible
             }).OrderBy(m => m.SortOrder);
@@ -42,15 +42,15 @@ namespace Dynamic_CMS.Application.Services
             {
                 Id = menu.Id,
                 Title = menu.Title,
-                Slug = menu.Slug,
+                Page = menu.Page,
                 SortOrder = menu.SortOrder,
                 IsVisible = menu.IsVisible
             };
         }
 
-        public async Task<bool> MenuExistsAsync(string slug)
+        public async Task<bool> MenuExistsAsync(string page)
         {
-            var menu = await _repository.GetBySlugAsync(slug);
+            var menu = await _repository.GetByPageAsync(page);
             return menu != null;
         }
 
@@ -60,7 +60,7 @@ namespace Dynamic_CMS.Application.Services
             {
                 Id = Guid.NewGuid(),
                 Title = dto.Title,
-                Slug = dto.Slug.ToLower(), // ensure slug is lower
+                Page = dto.Page.ToLower(), // ensure page is lower
                 SortOrder = dto.SortOrder,
                 IsVisible = dto.IsVisible
             };
@@ -71,7 +71,7 @@ namespace Dynamic_CMS.Application.Services
             {
                 Id = menuItem.Id,
                 Title = menuItem.Title,
-                Slug = menuItem.Slug,
+                Page = menuItem.Page,
                 SortOrder = menuItem.SortOrder,
                 IsVisible = menuItem.IsVisible
             };
@@ -82,15 +82,15 @@ namespace Dynamic_CMS.Application.Services
             var menu = await _repository.GetByIdAsync(id);
             if (menu == null) return (false, "Menu item not found.");
 
-            // Check if slug is taken by another menu item
-            var existingWithSlug = await _repository.GetBySlugAsync(dto.Slug.ToLower());
-            if (existingWithSlug != null && existingWithSlug.Id != id)
+            // Check if page is taken by another menu item
+            var existingWithPage = await _repository.GetByPageAsync(dto.Page.ToLower());
+            if (existingWithPage != null && existingWithPage.Id != id)
             {
-                return (false, "Another menu item is already using this slug.");
+                return (false, "Another menu item is already using this page name.");
             }
 
             menu.Title = dto.Title;
-            menu.Slug = dto.Slug.ToLower();
+            menu.Page = dto.Page.ToLower();
             menu.SortOrder = dto.SortOrder;
             menu.IsVisible = dto.IsVisible;
 

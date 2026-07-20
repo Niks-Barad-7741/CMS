@@ -9,7 +9,7 @@ namespace Dynamic_CMS.Application.Interfaces
     {
         Task<IEnumerable<MenuItemDto>> GetAllMenusAsync();
         Task<MenuItemDto?> GetMenuByIdAsync(Guid id);
-        Task<bool> MenuExistsAsync(string slug);
+        Task<bool> MenuExistsAsync(string page);
         Task<MenuItemDto> CreateMenuAsync(CreateMenuItemDto dto);
         Task<(bool success, string? error)> UpdateMenuAsync(Guid id, UpdateMenuItemDto dto);
         Task<bool> DeleteMenuAsync(Guid id);

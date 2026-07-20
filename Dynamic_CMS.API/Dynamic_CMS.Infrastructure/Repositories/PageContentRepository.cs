@@ -23,7 +23,7 @@ namespace Dynamic_CMS.Infrastructure.Repositories
         {
             return await _context.PageContents
                 .AsNoTracking()
-                .Where(p => p.OrganizationId == organizationId)
+                .Where(p => p.OrganizationId == organizationId && p.Status == "Published")
                 .ToListAsync(cancellationToken);
         }
 
@@ -40,13 +40,13 @@ namespace Dynamic_CMS.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.OrganizationId == organizationId && p.MenuItemId == menuItemId, cancellationToken);
         }
 
-        public async Task<PageContent?> GetByOrgSlugAndMenuSlugAsync(string orgSlug, string menuSlug, CancellationToken cancellationToken)
+        public async Task<PageContent?> GetByOrgSlugAndMenuPageAsync(string orgSlug, string menuPage, CancellationToken cancellationToken)
         {
             return await _context.PageContents
                 .AsNoTracking()
                 .Include(p => p.Organization)
                 .Include(p => p.MenuItem)
-                .FirstOrDefaultAsync(p => p.Organization.Slug == orgSlug && p.MenuItem.Slug == menuSlug, cancellationToken);
+                .FirstOrDefaultAsync(p => p.Organization.Slug == orgSlug && p.MenuItem.Page == menuPage, cancellationToken);
         }
 
         public async Task<PageContent> AddAsync(PageContent pageContent, CancellationToken cancellationToken)

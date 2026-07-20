@@ -27,9 +27,10 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             return await _context.MenuItems.FindAsync(id);
         }
 
-        public async Task<MenuItem?> GetBySlugAsync(string slug)
+        public async Task<MenuItem?> GetByPageAsync(string page)
         {
-            return await _context.MenuItems.FirstOrDefaultAsync(m => m.Slug == slug);
+            return await _context.MenuItems
+                .FirstOrDefaultAsync(m => m.Page == page);
         }
 
         public async Task<MenuItem> AddAsync(MenuItem menuItem)

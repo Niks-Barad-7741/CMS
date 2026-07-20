@@ -7,7 +7,7 @@ namespace Dynamic_CMS.Domain.Entities
     {
         public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string Slug { get; set; } = string.Empty;
+        public string Page { get; set; } = string.Empty;
         public int SortOrder { get; set; }
         public bool IsVisible { get; set; } = true;
         public bool IsDeleted { get; set; } = false;

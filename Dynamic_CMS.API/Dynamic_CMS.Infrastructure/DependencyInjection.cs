@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Http;
 using Dynamic_CMS.Domain.Repositories;
 using Dynamic_CMS.Infrastructure.Repositories;
 using Dynamic_CMS.Application.Interfaces;
@@ -62,6 +63,24 @@ namespace Dynamic_CMS.Infrastructure
                     ValidAudience = jwtSection["Audience"],
                     IssuerSigningKey = rsaSecurityKey,
                     ClockSkew = TimeSpan.Zero
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse();
+                        context.Response.StatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        var response = Dynamic_CMS.Application.DTOs.ApiResponse.FailureResponse("Unauthorized.", 401);
+                        return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+                    },
+                    OnForbidden = context =>
+                    {
+                        context.Response.StatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+                        var response = Dynamic_CMS.Application.DTOs.ApiResponse.FailureResponse("Access denied.", 403);
+                        return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+                    }
                 };
             });
 

@@ -26,9 +26,9 @@ namespace Dynamic_CMS.API.Controllers
         {
             var mediaList = await _mediaService.GetAllByOrganizationAsync(organizationId);
             if (mediaList == null || !mediaList.Any())
-                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+                return NotFound(ApiResponse.FailureResponse("No records found.", 404));
 
-            return Ok(GetApiResponse.SuccessResponse("Media retrieved successfully."));
+            return Ok(ApiResponse<IEnumerable<MediaDto>>.SuccessResponse(mediaList, "Operation successful"));
         }
 
         [HttpGet("{id}")]
@@ -36,9 +36,9 @@ namespace Dynamic_CMS.API.Controllers
         {
             var media = await _mediaService.GetByIdAsync(id);
             if (media == null)
-                return NotFound(GetApiResponse.FailureResponse("No records found.", 404));
+                return NotFound(ApiResponse.FailureResponse("No records found.", 404));
 
-            return Ok(GetApiResponse.SuccessResponse("Operation successful"));
+            return Ok(ApiResponse<MediaDto>.SuccessResponse(media, "Operation successful"));
         }
 
         [HttpPost("upload")]
@@ -48,7 +48,7 @@ namespace Dynamic_CMS.API.Controllers
             var userIdString = User.FindFirst("UserId")?.Value;
             if (!Guid.TryParse(userIdString, out Guid userId))
             {
-                return Unauthorized(ApiResponse<object>.FailureResponse("Invalid user token.", 401));
+                return Unauthorized(ApiResponse.FailureResponse("Unauthorized.", 401));
             }
 
             var webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
@@ -57,11 +57,11 @@ namespace Dynamic_CMS.API.Controllers
             
             if (!result.success)
             {
-                return BadRequest(ApiResponse<object>.FailureResponse(result.error ?? "Failed to upload media.", 400));
+                return BadRequest(ApiResponse.FailureResponse(result.error ?? "Validation failed.", 400));
             }
 
             return CreatedAtAction(nameof(GetById), new { id = result.data!.Id }, 
-                ApiResponse<object>.Create(ResponseStatus.MediaUploadedSuccessfully, result.data));
+                ApiResponse.CreatedResponse("Created successfully."));
         }
 
         [HttpDelete("{id}")]
@@ -72,10 +72,10 @@ namespace Dynamic_CMS.API.Controllers
             var result = await _mediaService.DeleteMediaAsync(id, webRootPath);
             if (!result.success)
             {
-                return NotFound(ApiResponse<object>.FailureResponse(result.error ?? "Media not found.", 404));
+                return NotFound(ApiResponse.FailureResponse("Resource not found.", 404));
             }
 
-            return Ok(ApiResponse<object>.Create(ResponseStatus.MediaDeletedSuccessfully));
+            return Ok(ApiResponse.SuccessResponse("Deleted successfully."));
         }
     }
 }
