@@ -1,0 +1,40 @@
+# ==============================
+# Node.js / Angular Frontend
+# ==============================
+node_modules/
+dist/
+out-tsc/
+.angular/
+.npm/
+coverage/
+*.log
+
+# ==============================
+# .NET / C# Backend
+# ==============================
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+TestResults/
+[Dd]ebug/
+[Rr]elease/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE / OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
