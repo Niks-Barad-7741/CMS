@@ -60,15 +60,13 @@ builder.Services.AddApplicationDI();
 // Register Infrastructure Layer DI (DbContext, Repositories, JWT Auth)
 builder.Services.AddInfrastructureDI(builder.Configuration);
 
-// Configure CORS for Angular Frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
@@ -86,7 +84,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<Dynamic_CMS.API.Middlewares.ExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
 
