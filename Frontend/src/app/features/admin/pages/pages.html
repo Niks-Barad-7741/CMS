@@ -1,0 +1,71 @@
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-800">Content Editor</h2>
+  <p class="text-gray-500 text-sm">Select an organization and a menu item to edit its page content.</p>
+</div>
+
+<!-- Selectors -->
+<div class="bg-white rounded shadow p-6 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+    <div *ngIf="role === 'Admin'">
+      <label class="block text-sm font-medium text-gray-700">Target Organization</label>
+      <select [(ngModel)]="selectedOrgId" (change)="onSelectionChange()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+        <option [ngValue]="null">-- Select Organization --</option>
+        <option *ngFor="let org of organizations" [ngValue]="org.id">{{ org.name }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Page / Menu Item</label>
+      <select [(ngModel)]="selectedMenuId" (change)="onSelectionChange()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+        <option [ngValue]="null">-- Select Page --</option>
+        <option *ngFor="let menu of menus" [ngValue]="menu.id">{{ menu.title }}</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Editor -->
+<div class="bg-white rounded shadow" *ngIf="selectedOrgId && selectedMenuId">
+  <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t">
+    <h3 class="text-lg font-semibold text-gray-800">Page Properties</h3>
+    <div class="flex items-center space-x-4">
+      <span *ngIf="successMessage" class="text-green-600 text-sm font-medium">{{ successMessage }}</span>
+      <button (click)="saveContent()" [disabled]="isSaving" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 disabled:bg-blue-300">
+        {{ isSaving ? 'Saving...' : 'Save Content' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6">
+    <div class="grid grid-cols-3 gap-6 mb-6">
+      <div class="col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Page Title (H1)</label>
+        <input type="text" [(ngModel)]="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="Enter page title">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Status</label>
+        <select [(ngModel)]="formData.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+          <option value="Draft">Draft</option>
+          <option value="Published">Published</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Page Body</label>
+      <div *ngIf="isBrowser" class="border rounded-md border-gray-300 overflow-hidden">
+        <quill-editor 
+          [(ngModel)]="formData.bodyHtml"
+          [modules]="editorModules"
+          [styles]="{height: '400px'}"
+          placeholder="Start writing page content...">
+        </quill-editor>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!selectedOrgId || !selectedMenuId" class="text-center p-12 bg-gray-50 rounded border-2 border-dashed border-gray-300">
+  <p class="text-gray-500">Please select an Organization and a Page above to start editing.</p>
+</div>

@@ -1,0 +1,42 @@
+<div class="auth-container">
+  <div class="auth-box">
+    <h2>Login</h2>
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+    
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          [(ngModel)]="credentials.email" 
+          #email="ngModel"
+          [ngClass]="{ 'is-invalid': email.invalid && (email.dirty || email.touched) }"
+          required
+          email>
+        <div *ngIf="email.invalid && (email.dirty || email.touched)" class="validation-error">
+          <small *ngIf="email.errors?.['required']">Email is required.</small>
+          <small *ngIf="email.errors?.['email']">Please enter a valid email address.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          [(ngModel)]="credentials.password" 
+          #password="ngModel"
+          [ngClass]="{ 'is-invalid': password.invalid && (password.dirty || password.touched) }"
+          required>
+        <div *ngIf="password.invalid && (password.dirty || password.touched)" class="validation-error">
+          <small *ngIf="password.errors?.['required']">Password is required.</small>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="!loginForm.valid">Login</button>
+    </form>
+  </div>
+</div>
