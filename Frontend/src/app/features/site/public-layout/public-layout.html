@@ -1,0 +1,55 @@
+<div *ngIf="isNotFound" class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+  <div class="text-6xl mb-4">🌍</div>
+  <h1 class="text-4xl font-bold text-gray-900 mb-2">Site Not Found</h1>
+  <p class="text-xl text-gray-600 max-w-lg">
+    The organization site you are looking for does not exist or has been deactivated.
+  </p>
+  <a href="/login" class="mt-8 text-blue-600 hover:underline">Go to Admin Login</a>
+</div>
+
+<div *ngIf="!isNotFound && orgProfile" class="min-h-screen bg-white flex flex-col">
+  <!-- Top Navigation (Shared Menus) -->
+  <nav class="bg-indigo-700 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Site Branding -->
+        <div class="flex-shrink-0 flex items-center">
+          <span class="text-white font-bold text-xl tracking-tight">{{ orgProfile.name }}</span>
+        </div>
+        
+        <!-- Navigation Links -->
+        <div class="hidden md:block">
+          <div class="ml-10 flex items-baseline space-x-4">
+            <a *ngFor="let menu of menus" 
+               [routerLink]="['/', menu.page]" 
+               routerLinkActive="bg-indigo-900 text-white"
+               class="text-indigo-100 hover:bg-indigo-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              {{ menu.title }}
+            </a>
+          </div>
+        </div>
+        
+        <div class="md:hidden">
+          <!-- Mobile menu button placeholder -->
+          <button class="text-indigo-200 hover:text-white p-2">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dynamic Page Content (injected via router) -->
+  <main class="flex-1">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-50 border-t border-gray-200 mt-12 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+      &copy; {{ currentYear }} {{ orgProfile.name }}. Powered by OrgCMS.
+    </div>
+  </footer>
+</div>
