@@ -12,11 +12,16 @@ namespace Dynamic_CMS.Application.Services
     public class OrganizationService : IOrganizationService
     {
         private readonly IOrganizationRepository _repository;
+        private readonly ISiteProvisioningService _siteProvisioningService;
         private readonly IMapper _mapper;
 
-        public OrganizationService(IOrganizationRepository repository, IMapper mapper)
+        public OrganizationService(
+            IOrganizationRepository repository,
+            ISiteProvisioningService siteProvisioningService,
+            IMapper mapper)
         {
             _repository = repository;
+            _siteProvisioningService = siteProvisioningService;
             _mapper = mapper;
         }
 
@@ -58,6 +63,9 @@ namespace Dynamic_CMS.Application.Services
 
             await _repository.AddAsync(organization);
             await _repository.SaveChangesAsync();
+
+            await _siteProvisioningService.EnsureDefaultPagesForOrganizationAsync(
+                organization.Id, organization.Slug, organization.Name);
 
             return _mapper.Map<OrganizationDto>(organization);
         }

@@ -63,16 +63,14 @@ export class AuthService {
       
       return JSON.parse(decoded);
     } catch (e) {
-      console.error('JWT Decode Error:', e);
+      // Error parsing token
       return null;
     }
   }
 
   getRole(): string | null {
     const decoded = this.decodeToken();
-    console.log('Decoded JWT Token:', decoded);
     const role = decoded ? (decoded.role || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']) : null;
-    console.log('Evaluated Role:', role);
     return role;
   }
 

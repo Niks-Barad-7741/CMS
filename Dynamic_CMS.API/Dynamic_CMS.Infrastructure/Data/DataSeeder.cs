@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Dynamic_CMS.Application.Interfaces;
 using Dynamic_CMS.Domain.Entities;
 using BCrypt.Net;
 
@@ -35,6 +36,15 @@ namespace Dynamic_CMS.Infrastructure.Data
 
                 context.Users.Add(adminUser);
                 await context.SaveChangesAsync();
+            }
+
+            var siteProvisioning = scope.ServiceProvider.GetRequiredService<ISiteProvisioningService>();
+            await siteProvisioning.EnsureDefaultMenusAsync();
+
+            var activeOrganizations = context.Organizations.Where(o => o.IsActive).ToList();
+            foreach (var org in activeOrganizations)
+            {
+                await siteProvisioning.EnsureDefaultPagesForOrganizationAsync(org.Id, org.Slug, org.Name);
             }
         }
     }

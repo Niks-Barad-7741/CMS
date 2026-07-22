@@ -1,0 +1,343 @@
+<div class="flex flex-col h-screen bg-gray-50 font-sans overflow-hidden">
+
+  <!-- Top Header Bar -->
+  <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-20 shadow-sm shrink-0">
+    <div class="flex items-center gap-4">
+      <button (click)="goBack()"
+        class="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+      </button>
+      <div>
+        <h1 class="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+          Static Template Builder
+          <span class="px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-bold rounded-full border border-violet-100">
+            Corporate Layout
+          </span>
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">Fill in the fields — the preview updates live on the right</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span *ngIf="saveStatus === 'saved'"
+        class="text-emerald-600 font-semibold text-sm flex items-center gap-1.5 animate-pulse">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        Saved!
+      </span>
+      <span *ngIf="saveStatus === 'error'" class="text-red-500 font-semibold text-sm">Save failed</span>
+
+      <button (click)="save('Draft')" [disabled]="saveStatus === 'saving'"
+        class="px-5 py-2.5 text-sm font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-xl hover:bg-violet-100 transition-colors disabled:opacity-50">
+        Save Draft
+      </button>
+      <button (click)="save('Published')" [disabled]="saveStatus === 'saving'"
+        class="px-5 py-2.5 text-sm font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 disabled:opacity-50 flex items-center gap-2">
+        <svg *ngIf="saveStatus === 'saving'" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        <svg *ngIf="saveStatus !== 'saving'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Publish
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Body -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="w-96 shrink-0 flex flex-col h-full bg-white border-r border-gray-200 shadow-sm">
+
+      <!-- Section Nav Tabs -->
+      <div class="flex gap-1 p-3 bg-gray-50 border-b border-gray-200 overflow-x-auto shrink-0">
+        <button *ngFor="let sec of sections" (click)="setSection(sec.key)"
+          [class.bg-white]="activeSection === sec.key"
+          [class.text-violet-700]="activeSection === sec.key"
+          [class.shadow-sm]="activeSection === sec.key"
+          [class.font-bold]="activeSection === sec.key"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 transition-all whitespace-nowrap cursor-pointer border-0 bg-transparent">
+          <span>{{ sec.icon }}</span>
+          {{ sec.label }}
+        </button>
+      </div>
+
+      <!-- Form Content (scrollable) -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+
+        <!-- HERO -->
+        <ng-container *ngIf="activeSection === 'hero'">
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Company Name</label>
+              <input type="text" [(ngModel)]="form.companyName" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="e.g. Acme Corp">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Hero Headline <span class="text-red-400">*</span></label>
+              <input type="text" [(ngModel)]="form.heroTitle" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="e.g. Build Something Amazing">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Hero Subtitle</label>
+              <textarea [(ngModel)]="form.heroSubtitle" (ngModelChange)="updatePreviewIframe()" rows="3"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="A short description of your value proposition..."></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">CTA Button Text</label>
+                <input type="text" [(ngModel)]="form.heroCtaText" (ngModelChange)="updatePreviewIframe()"
+                  class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                  placeholder="Get Started">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">CTA Button Link</label>
+                <input type="text" [(ngModel)]="form.heroCtaLink" (ngModelChange)="updatePreviewIframe()"
+                  class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                  placeholder="#contact">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                Background Image URL
+                <span class="text-xs font-normal text-gray-400 ml-1">(optional)</span>
+              </label>
+              <input type="url" [(ngModel)]="form.heroBgImage" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="https://...">
+              <div *ngIf="form.heroBgImage" class="mt-2 rounded-xl overflow-hidden border border-gray-200 h-28">
+                <img [src]="form.heroBgImage" class="w-full h-full object-cover" alt="bg preview">
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ABOUT -->
+        <ng-container *ngIf="activeSection === 'about'">
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">About Heading</label>
+              <input type="text" [(ngModel)]="form.aboutHeading" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="Who We Are">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">About Description</label>
+              <textarea [(ngModel)]="form.aboutDescription" (ngModelChange)="updatePreviewIframe()" rows="5"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="Tell visitors about your company..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Side Image URL</label>
+              <input type="url" [(ngModel)]="form.aboutImage" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="https://...">
+              <div *ngIf="form.aboutImage" class="mt-2 rounded-xl overflow-hidden border border-gray-200 h-36">
+                <img [src]="form.aboutImage" class="w-full h-full object-cover" alt="about image">
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- SERVICES -->
+        <ng-container *ngIf="activeSection === 'services'">
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Section Heading</label>
+              <input type="text" [(ngModel)]="form.servicesHeading" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="What We Offer">
+            </div>
+
+            <div class="space-y-4">
+              <div *ngFor="let svc of form.services; let i = index"
+                class="border border-gray-200 rounded-xl p-4 bg-gray-50 relative">
+                <button (click)="removeService(i); updatePreviewIframe()"
+                  class="absolute top-3 right-3 text-gray-300 hover:text-red-400 transition-colors bg-transparent border-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+                <div class="text-xs font-bold text-violet-600 mb-3 uppercase tracking-wider">Service {{ i + 1 }}</div>
+                <div class="space-y-3 pr-4">
+                  <div class="grid grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">Icon (emoji)</label>
+                      <input type="text" [(ngModel)]="svc.icon" (ngModelChange)="updatePreviewIframe()"
+                        class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-lg text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                        placeholder="💻">
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">Title</label>
+                      <input type="text" [(ngModel)]="svc.title" (ngModelChange)="updatePreviewIframe()"
+                        class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                        placeholder="Service Name">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                    <textarea [(ngModel)]="svc.description" (ngModelChange)="updatePreviewIframe()" rows="2"
+                      class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                      placeholder="Describe this service..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <button (click)="addService(); updatePreviewIframe()"
+                class="w-full py-3 border-2 border-dashed border-violet-200 rounded-xl text-violet-600 font-semibold text-sm hover:bg-violet-50 hover:border-violet-300 transition-colors flex items-center justify-center gap-2 bg-transparent cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Service
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- STATS -->
+        <ng-container *ngIf="activeSection === 'stats'">
+          <p class="text-xs text-gray-400 mb-4">These 3 stats appear in the banner below the services section.</p>
+          <div class="space-y-4">
+            <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+              <div class="text-xs font-bold text-violet-600 mb-3 uppercase tracking-wider">Stat 1</div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Value</label>
+                  <input type="text" [(ngModel)]="form.stat1Value" (ngModelChange)="updatePreviewIframe()"
+                    class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                    placeholder="500+">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                  <input type="text" [(ngModel)]="form.stat1Label" (ngModelChange)="updatePreviewIframe()"
+                    class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                    placeholder="Projects Done">
+                </div>
+              </div>
+            </div>
+            <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+              <div class="text-xs font-bold text-violet-600 mb-3 uppercase tracking-wider">Stat 2</div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Value</label>
+                  <input type="text" [(ngModel)]="form.stat2Value" (ngModelChange)="updatePreviewIframe()"
+                    class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                    placeholder="98%">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                  <input type="text" [(ngModel)]="form.stat2Label" (ngModelChange)="updatePreviewIframe()"
+                    class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                    placeholder="Client Satisfaction">
+                </div>
+              </div>
+            </div>
+            <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+              <div class="text-xs font-bold text-violet-600 mb-3 uppercase tracking-wider">Stat 3</div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Value</label>
+                  <input type="text" [(ngModel)]="form.stat3Value" (ngModelChange)="updatePreviewIframe()"
+                    class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                    placeholder="12+">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                  <input type="text" [(ngModel)]="form.stat3Label" (ngModelChange)="updatePreviewIframe()"
+                    class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                    placeholder="Years Experience">
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- CTA BANNER -->
+        <ng-container *ngIf="activeSection === 'cta'">
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Banner Heading</label>
+              <input type="text" [(ngModel)]="form.ctaBannerHeading" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="Ready to Transform Your Business?">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Subtext</label>
+              <textarea [(ngModel)]="form.ctaBannerSubtext" (ngModelChange)="updatePreviewIframe()" rows="2"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="A short motivating line..."></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Button Text</label>
+                <input type="text" [(ngModel)]="form.ctaBannerButtonText" (ngModelChange)="updatePreviewIframe()"
+                  class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                  placeholder="Contact Us">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Button Link</label>
+                <input type="text" [(ngModel)]="form.ctaBannerButtonLink" (ngModelChange)="updatePreviewIframe()"
+                  class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                  placeholder="#contact">
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- CONTACT -->
+        <ng-container *ngIf="activeSection === 'contact'">
+          <div class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
+              <textarea [(ngModel)]="form.contactAddress" (ngModelChange)="updatePreviewIframe()" rows="3"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="123 Main Street&#10;New York, NY 10001"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+              <input type="tel" [(ngModel)]="form.contactPhone" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="+1 (555) 123-4567">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+              <input type="email" [(ngModel)]="form.contactEmail" (ngModelChange)="updatePreviewIframe()"
+                class="block w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                placeholder="hello@company.com">
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: LIVE PREVIEW -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-gray-200">
+      <!-- Browser Bar Mockup -->
+      <div class="bg-gray-300 px-4 py-3 flex items-center gap-3 shrink-0 border-b border-gray-400">
+        <div class="flex gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div class="w-3 h-3 rounded-full bg-green-400"></div>
+        </div>
+        <div class="flex-1 bg-white rounded-md text-xs text-gray-500 px-4 py-1.5 flex items-center justify-center shadow-sm max-w-xs mx-auto">
+          <svg class="w-3 h-3 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+          </svg>
+          {{ form.companyName || 'yoursite' }}.com
+        </div>
+      </div>
+      <!-- Iframe -->
+      <div class="flex-1 overflow-hidden">
+        <iframe id="preview-iframe" class="w-full h-full border-none bg-white" title="Live Preview" [srcdoc]="previewHtml"></iframe>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -2,6 +2,15 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrganizationService, Organization } from '../../../core/services/organization.service';
+import { MenuService } from '../../../core/services/menu.service';
+import { PageService } from '../../../core/services/page.service';
+import { 
+  HOME_TEMPLATE, 
+  ABOUT_TEMPLATE, 
+  SERVICES_TEMPLATE, 
+  CONTACT_TEMPLATE 
+} from '../../../core/constants/template-data';
+import { from, concatMap, toArray, finalize } from 'rxjs';
 
 @Component({
   selector: 'app-organizations',
@@ -14,11 +23,14 @@ export class OrganizationsComponent implements OnInit {
   
   showForm = false;
   editingId: string | null = null;
-  formData: any = { name: '', slug: '', isActive: true };
+  formData: any = { name: '', slug: '', isActive: true, initializeTemplates: true };
   errorMessage: string | null = null;
+  isSaving = false;
 
   constructor(
     private orgService: OrganizationService,
+    private menuService: MenuService,
+    private pageService: PageService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -29,7 +41,6 @@ export class OrganizationsComponent implements OnInit {
   loadOrganizations() {
     this.orgService.getOrganizations().subscribe({
       next: (data) => {
-        console.log('loadOrganizations received:', data);
         this.organizations = data;
         this.cdr.detectChanges(); // Force UI update
       },
@@ -46,7 +57,7 @@ export class OrganizationsComponent implements OnInit {
 
   openCreateForm() {
     this.editingId = null;
-    this.formData = { name: '', slug: '', isActive: true };
+    this.formData = { name: '', slug: '', isActive: true, initializeTemplates: true };
     this.errorMessage = null;
     this.showForm = true;
   }
@@ -54,6 +65,7 @@ export class OrganizationsComponent implements OnInit {
   openEditForm(org: Organization) {
     this.editingId = org.id;
     this.formData = { ...org };
+    // We don't show initialize templates for editing
     this.errorMessage = null;
     this.showForm = true;
   }
@@ -62,6 +74,7 @@ export class OrganizationsComponent implements OnInit {
     this.showForm = false;
     this.editingId = null;
     this.errorMessage = null;
+    this.isSaving = false;
   }
 
   generateSlug() {
@@ -72,8 +85,14 @@ export class OrganizationsComponent implements OnInit {
 
   save() {
     this.errorMessage = null;
+    this.isSaving = true;
+
     if (this.editingId) {
-      this.orgService.updateOrganization(this.editingId, this.formData).subscribe({
+      this.orgService.updateOrganization(this.editingId, {
+        name: this.formData.name,
+        slug: this.formData.slug,
+        isActive: this.formData.isActive
+      }).subscribe({
         next: () => {
           this.loadOrganizations();
           this.closeForm();
@@ -81,22 +100,79 @@ export class OrganizationsComponent implements OnInit {
         error: (err) => {
           console.error('Update failed:', err);
           this.errorMessage = this.extractErrorMessage(err);
+          this.isSaving = false;
           this.cdr.detectChanges();
         }
       });
     } else {
-      this.orgService.createOrganization(this.formData).subscribe({
-        next: () => {
-          this.loadOrganizations();
-          this.closeForm();
+      this.orgService.createOrganization({
+        name: this.formData.name,
+        slug: this.formData.slug,
+        isActive: this.formData.isActive
+      }).subscribe({
+        next: (org) => {
+          if (this.formData.initializeTemplates) {
+            this.setupSiteContent(org);
+          } else {
+            this.loadOrganizations();
+            this.closeForm();
+          }
         },
         error: (err) => {
           console.error('Create failed:', err);
           this.errorMessage = this.extractErrorMessage(err);
+          this.isSaving = false;
           this.cdr.detectChanges();
         }
       });
     }
+  }
+
+  private setupSiteContent(org: Organization) {
+    const menusToCreate = [
+      { title: 'Home', page: 'home', sortOrder: 1, isVisible: true, html: HOME_TEMPLATE },
+      { title: 'About', page: 'about', sortOrder: 2, isVisible: true, html: ABOUT_TEMPLATE },
+      { title: 'Services', page: 'services', sortOrder: 3, isVisible: true, html: SERVICES_TEMPLATE },
+      { title: 'Contact', page: 'contact', sortOrder: 4, isVisible: true, html: CONTACT_TEMPLATE }
+    ];
+
+    from(menusToCreate).pipe(
+      concatMap(menuDef => 
+        this.menuService.createMenu({
+          organizationId: org.id,
+          title: menuDef.title,
+          page: menuDef.page,
+          sortOrder: menuDef.sortOrder,
+          isVisible: menuDef.isVisible
+        }).pipe(
+          concatMap((menuRes: any) => {
+            const menuItem = menuRes?.data || menuRes;
+            const pagePayload = {
+              organizationId: org.id,
+              menuItemId: menuItem.id,
+              title: menuDef.title,
+              bodyHtml: menuDef.html.trim(),
+              status: 'Published'
+            };
+            return this.pageService.createPage(pagePayload);
+          })
+        )
+      ),
+      toArray(),
+      finalize(() => {
+        this.isSaving = false;
+        this.loadOrganizations();
+        this.closeForm();
+      })
+    ).subscribe({
+      next: () => {
+        console.log('Site initialized successfully.');
+      },
+      error: (err) => {
+        this.errorMessage = 'Created organization, but failed to seed some content: ' + this.extractErrorMessage(err);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private extractErrorMessage(err: any): string {
