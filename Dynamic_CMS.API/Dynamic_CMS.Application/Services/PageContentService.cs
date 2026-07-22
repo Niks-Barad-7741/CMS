@@ -42,7 +42,7 @@ namespace Dynamic_CMS.Application.Services
         public async Task<PageContentDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             var content = await _pageContentRepository.GetByIdAsync(id, cancellationToken);
-            if (content == null || content.Status != "Published") return null;
+            if (content == null) return null;
             return _mapper.Map<PageContentDto>(content);
         }
 
@@ -92,6 +92,8 @@ namespace Dynamic_CMS.Application.Services
                 Title = dto.Title,
                 BodyHtml = dto.BodyHtml,
                 Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status,
+                TemplateId = dto.TemplateId,
+                ContentJson = dto.ContentJson,
                 UpdatedAt = DateTime.UtcNow,
                 CreatedBy = "Admin",
                 CreateDate = DateTime.UtcNow,
@@ -115,6 +117,8 @@ namespace Dynamic_CMS.Application.Services
             content.Title = dto.Title;
             content.BodyHtml = dto.BodyHtml;
             content.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status;
+            content.TemplateId = dto.TemplateId;
+            content.ContentJson = dto.ContentJson;
             content.UpdatedAt = DateTime.UtcNow;
             content.ModifiedBy = "Admin";
             content.ModifiedDate = DateTime.UtcNow;

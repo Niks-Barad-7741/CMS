@@ -1,23 +1,23 @@
 <div class="mb-6">
-  <h2 class="text-2xl font-bold text-gray-800">Content Editor</h2>
-  <p class="text-gray-500 text-sm">Select an organization and a menu item to edit its page content.</p>
+  <h2 class="text-2xl font-bold text-gray-800">Visual Website Builder</h2>
+  <p class="text-gray-500 text-sm">Select an organization and a menu item to manage its visual page content.</p>
 </div>
 
 <!-- Selectors -->
-<div class="bg-white rounded shadow p-6 mb-6">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     
     <div *ngIf="role === 'Admin'">
-      <label class="block text-sm font-medium text-gray-700">Target Organization</label>
-      <select [(ngModel)]="selectedOrgId" (change)="onSelectionChange()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+      <label class="block text-sm font-semibold text-gray-700">Target Organization</label>
+      <select [(ngModel)]="selectedOrgId" (change)="onSelectionChange()" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium">
         <option [ngValue]="null">-- Select Organization --</option>
         <option *ngFor="let org of organizations" [ngValue]="org.id">{{ org.name }}</option>
       </select>
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700">Page / Menu Item</label>
-      <select [(ngModel)]="selectedMenuId" (change)="onSelectionChange()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+      <label class="block text-sm font-semibold text-gray-700">Page / Menu Item</label>
+      <select [(ngModel)]="selectedMenuId" (change)="onSelectionChange()" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium">
         <option [ngValue]="null">-- Select Page --</option>
         <option *ngFor="let menu of menus" [ngValue]="menu.id">{{ menu.title }}</option>
       </select>
@@ -25,47 +25,140 @@
   </div>
 </div>
 
-<!-- Editor -->
-<div class="bg-white rounded shadow" *ngIf="selectedOrgId && selectedMenuId">
-  <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t">
-    <h3 class="text-lg font-semibold text-gray-800">Page Properties</h3>
-    <div class="flex items-center space-x-4">
-      <span *ngIf="successMessage" class="text-green-600 text-sm font-medium">{{ successMessage }}</span>
-      <button (click)="saveContent()" [disabled]="isSaving" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 disabled:bg-blue-300">
-        {{ isSaving ? 'Saving...' : 'Save Content' }}
-      </button>
+<div *ngIf="!selectedOrgId || !selectedMenuId" class="text-center p-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+  <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+  </div>
+  <h3 class="text-xl font-bold text-gray-800">Waiting for selection</h3>
+  <p class="text-gray-500 mt-2">Please select an Organization and a Page above to start editing.</p>
+</div>
+
+<!-- If Page Exists -->
+<div *ngIf="selectedOrgId && selectedMenuId && pageContent" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+  <div class="text-center mb-8">
+    <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     </div>
+    <h3 class="text-2xl font-bold text-gray-900 mb-2">Page Content Ready!</h3>
+    <p class="text-gray-500 max-w-md mx-auto">This page is currently <b>{{ pageContent.status }}</b>. Choose how you'd like to edit it:</p>
   </div>
 
-  <div class="p-6">
-    <div class="grid grid-cols-3 gap-6 mb-6">
-      <div class="col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Page Title (H1)</label>
-        <input type="text" [(ngModel)]="formData.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="Enter page title">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
+    <button (click)="openExistingBuilder()"
+      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200">
+      <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+      </div>
+      <h4 class="font-bold text-gray-900 mb-1">Visual HTML Editor</h4>
+      <p class="text-xs text-gray-500 leading-relaxed">Full drag-and-drop editor with HTML and rich text tools</p>
+    </button>
+
+    <button (click)="openTemplateBuilder()"
+      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+      </div>
+      <h4 class="font-bold text-gray-900 mb-1">Dynamic Template Builder</h4>
+      <p class="text-xs text-gray-500 leading-relaxed">Choose from Restaurant, Portfolio, Blog & Business templates</p>
+    </button>
+
+    <button (click)="openStaticBuilder()"
+      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-violet-300 hover:bg-violet-50 transition-all duration-200">
+      <div class="w-14 h-14 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <h4 class="font-bold text-gray-900 mb-1">Static Template Form</h4>
+      <p class="text-xs text-gray-500 leading-relaxed">Fill a simple form for a polished Corporate layout</p>
+    </button>
+
+    <button (click)="openPageEditor()"
+      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-amber-100 hover:border-amber-400 hover:bg-amber-50 transition-all duration-200 relative">
+      <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-2xl">
+        🏷️
+      </div>
+      <h4 class="font-bold text-gray-900 mb-1">Page Content Editor</h4>
+      <p class="text-xs text-gray-500 leading-relaxed">Enter content per page type: Home, About, Services, Contact</p>
+    </button>
+  </div>
+</div>
+
+<!-- If Page Does NOT Exist (Create Flow) -->
+<div *ngIf="selectedOrgId && selectedMenuId && !pageContent" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+  <div class="text-center mb-8">
+    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    </div>
+    <h3 class="text-2xl font-bold text-gray-900">Create New Page</h3>
+    <p class="text-gray-500 mt-2">Enter your content details below to create and publish this page.</p>
+  </div>
+
+  <div class="max-w-4xl mx-auto space-y-8">
+
+    <!-- FRIENDLY ERROR BANNER (NO RAW BROWSER ALERTS) -->
+    <div *ngIf="errorMessage" class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 flex items-start justify-between shadow-sm animate-fade-in">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div>
+          <h4 class="text-sm font-bold text-rose-900">Notice</h4>
+          <p class="text-xs text-rose-700 mt-0.5 font-medium leading-relaxed">{{ errorMessage }}</p>
+        </div>
+      </div>
+      <button (click)="dismissError()" class="text-rose-400 hover:text-rose-600 p-1 text-sm">✕</button>
+    </div>
+
+    <!-- Basic Info -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700">Page Title (H1)</label>
+        <input type="text" [(ngModel)]="formData.title" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium" placeholder="e.g. Services">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Status</label>
-        <select [(ngModel)]="formData.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+        <label class="block text-sm font-semibold text-gray-700">Status</label>
+        <select [(ngModel)]="formData.status" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium">
           <option value="Draft">Draft</option>
           <option value="Published">Published</option>
         </select>
       </div>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">Page Body</label>
-      <div *ngIf="isBrowser" class="border rounded-md border-gray-300 overflow-hidden">
-        <quill-editor 
-          [(ngModel)]="formData.bodyHtml"
-          [modules]="editorModules"
-          [styles]="{height: '400px'}"
-          placeholder="Start writing page content...">
-        </quill-editor>
+    <!-- CLEAN CONTENT INPUT FIELDS -->
+    <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 space-y-4">
+      <h4 class="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
+        <span>✍️</span> Page Content Details
+      </h4>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Company / Brand Name</label>
+          <input type="text" [(ngModel)]="clientData.companyName" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Ayaan Corp">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Tagline / Headline</label>
+          <input type="text" [(ngModel)]="clientData.tagline" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Building Next-Gen Platform Solutions">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">Page Subtitle / Description</label>
+        <textarea [(ngModel)]="clientData.description" (input)="updateGeneratedHtml()" rows="3" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Describe your page content or offerings..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="getSelectedMenuType() === 'contact'">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Email</label>
+          <input type="email" [(ngModel)]="clientData.email" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. hello@ayaan.com">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Phone</label>
+          <input type="text" [(ngModel)]="clientData.phone" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. +1 (555) 123-4567">
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div *ngIf="!selectedOrgId || !selectedMenuId" class="text-center p-12 bg-gray-50 rounded border-2 border-dashed border-gray-300">
-  <p class="text-gray-500">Please select an Organization and a Page above to start editing.</p>
+    <div class="pt-6 border-t border-gray-100 flex justify-end">
+      <button (click)="createAndOpenBuilder()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-8 py-4 border border-transparent rounded-xl shadow-md text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
+        {{ isCreating ? 'Saving...' : 'Save & Open Editor' }}
+      </button>
+    </div>
+  </div>
 </div>

@@ -94,8 +94,8 @@ namespace Dynamic_CMS.API.Controllers
             try
             {
                 var created = await _service.CreateAsync(dto, GetCurrentUserName(), cancellationToken);
-                var response = ApiResponse.CreatedResponse("Created successfully.");
-                return StatusCode(response.StatusCode, response);
+                var response = ApiResponse<PageContentDto>.SuccessResponse(created, "Created successfully.");
+                return StatusCode(201, response);
             }
             catch (InvalidOperationException ex)
             {

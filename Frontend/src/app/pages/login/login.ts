@@ -33,7 +33,7 @@ export class Login {
           this.authService.setToken(res.token);
         }
         // Redirect to admin dashboard on successful login
-        this.router.navigate(['/admin']); 
+        this.router.navigate(['/admin'], { replaceUrl: true }); 
         this.isLoading = false;
       },
       error: (err) => {

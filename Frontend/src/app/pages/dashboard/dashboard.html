@@ -1,16 +1,68 @@
-<div class="min-h-screen bg-gray-50 p-8">
-  <div class="max-w-7xl mx-auto">
-    <div class="bg-white rounded-lg shadow p-6 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-      <button (click)="logout()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+<div class="min-h-screen bg-gray-50 p-8 font-sans">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage your dynamic CMS platform</p>
+      </div>
+      <button (click)="logout()" class="px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors">
         Logout
       </button>
     </div>
     
-    <div class="mt-8 bg-white rounded-lg shadow p-6">
-      <p class="text-gray-600 text-lg">
-        Welcome! You have successfully logged in. Your token is now stored in localStorage.
-      </p>
+    <!-- Quick Site Setup -->
+    <div class="bg-white rounded-2xl shadow-xl shadow-blue-900/5 border border-blue-50 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-3">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          Quick Site Initialization
+        </h2>
+        <p class="text-blue-100 text-sm mt-2">Instantly generate a full 4-page website using our premium templates.</p>
+      </div>
+
+      <div class="p-8">
+        <form [formGroup]="siteForm" (ngSubmit)="initializeSite()" *ngIf="!createdOrgSlug">
+          
+          <div class="space-y-6 mb-8">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Site Name</label>
+              <input type="text" formControlName="siteName" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="e.g. Acme Corp">
+              <p *ngIf="siteForm.get('siteName')?.invalid && siteForm.get('siteName')?.touched" class="text-red-500 text-xs mt-2">Site Name is required.</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Site Slug</label>
+              <input type="text" formControlName="siteSlug" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="e.g. acme-corp">
+              <p class="text-gray-400 text-xs mt-2">Used in URL: /site/acme-corp (Lowercase letters, numbers, and hyphens only)</p>
+              <p *ngIf="siteForm.get('siteSlug')?.invalid && siteForm.get('siteSlug')?.touched" class="text-red-500 text-xs mt-2">Valid Site Slug is required.</p>
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm">
+            {{ errorMessage }}
+          </div>
+
+          <button type="submit" [disabled]="siteForm.invalid || isInitializing" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+            <svg *ngIf="isInitializing" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            {{ isInitializing ? 'Initializing Site Components...' : 'Initialize Site' }}
+          </button>
+        </form>
+
+        <div *ngIf="createdOrgSlug" class="text-center py-8 animate-fade-in-up">
+          <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-3">Site Successfully Initialized!</h3>
+          <p class="text-gray-600 mb-8 max-w-md mx-auto">Your site <strong>{{ siteForm.get('siteName')?.value }}</strong> has been created with the Home, About, Services, and Contact templates fully configured.</p>
+          
+          <button (click)="viewSite()" class="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-500/30 transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto">
+            View Live Site
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </button>
+        </div>
+      </div>
     </div>
+    
   </div>
 </div>

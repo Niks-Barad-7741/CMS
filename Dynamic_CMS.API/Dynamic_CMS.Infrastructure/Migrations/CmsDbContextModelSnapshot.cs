@@ -83,6 +83,12 @@ namespace Dynamic_CMS.Infrastructure.Migrations
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Page")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -149,6 +155,9 @@ namespace Dynamic_CMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ContentJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
@@ -175,6 +184,9 @@ namespace Dynamic_CMS.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TemplateId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()

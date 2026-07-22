@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center mb-6">
   <h2 class="text-2xl font-bold text-gray-800">Organizations</h2>
-  <button (click)="openCreateForm()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+  <button (click)="openCreateForm()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">
     + New Organization
   </button>
 </div>
@@ -29,8 +29,9 @@
         </td>
         <td class="px-6 py-4 text-gray-500 text-sm">{{ org.createdAt | date }}</td>
         <td class="px-6 py-4 text-right text-sm font-medium">
-          <a [href]="'http://' + org.slug + '.localhost:4200'" target="_blank" class="text-indigo-600 hover:text-indigo-900 mr-4 font-bold">
-            🌍 View Site
+          <a [href]="'/site/' + org.slug + '/home'" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-900 mr-4 font-bold inline-flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+            View Site
           </a>
           <button (click)="openEditForm(org)" class="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
           <button (click)="deactivate(org.id)" class="text-red-600 hover:text-red-900" *ngIf="org.isActive">Deactivate</button>
@@ -84,9 +85,25 @@
       <label for="isActive" class="ml-2 block text-sm text-gray-900">Active</label>
     </div>
 
+    <!-- Template Initialization Checkbox (Only for New Orgs) -->
+    <div class="bg-indigo-50 rounded-lg p-4 mt-4 border border-indigo-100" *ngIf="!editingId">
+      <div class="flex items-start">
+        <div class="flex items-center h-5">
+          <input id="initializeTemplates" name="initializeTemplates" type="checkbox" [(ngModel)]="formData.initializeTemplates" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+        </div>
+        <div class="ml-3 text-sm">
+          <label for="initializeTemplates" class="font-medium text-indigo-900">Initialize Default Site Templates</label>
+          <p class="text-indigo-700 mt-1">Automatically create the Home, About, Services, and Contact pages with beautiful premium layouts.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="flex justify-end space-x-3 pt-4">
-      <button type="button" (click)="closeForm()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200">Cancel</button>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">Save</button>
+      <button type="button" (click)="closeForm()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200" [disabled]="isSaving">Cancel</button>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2" [disabled]="isSaving">
+        <svg *ngIf="isSaving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        {{ isSaving ? 'Saving...' : 'Save' }}
+      </button>
     </div>
   </form>
 </div>

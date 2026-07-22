@@ -12,6 +12,11 @@ export const ADMIN_ROUTES: Routes = [
         path: 'dashboard',
         loadComponent: () => import('../../pages/dashboard/dashboard').then(m => m.DashboardComponent)
       },
+      {
+        path: 'client-dashboard',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent)
+      },
       // Admin only routes
       {
         path: 'organizations',
@@ -28,10 +33,29 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [adminGuard],
         loadComponent: () => import('./menus/menus').then(m => m.MenusComponent)
       },
-      // Client/Admin routes
       {
         path: 'pages',
         loadComponent: () => import('./pages/pages').then(m => m.PagesComponent)
+      },
+      {
+        path: 'pages/builder/:id',
+        loadComponent: () => import('./pages/builder/builder.component').then(m => m.BuilderComponent)
+      },
+      {
+        path: 'page-editor/:orgId/:pageId',
+        loadComponent: () => import('./page-editor/page-editor.component').then(m => m.PageEditorComponent)
+      },
+      {
+        path: 'static-builder/:orgId/:pageId',
+        loadComponent: () => import('./static-builder/static-builder.component').then(m => m.StaticBuilderComponent)
+      },
+      {
+        path: 'figma-builder/:orgId/:pageId',
+        loadComponent: () => import('./figma-builder/figma-builder.component').then(m => m.FigmaBuilderComponent)
+      },
+      {
+        path: 'site-builder/:orgId/:pageId',
+        loadComponent: () => import('./site-builder/components/site-builder-shell/site-builder-shell.component').then(m => m.SiteBuilderShellComponent)
       },
       {
         path: 'media',

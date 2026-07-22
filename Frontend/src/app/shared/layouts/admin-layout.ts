@@ -21,6 +21,9 @@ import { AuthService } from '../../core/services/auth.service';
           </a>
           
           <ng-container *ngIf="isAdmin">
+            <a routerLink="/admin/client-dashboard" routerLinkActive="bg-gray-800" class="block px-4 py-2 rounded hover:bg-gray-800 transition-colors text-indigo-300 font-semibold border-l-2 border-indigo-400 bg-indigo-900/20">
+              👥 Client Dashboard
+            </a>
             <a routerLink="/admin/organizations" routerLinkActive="bg-gray-800" class="block px-4 py-2 rounded hover:bg-gray-800 transition-colors">
               Organizations
             </a>
@@ -47,7 +50,6 @@ import { AuthService } from '../../core/services/auth.service';
       <main class="flex-1 flex flex-col overflow-hidden">
         <header class="h-16 bg-white shadow-sm flex flex-col justify-center px-6">
           <span class="text-sm text-gray-500">Logged in as: <strong class="text-gray-900">{{ role }}</strong></span>
-          <span class="text-xs text-red-500">Debug isAdmin: {{ isAdmin }}</span>
         </header>
         <div class="flex-1 overflow-auto p-6">
           <router-outlet></router-outlet>
