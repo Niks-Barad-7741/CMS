@@ -39,13 +39,8 @@ const adminRoutes: Routes = [
     loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.DashboardComponent),
     canActivate: [clientGuard]
   },
-  {
-    path: 'home',
-    loadComponent: () => import('./pages/home/home').then(m => m.HomeComponent),
-    canActivate: [clientGuard]
-  },
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: '**', redirectTo: 'home' }
+  { path: '', redirectTo: 'admin', pathMatch: 'full' },
+  { path: '**', redirectTo: 'admin' }
 ];
 
 export const routes: Routes = [

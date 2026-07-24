@@ -12,5 +12,13 @@ namespace Dynamic_CMS.Application.DTOs
         public string? CreatedBy { get; set; }
         public DateTime? ModifiedDate { get; set; }
         public string? ModifiedBy { get; set; }
+
+        public string? FooterDescription { get; set; }
+        public string? ContactEmail { get; set; }
+        public string? ContactPhone { get; set; }
+        public string? Address { get; set; }
+        public string? SocialTwitter { get; set; }
+        public string? SocialLinkedin { get; set; }
+        public string? SocialGithub { get; set; }
     }
 }

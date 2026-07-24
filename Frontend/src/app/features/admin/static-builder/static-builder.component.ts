@@ -119,6 +119,26 @@ export class StaticBuilderComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.pageId = params.get('pageId');
       this.orgId = params.get('orgId');
+      if (this.pageId) {
+        this.loadPageData(this.pageId);
+      }
+    });
+  }
+
+  loadPageData(pageId: string) {
+    this.pageService.getPageById(pageId).subscribe({
+      next: (res) => {
+        const data = res?.data || res;
+        if (data && data.contentJson) {
+          try {
+            const parsed = JSON.parse(data.contentJson);
+            this.form = { ...this.form, ...parsed };
+            this.cdr.detectChanges();
+          } catch (e) {
+            console.error('Error parsing static builder contentJson:', e);
+          }
+        }
+      }
     });
   }
 
@@ -386,7 +406,8 @@ export class StaticBuilderComponent implements OnInit {
     const payload = {
       title: this.form.heroTitle || 'Static Template Page',
       bodyHtml: generatedHtml,
-      status: status
+      status: status,
+      contentJson: JSON.stringify(this.form)
     };
 
     this.pageService.updatePage(this.pageId, payload).subscribe({

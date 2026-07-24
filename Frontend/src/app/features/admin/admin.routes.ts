@@ -42,10 +42,6 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./pages/builder/builder.component').then(m => m.BuilderComponent)
       },
       {
-        path: 'page-editor/:orgId/:pageId',
-        loadComponent: () => import('./page-editor/page-editor.component').then(m => m.PageEditorComponent)
-      },
-      {
         path: 'static-builder/:orgId/:pageId',
         loadComponent: () => import('./static-builder/static-builder.component').then(m => m.StaticBuilderComponent)
       },
@@ -56,10 +52,6 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'site-builder/:orgId/:pageId',
         loadComponent: () => import('./site-builder/components/site-builder-shell/site-builder-shell.component').then(m => m.SiteBuilderShellComponent)
-      },
-      {
-        path: 'media',
-        loadComponent: () => import('./media/media').then(m => m.MediaComponent)
       },
       {
         path: '',

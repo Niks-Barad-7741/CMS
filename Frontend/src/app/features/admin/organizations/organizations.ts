@@ -23,7 +23,7 @@ export class OrganizationsComponent implements OnInit {
   
   showForm = false;
   editingId: string | null = null;
-  formData: any = { name: '', slug: '', isActive: true, initializeTemplates: true };
+  formData: any = { name: '', slug: '', isActive: true, initializeTemplates: false };
   errorMessage: string | null = null;
   isSaving = false;
 
@@ -57,7 +57,19 @@ export class OrganizationsComponent implements OnInit {
 
   openCreateForm() {
     this.editingId = null;
-    this.formData = { name: '', slug: '', isActive: true, initializeTemplates: true };
+    this.formData = {
+      name: '',
+      slug: '',
+      isActive: true,
+      initializeTemplates: false,
+      footerDescription: '',
+      contactEmail: '',
+      contactPhone: '',
+      address: '',
+      socialTwitter: '',
+      socialLinkedin: '',
+      socialGithub: ''
+    };
     this.errorMessage = null;
     this.showForm = true;
   }
@@ -65,7 +77,6 @@ export class OrganizationsComponent implements OnInit {
   openEditForm(org: Organization) {
     this.editingId = org.id;
     this.formData = { ...org };
-    // We don't show initialize templates for editing
     this.errorMessage = null;
     this.showForm = true;
   }
@@ -87,12 +98,21 @@ export class OrganizationsComponent implements OnInit {
     this.errorMessage = null;
     this.isSaving = true;
 
+    const payload = {
+      name: this.formData.name,
+      slug: this.formData.slug,
+      isActive: this.formData.isActive,
+      footerDescription: this.formData.footerDescription,
+      contactEmail: this.formData.contactEmail,
+      contactPhone: this.formData.contactPhone,
+      address: this.formData.address,
+      socialTwitter: this.formData.socialTwitter,
+      socialLinkedin: this.formData.socialLinkedin,
+      socialGithub: this.formData.socialGithub
+    };
+
     if (this.editingId) {
-      this.orgService.updateOrganization(this.editingId, {
-        name: this.formData.name,
-        slug: this.formData.slug,
-        isActive: this.formData.isActive
-      }).subscribe({
+      this.orgService.updateOrganization(this.editingId, payload).subscribe({
         next: () => {
           this.loadOrganizations();
           this.closeForm();
@@ -105,11 +125,7 @@ export class OrganizationsComponent implements OnInit {
         }
       });
     } else {
-      this.orgService.createOrganization({
-        name: this.formData.name,
-        slug: this.formData.slug,
-        isActive: this.formData.isActive
-      }).subscribe({
+      this.orgService.createOrganization(payload).subscribe({
         next: (org) => {
           if (this.formData.initializeTemplates) {
             this.setupSiteContent(org);
@@ -187,9 +203,9 @@ export class OrganizationsComponent implements OnInit {
     return err.error?.message || err.message || 'An unknown error occurred.';
   }
 
-  deactivate(id: string) {
-    if (confirm('Are you sure you want to deactivate this organization?')) {
-      this.orgService.deactivateOrganization(id).subscribe({
+  deleteOrg(id: string) {
+    if (confirm('Are you sure you want to delete this organization?')) {
+      this.orgService.deleteOrganization(id).subscribe({
         next: () => this.loadOrganizations()
       });
     }

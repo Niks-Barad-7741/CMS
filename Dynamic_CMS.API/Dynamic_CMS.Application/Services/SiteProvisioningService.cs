@@ -47,34 +47,8 @@ namespace Dynamic_CMS.Application.Services
         public async Task EnsureDefaultPagesForOrganizationAsync(Guid organizationId, string orgSlug, string orgName)
         {
             await EnsureDefaultMenusAsync();
-
-            var allMenus = await _menuItemRepository.GetAllAsync();
-            var menuByPage = allMenus.ToDictionary(m => m.Page, StringComparer.OrdinalIgnoreCase);
-
-            foreach (var page in DefaultSitePages.Pages)
-            {
-                if (!menuByPage.TryGetValue(page.Page, out var menuItem)) continue;
-
-                var existing = await _pageContentRepository.GetByOrgAndMenuItemAsync(
-                    organizationId, menuItem.Id, CancellationToken.None);
-
-                if (existing != null) continue;
-
-                var bodyHtml = DefaultSitePages.PersonalizeHtml(page.BodyHtml, orgSlug, orgName);
-
-                await _pageContentRepository.AddAsync(new PageContent
-                {
-                    Id = Guid.NewGuid(),
-                    OrganizationId = organizationId,
-                    MenuItemId = menuItem.Id,
-                    Title = page.Title,
-                    BodyHtml = bodyHtml,
-                    Status = "Published",
-                    UpdatedAt = DateTime.UtcNow,
-                    CreatedBy = "System",
-                    CreateDate = DateTime.UtcNow
-                }, CancellationToken.None);
-            }
+            // No default pages inserted into PageContents table automatically.
+            // PageContent table remains empty until explicitly saved by admin/user.
         }
 
         public async Task<SiteProfileDto?> GetSiteProfileAsync(string orgSlug)
@@ -90,7 +64,14 @@ namespace Dynamic_CMS.Application.Services
                 Id = organization.Id,
                 Name = organization.Name,
                 Slug = organization.Slug,
-                IsActive = organization.IsActive
+                IsActive = organization.IsActive,
+                FooterDescription = organization.FooterDescription,
+                ContactEmail = organization.ContactEmail,
+                ContactPhone = organization.ContactPhone,
+                Address = organization.Address,
+                SocialTwitter = organization.SocialTwitter,
+                SocialLinkedin = organization.SocialLinkedin,
+                SocialGithub = organization.SocialGithub
             };
         }
 
@@ -102,9 +83,15 @@ namespace Dynamic_CMS.Application.Services
 
             await EnsureDefaultMenusAsync();
 
-            var menus = await _menuItemRepository.GetAllAsync();
-            return menus
-                .Where(m => m.IsVisible)
+            var orgPageContents = await _pageContentRepository.GetAllByOrganizationIdAsync(organization.Id, CancellationToken.None);
+            var savedMenuItemIds = orgPageContents
+                .Where(p => !p.IsDeleted)
+                .Select(p => p.MenuItemId)
+                .ToHashSet();
+
+            var allMenus = await _menuItemRepository.GetAllAsync();
+            return allMenus
+                .Where(m => m.IsVisible && savedMenuItemIds.Contains(m.Id))
                 .OrderBy(m => m.SortOrder)
                 .Select(m => new MenuItemDto
                 {
@@ -129,25 +116,30 @@ namespace Dynamic_CMS.Application.Services
             var content = await _pageContentRepository.GetByOrgSlugAndMenuPageAsync(
                 orgSlug, normalizedSlug, cancellationToken);
 
+            if (content == null)
+            {
+                var alias = normalizedSlug switch
+                {
+                    "about" => "about-us",
+                    "about-us" => "about",
+                    "contact" => "contact-us",
+                    "contact-us" => "contact",
+                    _ => null
+                };
+                if (alias != null)
+                {
+                    content = await _pageContentRepository.GetByOrgSlugAndMenuPageAsync(
+                        orgSlug, alias, cancellationToken);
+                }
+            }
+
             if (content != null && content.Status == "Published")
             {
                 return MapToDto(content);
             }
 
-            var defaultHtml = DefaultSitePages.GetBodyHtml(normalizedSlug);
-            var defaultTitle = DefaultSitePages.GetTitle(normalizedSlug);
-            if (defaultHtml == null || defaultTitle == null) return null;
-
-            return new PageContentDto
-            {
-                Id = Guid.Empty,
-                OrganizationId = organization.Id,
-                MenuItemId = Guid.Empty,
-                Title = defaultTitle,
-                BodyHtml = DefaultSitePages.PersonalizeHtml(defaultHtml, orgSlug, organization.Name),
-                Status = "Published",
-                UpdatedAt = DateTime.UtcNow
-            };
+            // No saved page content in database -> return null (do not return demo website HTML)
+            return null;
         }
 
         private static PageContentDto MapToDto(PageContent content) => new()
@@ -156,7 +148,6 @@ namespace Dynamic_CMS.Application.Services
             OrganizationId = content.OrganizationId,
             MenuItemId = content.MenuItemId,
             Title = content.Title,
-            BodyHtml = content.BodyHtml,
             Status = content.Status,
             TemplateId = content.TemplateId,
             ContentJson = content.ContentJson,

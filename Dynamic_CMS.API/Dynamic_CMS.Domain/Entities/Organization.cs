@@ -14,6 +14,15 @@ namespace Dynamic_CMS.Domain.Entities
         public DateTime? ModifiedDate { get; set; }
         public string? ModifiedBy { get; set; }
 
+        // Footer & Contact Customization Fields
+        public string? FooterDescription { get; set; }
+        public string? ContactEmail { get; set; }
+        public string? ContactPhone { get; set; }
+        public string? Address { get; set; }
+        public string? SocialTwitter { get; set; }
+        public string? SocialLinkedin { get; set; }
+        public string? SocialGithub { get; set; }
+
         // Navigation properties
         public ICollection<User> Users { get; set; } = new List<User>();
         public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();

@@ -3,6 +3,36 @@
   <p class="text-gray-500 text-sm">Select an organization and a menu item to manage its visual page content.</p>
 </div>
 
+<!-- TOP UPSIDE SUCCESS BANNER -->
+<div *ngIf="successMessage" class="mb-6 bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 flex items-center justify-between shadow-lg transition-all transform animate-fade-in">
+  <div class="flex items-center gap-3">
+    <span class="text-2xl">✅</span>
+    <div>
+      <h4 class="text-sm font-bold text-emerald-900">Saved Successfully!</h4>
+      <p class="text-xs text-emerald-700 mt-0.5 font-medium">{{ successMessage }}</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <a [href]="getViewSiteUrl()" target="_blank" rel="noopener" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+      View Live Site
+    </a>
+    <button (click)="dismissSuccess()" class="text-emerald-500 hover:text-emerald-700 p-1 text-base font-bold">✕</button>
+  </div>
+</div>
+
+<!-- TOP UPSIDE ERROR BANNER -->
+<div *ngIf="errorMessage" class="mb-6 bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 flex items-start justify-between shadow-lg transition-all animate-fade-in">
+  <div class="flex items-start gap-3">
+    <span class="text-2xl">⚠️</span>
+    <div>
+      <h4 class="text-sm font-bold text-rose-900">Notice</h4>
+      <p class="text-xs text-rose-700 mt-0.5 font-medium leading-relaxed">{{ errorMessage }}</p>
+    </div>
+  </div>
+  <button (click)="dismissError()" class="text-rose-400 hover:text-rose-600 p-1 text-base font-bold">✕</button>
+</div>
+
 <!-- Selectors -->
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -33,78 +63,24 @@
   <p class="text-gray-500 mt-2">Please select an Organization and a Page above to start editing.</p>
 </div>
 
-<!-- If Page Exists -->
-<div *ngIf="selectedOrgId && selectedMenuId && pageContent" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-  <div class="text-center mb-8">
-    <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+
+<!-- Edit / Create Form Block -->
+<div *ngIf="selectedOrgId && selectedMenuId" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+  <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+    <div>
+      <h3 class="text-xl font-bold text-gray-900">Page Content Details</h3>
+      <p class="text-gray-500 text-sm mt-0.5">Customize your page text & settings, then save to publish to your website.</p>
     </div>
-    <h3 class="text-2xl font-bold text-gray-900 mb-2">Page Content Ready!</h3>
-    <p class="text-gray-500 max-w-md mx-auto">This page is currently <b>{{ pageContent.status }}</b>. Choose how you'd like to edit it:</p>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
-    <button (click)="openExistingBuilder()"
-      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200">
-      <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-      </div>
-      <h4 class="font-bold text-gray-900 mb-1">Visual HTML Editor</h4>
-      <p class="text-xs text-gray-500 leading-relaxed">Full drag-and-drop editor with HTML and rich text tools</p>
-    </button>
-
-    <button (click)="openTemplateBuilder()"
-      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200">
-      <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-      </div>
-      <h4 class="font-bold text-gray-900 mb-1">Dynamic Template Builder</h4>
-      <p class="text-xs text-gray-500 leading-relaxed">Choose from Restaurant, Portfolio, Blog & Business templates</p>
-    </button>
-
-    <button (click)="openStaticBuilder()"
-      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-gray-100 hover:border-violet-300 hover:bg-violet-50 transition-all duration-200">
-      <div class="w-14 h-14 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      </div>
-      <h4 class="font-bold text-gray-900 mb-1">Static Template Form</h4>
-      <p class="text-xs text-gray-500 leading-relaxed">Fill a simple form for a polished Corporate layout</p>
-    </button>
-
-    <button (click)="openPageEditor()"
-      class="group flex flex-col items-center text-center p-6 rounded-2xl border-2 border-amber-100 hover:border-amber-400 hover:bg-amber-50 transition-all duration-200 relative">
-      <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-2xl">
-        🏷️
-      </div>
-      <h4 class="font-bold text-gray-900 mb-1">Page Content Editor</h4>
-      <p class="text-xs text-gray-500 leading-relaxed">Enter content per page type: Home, About, Services, Contact</p>
-    </button>
-  </div>
-</div>
-
-<!-- If Page Does NOT Exist (Create Flow) -->
-<div *ngIf="selectedOrgId && selectedMenuId && !pageContent" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-  <div class="text-center mb-8">
-    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-    </div>
-    <h3 class="text-2xl font-bold text-gray-900">Create New Page</h3>
-    <p class="text-gray-500 mt-2">Enter your content details below to create and publish this page.</p>
+    <a [href]="getViewSiteUrl()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-sm font-bold transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+      View Site
+    </a>
   </div>
 
   <div class="max-w-4xl mx-auto space-y-8">
 
-    <!-- FRIENDLY ERROR BANNER (NO RAW BROWSER ALERTS) -->
-    <div *ngIf="errorMessage" class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 flex items-start justify-between shadow-sm animate-fade-in">
-      <div class="flex items-start gap-3">
-        <span class="text-2xl">⚠️</span>
-        <div>
-          <h4 class="text-sm font-bold text-rose-900">Notice</h4>
-          <p class="text-xs text-rose-700 mt-0.5 font-medium leading-relaxed">{{ errorMessage }}</p>
-        </div>
-      </div>
-      <button (click)="dismissError()" class="text-rose-400 hover:text-rose-600 p-1 text-sm">✕</button>
-    </div>
+
 
     <!-- Basic Info -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -121,44 +97,190 @@
       </div>
     </div>
 
-    <!-- CLEAN CONTENT INPUT FIELDS -->
-    <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 space-y-4">
-      <h4 class="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
-        <span>✍️</span> Page Content Details
-      </h4>
+    <!-- DYNAMIC CONTENT INPUT FIELDS BASED ON SELECTED MENU -->
+    <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 space-y-6">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between border-b border-indigo-100 pb-3">
+        <h4 class="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
+          <span>✍️</span> Customize {{ getSelectedMenuType() | titlecase }} Content
+        </h4>
+        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg uppercase tracking-wide">
+          {{ getSelectedMenuType() }} Template
+        </span>
+      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Company / Brand Name</label>
-          <input type="text" [(ngModel)]="clientData.companyName" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Ayaan Corp">
+      <!-- COMMON FIELD: BRAND NAME -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 mb-1">Company / Brand Name</label>
+        <input type="text" [(ngModel)]="clientData.companyName" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Ayaan Corp">
+      </div>
+
+      <!-- ================= HOME FIELDS ================= -->
+      <div *ngIf="getSelectedMenuType() === 'home'" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Hero Main Title / Headline</label>
+            <input type="text" [(ngModel)]="clientData.homeHeroTitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Build Your Digital Empire">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Primary CTA Button Text</label>
+            <input type="text" [(ngModel)]="clientData.homeCtaText" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Get Started Now">
+          </div>
         </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Hero Tagline / Subtitle</label>
+          <textarea [(ngModel)]="clientData.homeHeroSubtitle" (input)="updateGeneratedHtml()" rows="2" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Hero subtext..."></textarea>
+        </div>
+
+        <div class="pt-2 border-t border-indigo-100/60">
+          <h5 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wider">Features Section</h5>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+              <label class="block text-xs font-bold text-indigo-700">Feature 1</label>
+              <input type="text" [(ngModel)]="clientData.homeFeature1Title" (input)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Title">
+              <textarea [(ngModel)]="clientData.homeFeature1Desc" (input)="updateGeneratedHtml()" rows="2" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Description"></textarea>
+            </div>
+            <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+              <label class="block text-xs font-bold text-indigo-700">Feature 2</label>
+              <input type="text" [(ngModel)]="clientData.homeFeature2Title" (input)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Title">
+              <textarea [(ngModel)]="clientData.homeFeature2Desc" (input)="updateGeneratedHtml()" rows="2" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Description"></textarea>
+            </div>
+            <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+              <label class="block text-xs font-bold text-indigo-700">Feature 3</label>
+              <input type="text" [(ngModel)]="clientData.homeFeature3Title" (input)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Title">
+              <textarea [(ngModel)]="clientData.homeFeature3Desc" (input)="updateGeneratedHtml()" rows="2" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Description"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ABOUT FIELDS ================= -->
+      <div *ngIf="getSelectedMenuType() === 'about'" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Page Main Heading</label>
+            <input type="text" [(ngModel)]="clientData.aboutTitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. About Ayaan Corp">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Featured Image URL</label>
+            <input type="text" [(ngModel)]="clientData.aboutImage" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://...">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Mission / Header Tagline</label>
+          <input type="text" [(ngModel)]="clientData.aboutSubtitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. We are on a mission...">
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Story Paragraph 1</label>
+            <textarea [(ngModel)]="clientData.aboutStory1" (input)="updateGeneratedHtml()" rows="3" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Story Paragraph 2</label>
+            <textarea [(ngModel)]="clientData.aboutStory2" (input)="updateGeneratedHtml()" rows="3" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-indigo-100/60">
+          <h5 class="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Key Highlights / Bullets</h5>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input type="text" [(ngModel)]="clientData.aboutPoint1" (input)="updateGeneratedHtml()" class="p-2.5 text-xs rounded-xl border border-gray-200 bg-white" placeholder="Bullet 1">
+            <input type="text" [(ngModel)]="clientData.aboutPoint2" (input)="updateGeneratedHtml()" class="p-2.5 text-xs rounded-xl border border-gray-200 bg-white" placeholder="Bullet 2">
+            <input type="text" [(ngModel)]="clientData.aboutPoint3" (input)="updateGeneratedHtml()" class="p-2.5 text-xs rounded-xl border border-gray-200 bg-white" placeholder="Bullet 3">
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SERVICES FIELDS ================= -->
+      <div *ngIf="getSelectedMenuType() === 'services'" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Services Page Heading</label>
+            <input type="text" [(ngModel)]="clientData.servicesTitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Our Services">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Services Subtitle</label>
+            <input type="text" [(ngModel)]="clientData.servicesSubtitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Subtitle...">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-indigo-100/60">
+          <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+            <label class="block text-xs font-bold text-teal-700">Service 1</label>
+            <input type="text" [(ngModel)]="clientData.service1Title" (input)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Title">
+            <textarea [(ngModel)]="clientData.service1Desc" (input)="updateGeneratedHtml()" rows="3" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Description"></textarea>
+          </div>
+          <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+            <label class="block text-xs font-bold text-blue-700">Service 2</label>
+            <input type="text" [(ngModel)]="clientData.service2Title" (input)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Title">
+            <textarea [(ngModel)]="clientData.service2Desc" (input)="updateGeneratedHtml()" rows="3" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Description"></textarea>
+          </div>
+          <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+            <label class="block text-xs font-bold text-purple-700">Service 3</label>
+            <input type="text" [(ngModel)]="clientData.service3Title" (input)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Title">
+            <textarea [(ngModel)]="clientData.service3Desc" (input)="updateGeneratedHtml()" rows="3" class="w-full p-2 text-xs rounded-lg border border-gray-200" placeholder="Description"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CONTACT FIELDS ================= -->
+      <div *ngIf="getSelectedMenuType() === 'contact'" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Page Title</label>
+            <input type="text" [(ngModel)]="clientData.contactTitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Get in Touch">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Page Subtitle</label>
+            <input type="text" [(ngModel)]="clientData.contactSubtitle" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Subtext...">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Email</label>
+            <input type="email" [(ngModel)]="clientData.email" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="hello@ayaan.com">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Phone</label>
+            <input type="text" [(ngModel)]="clientData.phone" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="+1 (555) 123-4567">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Office Address</label>
+            <input type="text" [(ngModel)]="clientData.address" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Address...">
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= GENERIC FIELDS ================= -->
+      <div *ngIf="getSelectedMenuType() === 'generic'" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-gray-700 mb-1">Tagline / Headline</label>
           <input type="text" [(ngModel)]="clientData.tagline" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Building Next-Gen Platform Solutions">
         </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Page Subtitle / Description</label>
-        <textarea [(ngModel)]="clientData.description" (input)="updateGeneratedHtml()" rows="3" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Describe your page content or offerings..."></textarea>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="getSelectedMenuType() === 'contact'">
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Email</label>
-          <input type="email" [(ngModel)]="clientData.email" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. hello@ayaan.com">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Phone</label>
-          <input type="text" [(ngModel)]="clientData.phone" (input)="updateGeneratedHtml()" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. +1 (555) 123-4567">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Page Subtitle / Description</label>
+          <textarea [(ngModel)]="clientData.description" (input)="updateGeneratedHtml()" rows="3" class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Describe your page content or offerings..."></textarea>
         </div>
       </div>
+
     </div>
 
-    <div class="pt-6 border-t border-gray-100 flex justify-end">
-      <button (click)="createAndOpenBuilder()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-8 py-4 border border-transparent rounded-xl shadow-md text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
-        {{ isCreating ? 'Saving...' : 'Save & Open Editor' }}
-      </button>
+    <div class="pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+      <a [href]="getViewSiteUrl()" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-3 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 transition-all">
+        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+        View Live Site
+      </a>
+
+      <div class="flex items-center gap-3">
+        <button (click)="createAndOpenBuilder()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-6 py-3 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 transition-all">
+          Open Visual Builder
+        </button>
+
+        <button (click)="saveAndPublishPage()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-8 py-3.5 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
+          <svg *ngIf="isCreating" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          {{ isCreating ? 'Saving...' : 'Save & Publish to Website' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

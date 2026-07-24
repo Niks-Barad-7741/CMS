@@ -1,68 +1,415 @@
-<div class="min-h-screen bg-gray-50 p-8 font-sans">
-  <div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p class="text-sm text-gray-500 mt-1">Manage your dynamic CMS platform</p>
+<div class="min-h-screen bg-[#F1F5F9] font-sans p-4 sm:p-6 lg:p-8">
+
+  <!-- Top Navigation & Header Bar -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <!-- Left: Title & Subtitle -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center font-bold text-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
       </div>
-      <button (click)="logout()" class="px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors">
-        Logout
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">Admin Dashboard</h1>
+        <p class="text-xs text-slate-500">Real-time CMS analytics and organization management</p>
+      </div>
+    </div>
+
+    <!-- Right: Search Bar & Actions -->
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="relative flex-1 md:w-64">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        <input type="text" placeholder="Type to search..." class="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+      </div>
+
+      <button (click)="showInitModal = true" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        + Initialize Site
+      </button>
+
+      <button (click)="logout()" class="p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl transition-colors" title="Logout">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
       </button>
     </div>
+  </div>
+
+  <!-- Row 1: 4 Metric Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
     
-    <!-- Quick Site Setup -->
-    <div class="bg-white rounded-2xl shadow-xl shadow-blue-900/5 border border-blue-50 overflow-hidden">
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
-        <h2 class="text-xl font-bold text-white flex items-center gap-3">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          Quick Site Initialization
-        </h2>
-        <p class="text-blue-100 text-sm mt-2">Instantly generate a full 4-page website using our premium templates.</p>
+    <!-- Metric 1: Total Views -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-11 h-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+        </div>
+        <span class="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          0.43% ↑
+        </span>
+      </div>
+      <h3 class="text-2xl font-bold text-slate-800">$3.456K</h3>
+      <p class="text-xs text-slate-400 mt-1 font-medium">Total Views</p>
+    </div>
+
+    <!-- Metric 2: Total Profit / Revenue -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-11 h-11 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+        </div>
+        <span class="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          4.35% ↑
+        </span>
+      </div>
+      <h3 class="text-2xl font-bold text-slate-800">$45.2K</h3>
+      <p class="text-xs text-slate-400 mt-1 font-medium">Total Profit</p>
+    </div>
+
+    <!-- Metric 3: Active Organizations -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-11 h-11 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h5m-5 0V11m0 0V5" /></svg>
+        </div>
+        <span class="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          2.59% ↑
+        </span>
+      </div>
+      <h3 class="text-2xl font-bold text-slate-800">{{ activeOrgs > 0 ? activeOrgs : '2,450' }}</h3>
+      <p class="text-xs text-slate-400 mt-1 font-medium">Active Organizations</p>
+    </div>
+
+    <!-- Metric 4: Total Users -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-11 h-11 rounded-full bg-violet-50 text-violet-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        </div>
+        <span class="inline-flex items-center text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+          0.95% ↓
+        </span>
+      </div>
+      <h3 class="text-2xl font-bold text-slate-800">3.456</h3>
+      <p class="text-xs text-slate-400 mt-1 font-medium">Total Users</p>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Charts & Analytics Grid (2 Columns) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    
+    <!-- Left Chart: Total Revenue Area Chart (Spans 2 Columns) -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+      <!-- Chart Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <div class="flex items-center gap-4 text-xs font-semibold">
+            <span class="flex items-center gap-1.5 text-blue-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Total Revenue
+            </span>
+            <span class="flex items-center gap-1.5 text-cyan-500">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Total Sales
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">12.04.2026 - 12.05.2026</p>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-medium text-slate-500">
+          <button (click)="setPeriod('Day')" [ngClass]="selectedPeriod === 'Day' ? 'bg-white text-slate-800 shadow-sm' : 'hover:text-slate-700'" class="px-3 py-1 rounded-lg transition-all">Day</button>
+          <button (click)="setPeriod('Week')" [ngClass]="selectedPeriod === 'Week' ? 'bg-white text-slate-800 shadow-sm' : 'hover:text-slate-700'" class="px-3 py-1 rounded-lg transition-all">Week</button>
+          <button (click)="setPeriod('Month')" [ngClass]="selectedPeriod === 'Month' ? 'bg-white text-slate-800 shadow-sm' : 'hover:text-slate-700'" class="px-3 py-1 rounded-lg transition-all">Month</button>
+        </div>
       </div>
 
-      <div class="p-8">
-        <form [formGroup]="siteForm" (ngSubmit)="initializeSite()" *ngIf="!createdOrgSlug">
-          
-          <div class="space-y-6 mb-8">
-            <div>
-              <label class="block text-sm font-bold text-gray-700 mb-2">Site Name</label>
-              <input type="text" formControlName="siteName" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="e.g. Acme Corp">
-              <p *ngIf="siteForm.get('siteName')?.invalid && siteForm.get('siteName')?.touched" class="text-red-500 text-xs mt-2">Site Name is required.</p>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-bold text-gray-700 mb-2">Site Slug</label>
-              <input type="text" formControlName="siteSlug" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="e.g. acme-corp">
-              <p class="text-gray-400 text-xs mt-2">Used in URL: /site/acme-corp (Lowercase letters, numbers, and hyphens only)</p>
-              <p *ngIf="siteForm.get('siteSlug')?.invalid && siteForm.get('siteSlug')?.touched" class="text-red-500 text-xs mt-2">Valid Site Slug is required.</p>
-            </div>
-          </div>
+      <!-- Area Chart SVG Graphic -->
+      <div class="relative h-64 w-full">
+        <svg class="w-full h-full overflow-visible" viewBox="0 0 500 180" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563EB" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0"/>
+            </linearGradient>
+            <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.0"/>
+            </linearGradient>
+          </defs>
 
-          <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm">
-            {{ errorMessage }}
-          </div>
+          <!-- Y Grid Lines -->
+          <line x1="0" y1="0" x2="500" y2="0" stroke="#E2E8F0" stroke-dasharray="3 3"/>
+          <line x1="0" y1="45" x2="500" y2="45" stroke="#E2E8F0" stroke-dasharray="3 3"/>
+          <line x1="0" y1="90" x2="500" y2="90" stroke="#E2E8F0" stroke-dasharray="3 3"/>
+          <line x1="0" y1="135" x2="500" y2="135" stroke="#E2E8F0" stroke-dasharray="3 3"/>
+          <line x1="0" y1="180" x2="500" y2="180" stroke="#E2E8F0"/>
 
-          <button type="submit" [disabled]="siteForm.invalid || isInitializing" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-            <svg *ngIf="isInitializing" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            {{ isInitializing ? 'Initializing Site Components...' : 'Initialize Site' }}
-          </button>
-        </form>
+          <!-- Area 1 (Cyan Sales) -->
+          <path d="M 0,130 Q 50,110 100,100 T 200,80 T 300,95 T 400,60 T 500,90 L 500,180 L 0,180 Z" fill="url(#cyanGradient)" />
+          <path d="M 0,130 Q 50,110 100,100 T 200,80 T 300,95 T 400,60 T 500,90" fill="none" stroke="#38BDF8" stroke-width="2.5" />
 
-        <div *ngIf="createdOrgSlug" class="text-center py-8 animate-fade-in-up">
-          <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-3">Site Successfully Initialized!</h3>
-          <p class="text-gray-600 mb-8 max-w-md mx-auto">Your site <strong>{{ siteForm.get('siteName')?.value }}</strong> has been created with the Home, About, Services, and Contact templates fully configured.</p>
-          
-          <button (click)="viewSite()" class="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-500/30 transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto">
-            View Live Site
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-          </button>
+          <!-- Area 2 (Blue Revenue) -->
+          <path d="M 0,150 Q 50,140 100,120 T 200,140 T 300,110 T 400,130 T 500,80 L 500,180 L 0,180 Z" fill="url(#blueGradient)" />
+          <path d="M 0,150 Q 50,140 100,120 T 200,140 T 300,110 T 400,130 T 500,80" fill="none" stroke="#2563EB" stroke-width="3" />
+
+          <!-- Data Points -->
+          <circle cx="200" cy="80" r="4" fill="#ffffff" stroke="#38BDF8" stroke-width="2"/>
+          <circle cx="300" cy="95" r="4" fill="#ffffff" stroke="#38BDF8" stroke-width="2"/>
+          <circle cx="400" cy="60" r="4" fill="#ffffff" stroke="#38BDF8" stroke-width="2"/>
+          <circle cx="500" cy="90" r="4" fill="#ffffff" stroke="#38BDF8" stroke-width="2"/>
+
+          <circle cx="200" cy="140" r="4" fill="#ffffff" stroke="#2563EB" stroke-width="2"/>
+          <circle cx="300" cy="110" r="4" fill="#ffffff" stroke="#2563EB" stroke-width="2"/>
+          <circle cx="400" cy="130" r="4" fill="#ffffff" stroke="#2563EB" stroke-width="2"/>
+          <circle cx="500" cy="80" r="4" fill="#ffffff" stroke="#2563EB" stroke-width="2"/>
+        </svg>
+
+        <!-- X Axis Labels -->
+        <div class="flex justify-between text-[11px] text-slate-400 mt-2 font-medium">
+          <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
         </div>
       </div>
     </div>
-    
+
+    <!-- Right Chart: Profit This Week Bar Chart -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-slate-800">Profit this week</h3>
+        <select class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none">
+          <option>This Week</option>
+          <option>Last Week</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs font-semibold mb-6">
+        <span class="flex items-center gap-1.5 text-blue-600">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Sales
+        </span>
+        <span class="flex items-center gap-1.5 text-cyan-500">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-300"></span> Revenue
+        </span>
+      </div>
+
+      <!-- Vertical Bars Container -->
+      <div class="flex items-end justify-between h-48 px-2">
+        
+        <!-- Mon -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[30%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[40%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">M</span>
+        </div>
+
+        <!-- Tue -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[25%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[55%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">T</span>
+        </div>
+
+        <!-- Wed -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[35%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[45%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">W</span>
+        </div>
+
+        <!-- Thu -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[15%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[65%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">T</span>
+        </div>
+
+        <!-- Fri -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[20%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[25%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">F</span>
+        </div>
+
+        <!-- Sat -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[30%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[40%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">S</span>
+        </div>
+
+        <!-- Sun -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-3.5 bg-slate-100 rounded-full h-36 flex flex-col justify-end overflow-hidden">
+            <div class="bg-cyan-300 w-full h-[15%] rounded-t-full"></div>
+            <div class="bg-blue-600 w-full h-[60%]"></div>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">S</span>
+        </div>
+
+      </div>
+    </div>
+
   </div>
+
+  <!-- Row 3: Bottom Grid (Organizations Data Table & Visitor Analytics) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Left: Organizations Overview Table (Spans 2 Columns) -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+      <div class="flex justify-between items-center mb-5">
+        <div>
+          <h3 class="text-base font-bold text-slate-800">Organizations Overview</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Manage registered multi-tenant client domains</p>
+        </div>
+        <a routerLink="/admin/organizations" class="text-xs font-semibold text-blue-600 hover:text-blue-700">View All →</a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th class="pb-3 px-2">Organization Name</th>
+              <th class="pb-3 px-2">Subdomain</th>
+              <th class="pb-3 px-2">Status</th>
+              <th class="pb-3 px-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-xs">
+            <tr *ngFor="let org of organizations" class="hover:bg-slate-50/80 transition-colors">
+              <td class="py-3 px-2 font-bold text-slate-800">{{ org.name }}</td>
+              <td class="py-3 px-2 font-mono text-blue-600">{{ org.slug }}.com</td>
+              <td class="py-3 px-2">
+                <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full"
+                      [ngClass]="org.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'">
+                  {{ org.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="py-3 px-2 text-right">
+                <a [href]="'/site/' + org.slug + '/home'" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold mr-3">View Site</a>
+                <a routerLink="/admin/organizations" class="text-slate-500 hover:text-slate-700">Edit</a>
+              </td>
+            </tr>
+            <tr *ngIf="organizations.length === 0">
+              <td colspan="4" class="py-8 text-center text-slate-400">No organizations found. Click "+ Initialize Site" to get started.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right: Visitors Analytics Breakdown -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-base font-bold text-slate-800">Visitors Analytics</h3>
+          <span class="text-xs font-medium text-slate-400">Monthly</span>
+        </div>
+
+        <div class="space-y-5">
+          <!-- Desktop -->
+          <div>
+            <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Desktop</span>
+              <span>65%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-blue-600 h-full w-[65%] rounded-full"></div>
+            </div>
+          </div>
+
+          <!-- Mobile -->
+          <div>
+            <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> Mobile</span>
+              <span>25%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-cyan-400 h-full w-[25%] rounded-full"></div>
+            </div>
+          </div>
+
+          <!-- Tablet -->
+          <div>
+            <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Tablet</span>
+              <span>10%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-indigo-500 h-full w-[10%] rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+        <span>Updated 5 mins ago</span>
+        <span class="text-emerald-600 font-semibold flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Sync
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Quick Site Initialization Modal -->
+  <div *ngIf="showInitModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-scale-in">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 flex justify-between items-center text-white">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          Quick Site Initialization
+        </h3>
+        <button (click)="showInitModal = false" class="text-blue-100 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="p-6">
+        <form [formGroup]="siteForm" (ngSubmit)="initializeSite()" *ngIf="!createdOrgSlug">
+          <div class="space-y-4 mb-6">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Site Name</label>
+              <input type="text" formControlName="siteName" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="e.g. Acme Corp">
+            </div>
+            
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Site Slug</label>
+              <input type="text" formControlName="siteSlug" class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="e.g. acme-corp">
+              <p class="text-slate-400 text-[11px] mt-1">Used in URL: /site/acme-corp</p>
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="mb-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs">
+            {{ errorMessage }}
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" (click)="showInitModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-200">Cancel</button>
+            <button type="submit" [disabled]="siteForm.invalid || isInitializing" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-500/20 disabled:opacity-70">
+              {{ isInitializing ? 'Initializing...' : 'Generate Site' }}
+            </button>
+          </div>
+        </form>
+
+        <div *ngIf="createdOrgSlug" class="text-center py-6">
+          <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800 mb-2">Site Initialized!</h4>
+          <p class="text-xs text-slate-500 mb-6">Your site <strong>{{ siteForm.get('siteName')?.value }}</strong> is now ready.</p>
+
+          <div class="flex justify-center gap-3">
+            <button (click)="showInitModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">Close</button>
+            <button (click)="viewSite()" class="px-5 py-2 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-500/20">View Live Site</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

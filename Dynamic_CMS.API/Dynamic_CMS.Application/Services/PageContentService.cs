@@ -90,7 +90,6 @@ namespace Dynamic_CMS.Application.Services
                 OrganizationId = orgId,
                 MenuItemId = menuId,
                 Title = dto.Title,
-                BodyHtml = dto.BodyHtml,
                 Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status,
                 TemplateId = dto.TemplateId,
                 ContentJson = dto.ContentJson,
@@ -115,7 +114,6 @@ namespace Dynamic_CMS.Application.Services
             }
 
             content.Title = dto.Title;
-            content.BodyHtml = dto.BodyHtml;
             content.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status;
             content.TemplateId = dto.TemplateId;
             content.ContentJson = dto.ContentJson;
@@ -127,6 +125,30 @@ namespace Dynamic_CMS.Application.Services
             _logger.LogInformation("Page content updated with ID: {Id}", id);
             
             return (true, null);
+        }
+
+        public async Task<PageContentDto> SaveByOrgAndMenuItemAsync(Guid organizationId, Guid menuItemId, CreatePageContentDto dto, string? userName, CancellationToken cancellationToken)
+        {
+            var existing = await _pageContentRepository.GetByOrgAndMenuItemAsync(organizationId, menuItemId, cancellationToken);
+            if (existing != null)
+            {
+                var updateDto = new UpdatePageContentDto
+                {
+                    Title = dto.Title,
+                    Status = dto.Status,
+                    TemplateId = dto.TemplateId,
+                    ContentJson = dto.ContentJson
+                };
+                await UpdateAsync(existing.Id, updateDto, userName, cancellationToken);
+                var updated = await _pageContentRepository.GetByIdAsync(existing.Id, cancellationToken);
+                return _mapper.Map<PageContentDto>(updated!);
+            }
+            else
+            {
+                dto.OrganizationId = organizationId;
+                dto.MenuItemId = menuItemId;
+                return await CreateAsync(dto, userName, cancellationToken);
+            }
         }
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
