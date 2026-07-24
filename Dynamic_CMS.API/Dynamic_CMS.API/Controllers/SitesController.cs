@@ -38,12 +38,6 @@ namespace Dynamic_CMS.API.Controllers
         public async Task<IActionResult> GetMenus(string orgSlug)
         {
             var menus = await _siteService.GetPublicMenusAsync(orgSlug);
-            if (!menus.Any())
-            {
-                var failResponse = ApiResponse.FailureResponse("Site not found.", 404);
-                return StatusCode(failResponse.StatusCode, failResponse);
-            }
-
             var response = ApiResponse<IEnumerable<MenuItemDto>>.SuccessResponse(menus, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }

@@ -25,6 +25,17 @@ export class DashboardComponent {
   isInitializing = false;
   createdOrgSlug: string | null = null;
   errorMessage = '';
+  showInitModal = false;
+
+  selectedPeriod: 'Day' | 'Week' | 'Month' = 'Week';
+
+  organizations: any[] = [];
+  totalOrgs = 0;
+  activeOrgs = 0;
+  totalViews = '12.45K';
+  totalProfit = '$45.2K';
+  totalProducts = '2.450';
+  totalUsersCount = '3.456';
 
   constructor(
     private authService: AuthService,
@@ -39,6 +50,26 @@ export class DashboardComponent {
       siteName: ['', Validators.required],
       siteSlug: ['', [Validators.required, Validators.pattern('^[a-z0-9-]+$')]]
     });
+  }
+
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.orgService.getOrganizations().subscribe({
+      next: (orgs) => {
+        this.organizations = orgs || [];
+        this.totalOrgs = this.organizations.length;
+        this.activeOrgs = this.organizations.filter(o => o.isActive).length;
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
+  }
+
+  setPeriod(period: 'Day' | 'Week' | 'Month'): void {
+    this.selectedPeriod = period;
   }
 
   logout() {

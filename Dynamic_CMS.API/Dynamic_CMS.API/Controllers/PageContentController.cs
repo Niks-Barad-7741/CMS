@@ -50,10 +50,12 @@ namespace Dynamic_CMS.API.Controllers
             var response = ApiResponse<PageContentDto>.SuccessResponse(content, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
+        */
 
-        // ADMIN: GET /api/admin/content/{organizationId}
+        // ADMIN/CLIENT: GET /api/admin/content/{organizationId} or /api/admin/organizations/{organizationId}/pages
         [HttpGet("api/admin/content/{organizationId:guid}")]
-        [Authorize(Roles = "Admin")]
+        [HttpGet("api/admin/organizations/{organizationId:guid}/pages")]
+        [Authorize]
         public async Task<IActionResult> GetAllByOrganization(Guid organizationId, CancellationToken cancellationToken)
         {
             var contents = await _service.GetAllByOrganizationAsync(organizationId, cancellationToken);
@@ -66,10 +68,23 @@ namespace Dynamic_CMS.API.Controllers
             var response = ApiResponse<IEnumerable<PageContentDto>>.SuccessResponse(contents, "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
-        */
-        // ADMIN: GET /api/admin/content/detail/{id}
+
+        // ADMIN/CLIENT: PUT /api/admin/organizations/{organizationId}/pages/{menuItemId}
+        [HttpPut("api/admin/organizations/{organizationId:guid}/pages/{menuItemId:guid}")]
+        [Authorize]
+        public async Task<IActionResult> SaveByOrgAndMenuItem(Guid organizationId, Guid menuItemId, [FromBody] CreatePageContentDto dto, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
+
+            var result = await _service.SaveByOrgAndMenuItemAsync(organizationId, menuItemId, dto, GetCurrentUserName(), cancellationToken);
+            var response = ApiResponse<PageContentDto>.SuccessResponse(result, "Saved successfully.");
+            return StatusCode(200, response);
+        }
+
+        // ADMIN/CLIENT: GET /api/admin/content/detail/{id}
         [HttpGet("api/admin/content/detail/{id:guid}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
         {
             var content = await _service.GetByIdAsync(id, cancellationToken);
@@ -83,9 +98,9 @@ namespace Dynamic_CMS.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        // ADMIN: POST /api/admin/content
+        // ADMIN/CLIENT: POST /api/admin/content
         [HttpPost("api/admin/content")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreatePageContentDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -109,9 +124,9 @@ namespace Dynamic_CMS.API.Controllers
             }
         }
 
-        // ADMIN: PUT /api/admin/content/{id}
+        // ADMIN/CLIENT: PUT /api/admin/content/{id}
         [HttpPut("api/admin/content/{id:guid}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePageContentDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)

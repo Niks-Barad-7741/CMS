@@ -35,9 +35,6 @@ import { AuthService } from '../../core/services/auth.service';
           <a routerLink="/admin/pages" routerLinkActive="bg-gray-800" class="block px-4 py-2 rounded hover:bg-gray-800 transition-colors">
             Page Content
           </a>
-          <a routerLink="/admin/media" routerLinkActive="bg-gray-800" class="block px-4 py-2 rounded hover:bg-gray-800 transition-colors">
-            Media Library
-          </a>
         </nav>
         <div class="p-4 bg-gray-950">
           <button (click)="logout()" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800 transition-colors text-red-400">

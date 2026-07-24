@@ -25,14 +25,6 @@ namespace Dynamic_CMS.Application.Validators
             RuleFor(x => x.Title).Must(x => x != null && x.Trim() == x)
                 .WithMessage("Title cannot have leading or trailing spaces.");
 
-            RuleFor(x => x.BodyHtml)
-                .NotNull().WithMessage("BodyHtml is required.")
-                .NotEmpty().WithMessage("BodyHtml is required.")
-                .NotEqual("string").WithMessage("BodyHtml cannot be 'string'.");
-
-            RuleFor(x => x.BodyHtml).Must(x => x != null && x.Trim() == x)
-                .WithMessage("BodyHtml cannot have leading or trailing spaces.");
-
             RuleFor(x => x.Status)
                 .Must(x => string.IsNullOrEmpty(x) || x == "Draft" || x == "Published")
                 .WithMessage("Status must be 'Draft', 'Published', or empty.");
@@ -52,14 +44,6 @@ namespace Dynamic_CMS.Application.Validators
 
             RuleFor(x => x.Title).Must(x => x != null && x.Trim() == x)
                 .WithMessage("Title cannot have leading or trailing spaces.");
-
-            RuleFor(x => x.BodyHtml)
-                .NotNull().WithMessage("BodyHtml is required.")
-                .NotEmpty().WithMessage("BodyHtml is required.")
-                .NotEqual("string").WithMessage("BodyHtml cannot be 'string'.");
-
-            RuleFor(x => x.BodyHtml).Must(x => x != null && x.Trim() == x)
-                .WithMessage("BodyHtml cannot have leading or trailing spaces.");
 
             RuleFor(x => x.Status)
                 .NotEmpty().WithMessage("Status is required.")

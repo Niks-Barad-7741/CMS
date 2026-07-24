@@ -13,6 +13,7 @@ namespace Dynamic_CMS.Application.Interfaces
         Task<PageContentDto?> GetPublicContentAsync(string orgSlug, string menuPage, CancellationToken cancellationToken);
         Task<PageContentDto> CreateAsync(CreatePageContentDto dto, string? userName, CancellationToken cancellationToken);
         Task<(bool success, string? error)> UpdateAsync(Guid id, UpdatePageContentDto dto, string? userName, CancellationToken cancellationToken);
+        Task<PageContentDto> SaveByOrgAndMenuItemAsync(Guid organizationId, Guid menuItemId, CreatePageContentDto dto, string? userName, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
     }
 }

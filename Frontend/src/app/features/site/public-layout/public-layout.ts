@@ -31,7 +31,6 @@ export class PublicLayoutComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(() => this.initSite());
-    this.initSite();
   }
 
   private initSite() {
@@ -43,17 +42,8 @@ export class PublicLayoutComponent implements OnInit {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-    // Safety timeout: if API call takes more than 1 second, immediately render default templates
-    const timeoutId = setTimeout(() => {
-      if (this.isLoading) {
-        console.warn('API timeout: falling back to default site templates');
-        this.loadStaticSite();
-      }
-    }, 1000);
-
     this.pageService.getSiteProfile(this.orgSlug).subscribe({
       next: (res: any) => {
-        clearTimeout(timeoutId);
         const profile = res?.data || res;
         if (profile && profile.name) {
           this.orgProfile = profile;
@@ -64,7 +54,6 @@ export class PublicLayoutComponent implements OnInit {
         }
       },
       error: () => {
-        clearTimeout(timeoutId);
         this.loadStaticSite();
       }
     });
@@ -83,15 +72,15 @@ export class PublicLayoutComponent implements OnInit {
       next: (res: any) => {
         const data = res?.data || res;
         const fetched = (Array.isArray(data) ? data : [])
-          .filter((m: any) => m.isVisible)
-          .sort((a: any, b: any) => a.sortOrder - b.sortOrder);
-          
-        this.menus = (fetched && fetched.length > 0) ? fetched : (STATIC_SITE_MENUS as MenuItem[]);
+          .filter((m: any) => m.isVisible !== false)
+          .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+        this.menus = fetched;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.menus = STATIC_SITE_MENUS as MenuItem[];
+        this.menus = [];
         this.isLoading = false;
         this.cdr.detectChanges();
       }

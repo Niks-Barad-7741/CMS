@@ -34,6 +34,10 @@ export class OrganizationService {
     return this.http.put(`${this.baseUrl}/${id}`, data);
   }
 
+  deleteOrganization(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`);
+  }
+
   deactivateOrganization(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${id}`);
   }

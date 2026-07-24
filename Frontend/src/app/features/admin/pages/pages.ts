@@ -54,15 +54,53 @@ export class PagesComponent implements OnInit {
   templates: SiteTemplate[] = SITE_TEMPLATES;
   selectedTemplateId: string = 'blank';
   
-  formData = { title: '', status: 'Draft', bodyHtml: '' };
+  formData: any = { title: '', status: 'Draft' };
   
   // Clean Input Fields for Content Customization
-  clientData = {
+  // Clean Input Fields for Content Customization
+  clientData: any = {
     companyName: 'Ayaan Corp',
     tagline: 'Building Next-Gen Platform Solutions',
     description: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
     email: 'hello@ayaan.com',
-    phone: '+1 (555) 123-4567'
+    phone: '+1 (555) 123-4567',
+    address: '123 Innovation Way, Tech City',
+
+    // Home
+    homeHeroTitle: 'Build Your Digital Empire',
+    homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
+    homeCtaText: 'Get Started Now',
+    homeSecondaryCtaText: 'Learn More',
+    homeFeature1Title: 'Lightning Fast',
+    homeFeature1Desc: 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.',
+    homeFeature2Title: 'Bank-Grade Security',
+    homeFeature2Desc: 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.',
+    homeFeature3Title: 'Limitless Scaling',
+    homeFeature3Desc: 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.',
+
+    // About
+    aboutTitle: 'About Ayaan Corp',
+    aboutSubtitle: 'We are on a mission to transform how the world creates and interacts with digital content.',
+    aboutStory1: 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.',
+    aboutStory2: 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.',
+    aboutImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop',
+    aboutPoint1: 'Innovation-driven approach',
+    aboutPoint2: 'Customer-centric design',
+    aboutPoint3: 'Commitment to excellence',
+
+    // Services
+    servicesTitle: 'Our Services',
+    servicesSubtitle: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
+    service1Title: 'Web Development',
+    service1Desc: 'Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences.',
+    service2Title: 'App Design',
+    service2Desc: 'Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI/UX principles.',
+    service3Title: 'Digital Marketing',
+    service3Desc: 'Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers.',
+
+    // Contact
+    contactTitle: 'Get in Touch',
+    contactSubtitle: "Have a question or ready to start a project? We'd love to hear from you."
   };
 
   isCreating = false;
@@ -106,11 +144,32 @@ export class PagesComponent implements OnInit {
 
   loadMenus() {
     this.menuService.getMenus().subscribe(data => {
-      if (data && Array.isArray(data)) {
-        this.menus = data.sort((a,b) => a.sortOrder - b.sortOrder);
-      } else {
-        this.menus = [];
-      }
+      const fetched = (data && Array.isArray(data)) ? data : [];
+      const defaults: MenuItem[] = [
+        { id: 'def-1', title: 'Home', page: 'home', isVisible: true, sortOrder: 1 },
+        { id: 'def-2', title: 'About Us', page: 'about-us', isVisible: true, sortOrder: 2 },
+        { id: 'def-3', title: 'Services', page: 'services', isVisible: true, sortOrder: 3 },
+        { id: 'def-4', title: 'Contact Us', page: 'contact-us', isVisible: true, sortOrder: 4 }
+      ];
+
+      const merged = [...defaults];
+      fetched.forEach(item => {
+        const pageSlug = (item.page || '').toLowerCase();
+        const idx = merged.findIndex(m => 
+          m.page.toLowerCase() === pageSlug || 
+          (pageSlug.includes('about') && m.page.includes('about')) ||
+          (pageSlug.includes('service') && m.page.includes('service')) ||
+          (pageSlug.includes('contact') && m.page.includes('contact')) ||
+          (pageSlug.includes('home') && m.page.includes('home'))
+        );
+        if (idx !== -1) {
+          merged[idx] = item;
+        } else {
+          merged.push(item);
+        }
+      });
+
+      this.menus = merged.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       this.cdr.detectChanges();
     });
   }
@@ -141,53 +200,187 @@ export class PagesComponent implements OnInit {
   loadPageContent() {
     this.pageService.getPagesForOrg(this.selectedOrgId!).subscribe({
       next: (pages) => {
-        const page = pages.find(p => p.menuItemId === this.selectedMenuId);
+        const page = (pages || []).find(p => p.menuItemId === this.selectedMenuId);
         if (page) {
           this.pageContent = page;
           this.formData = { title: page.title, status: page.status, bodyHtml: page.bodyHtml };
+          if (page.contentJson) {
+            try {
+              const parsed = JSON.parse(page.contentJson);
+              this.clientData = { ...this.resetDefaultDemoData(), ...parsed };
+            } catch (e) {
+              console.error('Error parsing contentJson:', e);
+              this.resetDefaultDemoData();
+            }
+          } else {
+            this.resetDefaultDemoData();
+          }
+          this.updateGeneratedHtml();
         } else {
           this.pageContent = null;
           this.formData = { title: '', status: 'Draft', bodyHtml: '' };
+          this.resetDefaultDemoData();
           this.updateGeneratedHtml();
         }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.pageContent = null;
+        this.formData = { title: '', status: 'Draft', bodyHtml: '' };
+        this.resetDefaultDemoData();
+        this.updateGeneratedHtml();
         this.cdr.detectChanges();
       }
     });
   }
 
+  resetDefaultDemoData(): any {
+    const demoData = {
+      companyName: 'Ayaan Corp',
+      tagline: 'Building Next-Gen Platform Solutions',
+      description: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
+      email: 'hello@ayaan.com',
+      phone: '+1 (555) 123-4567',
+      address: '123 Innovation Way, Tech City',
+
+      // Home
+      homeHeroTitle: 'Build Your Digital Empire',
+      homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
+      homeCtaText: 'Get Started Now',
+      homeSecondaryCtaText: 'Learn More',
+      homeFeature1Title: 'Lightning Fast',
+      homeFeature1Desc: 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.',
+      homeFeature2Title: 'Bank-Grade Security',
+      homeFeature2Desc: 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.',
+      homeFeature3Title: 'Limitless Scaling',
+      homeFeature3Desc: 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.',
+
+      // About
+      aboutTitle: 'About Ayaan Corp',
+      aboutSubtitle: 'We are on a mission to transform how the world creates and interacts with digital content.',
+      aboutStory1: 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.',
+      aboutStory2: 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.',
+      aboutImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop',
+      aboutPoint1: 'Innovation-driven approach',
+      aboutPoint2: 'Customer-centric design',
+      aboutPoint3: 'Commitment to excellence',
+
+      // Services
+      servicesTitle: 'Our Services',
+      servicesSubtitle: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
+      service1Title: 'Web Development',
+      service1Desc: 'Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences.',
+      service2Title: 'App Design',
+      service2Desc: 'Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI/UX principles.',
+      service3Title: 'Digital Marketing',
+      service3Desc: 'Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers.',
+
+      // Contact
+      contactTitle: 'Get in Touch',
+      contactSubtitle: "Have a question or ready to start a project? We'd love to hear from you."
+    };
+
+    this.clientData = { ...demoData };
+    return demoData;
+  }
+
   updateGeneratedHtml(presetType?: 'home' | 'about' | 'services' | 'contact' | 'wireframe') {
     const type = presetType || this.getSelectedMenuType();
-    const company = this.clientData.companyName || 'My Business';
-    const tagline = this.clientData.tagline || 'Building Next-Gen Platform Solutions';
-    const desc = this.clientData.description || 'Tailored solutions designed to elevate your brand and drive unparalleled growth.';
-    const email = this.clientData.email || 'hello@ayaan.com';
-    const phone = this.clientData.phone || '+1 (555) 123-4567';
+    const company = this.clientData.companyName || 'Ayaan Corp';
 
     let html = '';
     switch (type) {
-      case 'services':
-        html = SERVICES_TEMPLATE
-          .replace(/Tailored solutions designed to elevate your brand and drive unparalleled growth\./g, desc);
-        if (!this.formData.title) this.formData.title = 'Services';
-        break;
-      case 'home':
+      case 'home': {
+        const title = this.clientData.homeHeroTitle || 'Build Your Digital Empire';
+        const subtitle = this.clientData.homeHeroSubtitle || 'Empower your business with our cutting-edge dynamic platform.';
+        const cta = this.clientData.homeCtaText || 'Get Started Now';
+        const secondaryCta = this.clientData.homeSecondaryCtaText || 'Learn More';
+
+        const f1Title = this.clientData.homeFeature1Title || 'Lightning Fast';
+        const f1Desc = this.clientData.homeFeature1Desc || 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.';
+        const f2Title = this.clientData.homeFeature2Title || 'Bank-Grade Security';
+        const f2Desc = this.clientData.homeFeature2Desc || 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.';
+        const f3Title = this.clientData.homeFeature3Title || 'Limitless Scaling';
+        const f3Desc = this.clientData.homeFeature3Desc || 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.';
+
         html = HOME_TEMPLATE
-          .replace(/Build Your Digital Empire/g, company)
-          .replace(/Empower your business with our cutting-edge dynamic platform\./g, tagline);
+          .replace(/Build Your Digital <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300">Empire<\/span>/g, title)
+          .replace(/Empower your business with our cutting-edge dynamic platform\. Create, manage, and scale with unparalleled speed and beautiful design\./g, subtitle)
+          .replace(/Get Started Now/g, cta)
+          .replace(/Learn More/g, secondaryCta)
+          .replace(/Lightning Fast/g, f1Title)
+          .replace(/Optimized for speed, our platform ensures your content loads instantly for users worldwide\./g, f1Desc)
+          .replace(/Bank-Grade Security/g, f2Title)
+          .replace(/Rest easy knowing your data is protected by state-of-the-art encryption and security protocols\./g, f2Desc)
+          .replace(/Limitless Scaling/g, f3Title)
+          .replace(/Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases\./g, f3Desc);
+
         if (!this.formData.title) this.formData.title = 'Home - ' + company;
         break;
-      case 'about':
+      }
+      case 'about': {
+        const pageTitle = this.clientData.aboutTitle || ('About ' + company);
+        const sub = this.clientData.aboutSubtitle || 'We are on a mission to transform how the world creates and interacts with digital content.';
+        const story1 = this.clientData.aboutStory1 || 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.';
+        const story2 = this.clientData.aboutStory2 || 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.';
+        const img = this.clientData.aboutImage || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop';
+        const p1 = this.clientData.aboutPoint1 || 'Innovation-driven approach';
+        const p2 = this.clientData.aboutPoint2 || 'Customer-centric design';
+        const p3 = this.clientData.aboutPoint3 || 'Commitment to excellence';
+
         html = ABOUT_TEMPLATE
-          .replace(/About Us/g, 'About ' + company)
-          .replace(/We are on a mission to transform how the world creates and interacts with digital content\./g, desc);
+          .replace(/About Us/g, pageTitle)
+          .replace(/We are on a mission to transform how the world creates and interacts with digital content\./g, sub)
+          .replace(/Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers\./g, story1)
+          .replace(/We set out to bridge that gap\. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility\./g, story2)
+          .replace(/https:\/\/images\.unsplash\.com\/photo-1522071820081-009f0129c71c\?q=80&w=2850&auto=format&fit=crop/g, img)
+          .replace(/Innovation-driven approach/g, p1)
+          .replace(/Customer-centric design/g, p2)
+          .replace(/Commitment to excellence/g, p3);
+
         if (!this.formData.title) this.formData.title = 'About ' + company;
         break;
-      case 'contact':
+      }
+      case 'services': {
+        const title = this.clientData.servicesTitle || 'Our Services';
+        const sub = this.clientData.servicesSubtitle || 'Tailored solutions designed to elevate your brand and drive unparalleled growth.';
+        const s1Title = this.clientData.service1Title || 'Web Development';
+        const s1Desc = this.clientData.service1Desc || 'Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences.';
+        const s2Title = this.clientData.service2Title || 'App Design';
+        const s2Desc = this.clientData.service2Desc || 'Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI/UX principles.';
+        const s3Title = this.clientData.service3Title || 'Digital Marketing';
+        const s3Desc = this.clientData.service3Desc || 'Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers.';
+
+        html = SERVICES_TEMPLATE
+          .replace(/Our Services/g, title)
+          .replace(/Tailored solutions designed to elevate your brand and drive unparalleled growth\./g, sub)
+          .replace(/Web Development/g, s1Title)
+          .replace(/Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences\./g, s1Desc)
+          .replace(/App Design/g, s2Title)
+          .replace(/Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI\/UX principles\./g, s2Desc)
+          .replace(/Digital Marketing/g, s3Title)
+          .replace(/Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers\./g, s3Desc);
+
+        if (!this.formData.title) this.formData.title = 'Services';
+        break;
+      }
+      case 'contact': {
+        const title = this.clientData.contactTitle || 'Get in Touch';
+        const sub = this.clientData.contactSubtitle || "Have a question or ready to start a project? We'd love to hear from you.";
+        const phone = this.clientData.phone || '+1 (555) 123-4567';
+        const email = this.clientData.email || 'hello@ayaan.com';
+        const address = this.clientData.address || '123 Innovation Way, Tech City';
+
         html = CONTACT_TEMPLATE
+          .replace(/Get in Touch/g, title)
+          .replace(/Have a question or ready to start a project\? We'd love to hear from you\./g, sub)
+          .replace(/\+1 \(555\) 123-4567/g, phone)
           .replace(/hello@dynamiccms\.com/g, email)
-          .replace(/\+1 \(555\) 123-4567/g, phone);
+          .replace(/123 Innovation Way, Tech City/g, address);
+
         if (!this.formData.title) this.formData.title = 'Contact Us';
         break;
+      }
       case 'wireframe':
         html = CORPORATE_WIREFRAME_HTML;
         if (!this.formData.title) this.formData.title = 'Corporate Page';
@@ -224,12 +417,6 @@ export class PagesComponent implements OnInit {
     }
   }
 
-  openPageEditor() {
-    if (this.selectedOrgId && this.pageContent && this.pageContent.id) {
-      this.router.navigate(['/admin/page-editor', this.selectedOrgId, this.pageContent.id]);
-    }
-  }
-
   openFigmaBuilder() {
     if (this.selectedOrgId && this.pageContent && this.pageContent.id) {
       this.router.navigate(['/admin/figma-builder', this.selectedOrgId, this.pageContent.id]);
@@ -253,14 +440,16 @@ export class PagesComponent implements OnInit {
       menuItemId: this.selectedMenuId,
       title: (this.formData.title || '').trim(),
       bodyHtml: (this.formData.bodyHtml || '').trim(),
-      status: this.formData.status || 'Draft'
+      status: this.formData.status || 'Draft',
+      templateId: this.selectedTemplateId || 'blank',
+      contentJson: JSON.stringify(this.clientData)
     };
 
-    const redirectToPageEditor = (targetPageId?: string) => {
+    const redirectToBuilder = (targetPageId?: string) => {
       this.isCreating = false;
       this.cdr.detectChanges();
-      if (targetPageId) {
-        this.router.navigate(['/admin/page-editor', this.selectedOrgId, targetPageId]);
+      if (targetPageId && this.selectedOrgId) {
+        this.router.navigate(['/admin/site-builder', this.selectedOrgId, targetPageId]);
       } else {
         this.loadPageContent();
       }
@@ -269,7 +458,7 @@ export class PagesComponent implements OnInit {
     // If page already exists, update it
     if (this.pageContent && this.pageContent.id) {
       this.pageService.updatePage(this.pageContent.id, payload).subscribe({
-        next: () => redirectToPageEditor(this.pageContent!.id),
+        next: () => redirectToBuilder(this.pageContent!.id),
         error: (err) => this.handleCreateOrUpdateError(err)
       });
       return;
@@ -280,7 +469,7 @@ export class PagesComponent implements OnInit {
       next: (res) => {
         const pageData = res?.data || res;
         const pageId = pageData?.id || pageData?.data?.id;
-        redirectToPageEditor(pageId);
+        redirectToBuilder(pageId);
       },
       error: (err) => {
         const errText = err.error?.message || err.message || '';
@@ -289,7 +478,7 @@ export class PagesComponent implements OnInit {
             next: (res: any) => {
               const pageData = res?.data || res;
               const pageId = pageData?.id || this.pageContent?.id;
-              redirectToPageEditor(pageId);
+              redirectToBuilder(pageId);
             },
             error: (updateErr) => this.handleCreateOrUpdateError(updateErr)
           });
@@ -319,6 +508,83 @@ export class PagesComponent implements OnInit {
     this.errorMessage = message;
     this.cdr.detectChanges();
     console.error('Save Page Error:', err);
+  }
+
+  getOrgSlug(): string {
+    if (!this.selectedOrgId) return '';
+    const org = this.organizations.find(o => o.id === this.selectedOrgId);
+    return org ? org.slug : 'site';
+  }
+
+  getSelectedPageSlug(): string {
+    if (!this.selectedMenuId || !this.menus) return 'home';
+    const menu = this.menus.find(m => m.id === this.selectedMenuId);
+    return menu ? (menu.page || 'home') : 'home';
+  }
+
+  getViewSiteUrl(): string {
+    const slug = this.getOrgSlug();
+    const page = this.getSelectedPageSlug();
+    return `/site/${slug}/${page}`;
+  }
+
+  saveAndPublishPage() {
+    if (!this.selectedOrgId || !this.selectedMenuId || !this.formData.title) return;
+
+    this.isCreating = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    if (!this.formData.bodyHtml || this.formData.bodyHtml.trim() === '') {
+      this.updateGeneratedHtml();
+    }
+
+    const payload = {
+      organizationId: this.selectedOrgId,
+      menuItemId: this.selectedMenuId,
+      title: (this.formData.title || '').trim(),
+      status: 'Published',
+      templateId: this.selectedTemplateId || 'blank',
+      contentJson: JSON.stringify(this.clientData)
+    };
+
+    const handleSuccess = () => {
+      this.isCreating = false;
+      this.successMessage = 'Page saved & published to website successfully!';
+      
+      // Reset selections to redirect back to initial Page Content view
+      if (this.role === 'Admin') {
+        this.selectedOrgId = null;
+      }
+      this.selectedMenuId = null;
+      this.pageContent = null;
+      this.formData = { title: '', status: 'Draft' };
+
+      this.cdr.detectChanges();
+      
+      // Auto-dismiss popup after 4 seconds
+      setTimeout(() => {
+        this.successMessage = null;
+        this.cdr.detectChanges();
+      }, 4000);
+    };
+
+    if (this.pageContent && this.pageContent.id) {
+      this.pageService.updatePage(this.pageContent.id, payload).subscribe({
+        next: () => handleSuccess(),
+        error: (err) => this.handleCreateOrUpdateError(err)
+      });
+    } else {
+      this.pageService.createPage(payload).subscribe({
+        next: () => handleSuccess(),
+        error: (err) => this.handleCreateOrUpdateError(err)
+      });
+    }
+  }
+
+  dismissSuccess() {
+    this.successMessage = null;
+    this.cdr.detectChanges();
   }
 
   dismissError() {
