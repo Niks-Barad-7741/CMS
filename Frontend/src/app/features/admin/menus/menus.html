@@ -32,7 +32,6 @@
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider w-20" style="color:var(--text-muted)">Order</th>
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Title</th>
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Menu Page</th>
-          <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Visibility</th>
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-right" style="color:var(--text-muted)">Actions</th>
         </tr>
       </thead>
@@ -43,12 +42,7 @@
           <td class="px-6 py-4 font-mono text-sm" style="color:var(--text-muted)">{{ menu.sortOrder }}</td>
           <td class="px-6 py-4 text-sm font-semibold" style="color:var(--text-primary)">{{ menu.title }}</td>
           <td class="px-6 py-4 text-sm font-mono" style="color:#6366F1;">/{{ menu.page }}</td>
-          <td class="px-6 py-4">
-            <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                  [class]="menu.isVisible ? 'badge-success' : 'badge-neutral'">
-              {{ menu.isVisible ? 'Visible' : 'Hidden' }}
-            </span>
-          </td>
+
           <td class="px-6 py-4 text-right text-sm font-medium">
             <button (click)="openEditForm(menu)"
                     class="mr-4 font-medium transition-colors hover:opacity-80"
@@ -118,11 +112,7 @@
              onblur="this.style.borderColor=''; this.style.boxShadow=''">
     </div>
 
-    <div class="flex items-center gap-3">
-      <input type="checkbox" name="isVisible" [(ngModel)]="formData.isVisible" id="isVisible"
-             class="h-4 w-4 rounded accent-indigo-500">
-      <label for="isVisible" class="text-sm font-medium" style="color:var(--text-primary)">Visible on Public Site</label>
-    </div>
+
 
     <div class="flex justify-end gap-3 pt-2">
       <button type="button" (click)="closeForm()"
