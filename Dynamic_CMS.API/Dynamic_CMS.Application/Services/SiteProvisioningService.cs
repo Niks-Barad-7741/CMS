@@ -87,7 +87,7 @@ namespace Dynamic_CMS.Application.Services
             var allMenus = (await _menuItemRepository.GetAllAsync()).ToDictionary(m => m.Id);
 
             var activePageContents = orgPageContents
-                .Where(p => !p.IsDeleted)
+                .Where(p => !p.IsDeleted && p.Status == "Published")
                 .Select(p =>
                 {
                     allMenus.TryGetValue(p.MenuItemId, out var m);

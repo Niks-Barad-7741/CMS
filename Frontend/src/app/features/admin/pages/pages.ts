@@ -600,7 +600,7 @@ export class PagesComponent implements OnInit {
       organizationId: this.selectedOrgId,
       menuItemId: this.selectedMenuId,
       title: (this.formData.title || '').trim(),
-      status: 'Published',
+      status: this.formData.status || 'Draft',
       sortOrder: Number(this.formData.sortOrder || selectedMenu?.sortOrder || 1),
       templateId: this.selectedTemplateId || 'blank',
       contentJson: JSON.stringify(this.clientData)
@@ -608,7 +608,9 @@ export class PagesComponent implements OnInit {
 
     const handleSuccess = () => {
       this.isCreating = false;
-      this.successMessage = 'Page saved & published to website successfully!';
+      this.successMessage = this.formData.status === 'Draft' 
+        ? 'Draft saved successfully!' 
+        : 'Page saved & published to website successfully!';
       
       // Reset selections to redirect back to initial Page Content view
       if (this.role === 'Admin') {

@@ -169,6 +169,16 @@ interface NavItem {
                 <p class="text-xs" style="color:var(--text-muted)">{{ isAdmin ? 'System Admin' : 'Workspace Client' }}</p>
               </div>
             </div>
+
+            <!-- Topbar Logout -->
+            <button (click)="logout()" title="Logout" class="p-2 rounded-xl transition-all ml-1"
+                    style="color:var(--text-muted); background:var(--bg-base);"
+                    onmouseenter="this.style.color='#F87171'; this.style.background='rgba(239,68,68,.1)'"
+                    onmouseleave="this.style.color='var(--text-muted)'; this.style.background='var(--bg-base)'">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+            </button>
           </div>
         </header>
 

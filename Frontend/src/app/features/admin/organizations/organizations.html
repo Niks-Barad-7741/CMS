@@ -21,7 +21,6 @@
         <tr style="border-bottom:1px solid var(--border-card); background:var(--bg-base);">
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Name</th>
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Subdomain (Slug)</th>
-          <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Status</th>
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider" style="color:var(--text-muted)">Created</th>
           <th class="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-right" style="color:var(--text-muted)">Actions</th>
         </tr>
@@ -40,12 +39,7 @@
             </div>
           </td>
           <td class="px-6 py-4 font-mono text-sm" style="color:#6366F1;">{{ org.slug }}.com</td>
-          <td class="px-6 py-4">
-            <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                  [class]="org.isActive ? 'badge-success' : 'badge-danger'">
-              {{ org.isActive ? 'Active' : 'Inactive' }}
-            </span>
-          </td>
+
           <td class="px-6 py-4 text-sm" style="color:var(--text-muted)">{{ org.createdAt | date }}</td>
           <td class="px-6 py-4 text-right text-sm font-medium">
             <a [href]="'/site/' + org.slug + '/home'" target="_blank" rel="noopener"
@@ -126,12 +120,7 @@
       </div>
     </div>
 
-    <!-- Active toggle -->
-    <div class="flex items-center gap-3">
-      <input type="checkbox" name="isActive" [(ngModel)]="formData.isActive" id="isActive"
-             class="h-4 w-4 rounded accent-indigo-500">
-      <label for="isActive" class="text-sm font-medium" style="color:var(--text-primary)">Active</label>
-    </div>
+
 
     <!-- Footer & Contact Section -->
     <div class="pt-4 mt-2 space-y-3" style="border-top:1px solid var(--border-card);">
