@@ -21,25 +21,36 @@ export class AuthService {
 
   setToken(token: string) {
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('auth_token', token);
+      sessionStorage.setItem('auth_token', token);
     }
   }
 
   getToken(): string | null {
     if (isPlatformBrowser(this.platformId)) {
-      return localStorage.getItem('auth_token');
+      return sessionStorage.getItem('auth_token');
     }
     return null;
   }
 
   logout() {
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
     }
   }
 
   isLoggedIn(): boolean {
-    return this.getToken() !== null;
+    const token = this.getToken();
+    if (!token) return false;
+    
+    const decoded = this.decodeToken();
+    if (decoded && decoded.exp) {
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decoded.exp < currentTime) {
+        this.logout();
+        return false;
+      }
+    }
+    return true;
   }
 
   private decodeToken(): any {

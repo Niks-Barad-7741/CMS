@@ -6,6 +6,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PageService, PageContent } from '../../../core/services/page.service';
 import { OrganizationService, Organization } from '../../../core/services/organization.service';
 import { MenuService, MenuItem } from '../../../core/services/menu.service';
+import { MediaService } from '../../../core/services/media.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SITE_TEMPLATES, SiteTemplate } from '../../../core/constants/templates';
 import { 
@@ -69,6 +70,11 @@ export class PagesComponent implements OnInit {
     // Home
     homeHeroTitle: 'Build Your Digital Empire',
     homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
+    homeBackgroundImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
+    stat1Value: '500+',
+    stat2Value: '100',
+    stat3Value: '50+',
+    stat4Value: '12+',
     homeCtaText: 'Get Started Now',
     homeSecondaryCtaText: 'Learn More',
     homeFeature1Title: 'Lightning Fast',
@@ -104,6 +110,7 @@ export class PagesComponent implements OnInit {
   };
 
   isCreating = false;
+  isUploadingImage = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
@@ -111,6 +118,7 @@ export class PagesComponent implements OnInit {
     private pageService: PageService,
     private orgService: OrganizationService,
     private menuService: MenuService,
+    private mediaService: MediaService,
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
@@ -246,6 +254,11 @@ export class PagesComponent implements OnInit {
       // Home
       homeHeroTitle: 'Build Your Digital Empire',
       homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
+      homeBackgroundImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
+      stat1Value: '500+',
+      stat2Value: '100',
+      stat3Value: '50+',
+      stat4Value: '12+',
       homeCtaText: 'Get Started Now',
       homeSecondaryCtaText: 'Learn More',
       homeFeature1Title: 'Lightning Fast',
@@ -282,6 +295,30 @@ export class PagesComponent implements OnInit {
 
     this.clientData = { ...demoData };
     return demoData;
+  }
+
+  uploadBackgroundImage(event: any) {
+    const file = event.target.files[0];
+    if (file && this.selectedOrgId) {
+      this.isUploadingImage = true;
+      this.cdr.detectChanges();
+      this.mediaService.uploadMedia(this.selectedOrgId, file).subscribe({
+        next: (res: any) => {
+          const url = res?.data?.url || res?.url;
+          if (url) {
+            this.clientData.homeBackgroundImage = url;
+            this.updateGeneratedHtml();
+          }
+          this.isUploadingImage = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Image upload failed', err);
+          this.isUploadingImage = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   updateGeneratedHtml(presetType?: 'home' | 'about' | 'services' | 'contact' | 'wireframe') {
