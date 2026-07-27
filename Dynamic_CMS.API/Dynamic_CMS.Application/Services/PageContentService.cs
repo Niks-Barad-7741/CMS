@@ -84,6 +84,8 @@ namespace Dynamic_CMS.Application.Services
             if (existing != null)
                 throw new InvalidOperationException("Page content for this organization and menu item already exists.");
 
+            var targetOrder = dto.SortOrder > 0 ? dto.SortOrder : (menuItem.SortOrder > 0 ? menuItem.SortOrder : 1);
+
             var pageContent = new PageContent
             {
                 Id = Guid.NewGuid(),
@@ -91,6 +93,7 @@ namespace Dynamic_CMS.Application.Services
                 MenuItemId = menuId,
                 Title = dto.Title,
                 Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status,
+                SortOrder = targetOrder,
                 TemplateId = dto.TemplateId,
                 ContentJson = dto.ContentJson,
                 UpdatedAt = DateTime.UtcNow,
@@ -101,6 +104,8 @@ namespace Dynamic_CMS.Application.Services
             };
 
             var created = await _pageContentRepository.AddAsync(pageContent, cancellationToken);
+            await ReorderPageContentsAsync(orgId, created.Id, targetOrder, cancellationToken);
+
             _logger.LogInformation("Page content created with ID: {Id}", created.Id);
             return _mapper.Map<PageContentDto>(created);
         }
@@ -113,8 +118,11 @@ namespace Dynamic_CMS.Application.Services
                 return (false, "Page content not found.");
             }
 
+            var newOrder = dto.SortOrder > 0 ? dto.SortOrder : (content.SortOrder > 0 ? content.SortOrder : 1);
+
             content.Title = dto.Title;
             content.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status;
+            content.SortOrder = newOrder;
             content.TemplateId = dto.TemplateId;
             content.ContentJson = dto.ContentJson;
             content.UpdatedAt = DateTime.UtcNow;
@@ -122,9 +130,40 @@ namespace Dynamic_CMS.Application.Services
             content.ModifiedDate = DateTime.UtcNow;
 
             await _pageContentRepository.UpdateAsync(content, cancellationToken);
+            await ReorderPageContentsAsync(content.OrganizationId, content.Id, newOrder, cancellationToken);
+
             _logger.LogInformation("Page content updated with ID: {Id}", id);
             
             return (true, null);
+        }
+
+        private async Task ReorderPageContentsAsync(Guid orgId, Guid targetId, int requestedOrder, CancellationToken cancellationToken)
+        {
+            var orgPages = (await _pageContentRepository.GetAllByOrganizationIdAsync(orgId, cancellationToken))
+                .Where(p => !p.IsDeleted)
+                .OrderBy(p => p.SortOrder > 0 ? p.SortOrder : 999)
+                .ToList();
+
+            if (orgPages.Count == 0) return;
+
+            var target = orgPages.FirstOrDefault(p => p.Id == targetId);
+            if (target != null)
+            {
+                orgPages.Remove(target);
+                int insertIdx = Math.Clamp(requestedOrder - 1, 0, orgPages.Count);
+                orgPages.Insert(insertIdx, target);
+
+                for (int i = 0; i < orgPages.Count; i++)
+                {
+                    var p = orgPages[i];
+                    int expectedOrder = i + 1;
+                    if (p.SortOrder != expectedOrder)
+                    {
+                        p.SortOrder = expectedOrder;
+                        await _pageContentRepository.UpdateAsync(p, cancellationToken);
+                    }
+                }
+            }
         }
 
         public async Task<PageContentDto> SaveByOrgAndMenuItemAsync(Guid organizationId, Guid menuItemId, CreatePageContentDto dto, string? userName, CancellationToken cancellationToken)
@@ -136,6 +175,7 @@ namespace Dynamic_CMS.Application.Services
                 {
                     Title = dto.Title,
                     Status = dto.Status,
+                    SortOrder = dto.SortOrder,
                     TemplateId = dto.TemplateId,
                     ContentJson = dto.ContentJson
                 };

@@ -205,13 +205,31 @@ export class PagesComponent implements OnInit {
     }
   }
 
+  getMenuDefaultSortOrder(menuId: string | null): number {
+    if (!menuId || !this.menus || this.menus.length === 0) return 1;
+    const idx = this.menus.findIndex(m => m.id === menuId);
+    return idx !== -1 ? idx + 1 : 1;
+  }
+
   loadPageContent() {
     this.pageService.getPagesForOrg(this.selectedOrgId!).subscribe({
       next: (pages) => {
-        const page = (pages || []).find(p => p.menuItemId === this.selectedMenuId);
+        const pageList = pages || [];
+        const page = pageList.find(p => p.menuItemId === this.selectedMenuId);
+        const defaultOrder = this.getMenuDefaultSortOrder(this.selectedMenuId);
+
         if (page) {
           this.pageContent = page;
-          this.formData = { title: page.title, status: page.status, bodyHtml: page.bodyHtml };
+          // If page.sortOrder is 0/1 for a non-first page without unique order, use defaultOrder position
+          let order = page.sortOrder && page.sortOrder > 0 ? page.sortOrder : defaultOrder;
+          
+          // Check for collision with another page in this org
+          const conflicting = pageList.find(p => p.id !== page.id && p.sortOrder === order);
+          if (conflicting) {
+            order = defaultOrder;
+          }
+
+          this.formData = { title: page.title, status: page.status, sortOrder: order, bodyHtml: page.bodyHtml };
           if (page.contentJson) {
             try {
               const parsed = JSON.parse(page.contentJson);
@@ -226,7 +244,7 @@ export class PagesComponent implements OnInit {
           this.updateGeneratedHtml();
         } else {
           this.pageContent = null;
-          this.formData = { title: '', status: 'Draft', bodyHtml: '' };
+          this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
           this.resetDefaultDemoData();
           this.updateGeneratedHtml();
         }
@@ -234,7 +252,8 @@ export class PagesComponent implements OnInit {
       },
       error: () => {
         this.pageContent = null;
-        this.formData = { title: '', status: 'Draft', bodyHtml: '' };
+        const defaultOrder = this.getMenuDefaultSortOrder(this.selectedMenuId);
+        this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
         this.resetDefaultDemoData();
         this.updateGeneratedHtml();
         this.cdr.detectChanges();
@@ -576,11 +595,13 @@ export class PagesComponent implements OnInit {
       this.updateGeneratedHtml();
     }
 
+    const selectedMenu = this.menus.find(m => m.id === this.selectedMenuId);
     const payload = {
       organizationId: this.selectedOrgId,
       menuItemId: this.selectedMenuId,
       title: (this.formData.title || '').trim(),
       status: 'Published',
+      sortOrder: Number(this.formData.sortOrder || selectedMenu?.sortOrder || 1),
       templateId: this.selectedTemplateId || 'blank',
       contentJson: JSON.stringify(this.clientData)
     };

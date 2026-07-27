@@ -23,8 +23,10 @@
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
-      <tr *ngFor="let menu of menus" class="hover:bg-gray-50">
-        <td class="px-6 py-4 text-gray-500 font-mono">{{ menu.sortOrder }}</td>
+      <tr *ngFor="let menu of menus; let i = index" class="hover:bg-gray-50">
+        <td class="px-6 py-4 text-gray-500 font-mono">
+          <span>{{ menu.sortOrder }}</span>
+        </td>
         <td class="px-6 py-4 font-medium text-gray-900">{{ menu.title }}</td>
         <td class="px-6 py-4 text-blue-600 text-sm">/{{ menu.page }}</td>
         <td class="px-6 py-4">

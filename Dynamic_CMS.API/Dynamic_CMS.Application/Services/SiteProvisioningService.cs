@@ -84,23 +84,34 @@ namespace Dynamic_CMS.Application.Services
             await EnsureDefaultMenusAsync();
 
             var orgPageContents = await _pageContentRepository.GetAllByOrganizationIdAsync(organization.Id, CancellationToken.None);
-            var savedMenuItemIds = orgPageContents
-                .Where(p => !p.IsDeleted)
-                .Select(p => p.MenuItemId)
-                .ToHashSet();
+            var allMenus = (await _menuItemRepository.GetAllAsync()).ToDictionary(m => m.Id);
 
-            var allMenus = await _menuItemRepository.GetAllAsync();
-            return allMenus
-                .Where(m => m.IsVisible && savedMenuItemIds.Contains(m.Id))
-                .OrderBy(m => m.SortOrder)
-                .Select(m => new MenuItemDto
+            var activePageContents = orgPageContents
+                .Where(p => !p.IsDeleted)
+                .Select(p =>
                 {
-                    Id = m.Id,
-                    Title = m.Title,
-                    Page = m.Page,
-                    SortOrder = m.SortOrder,
-                    IsVisible = m.IsVisible
+                    allMenus.TryGetValue(p.MenuItemId, out var m);
+                    var defaultOrder = m != null && m.SortOrder > 0 ? m.SortOrder : 999;
+                    var finalOrder = p.SortOrder > 0 ? p.SortOrder : defaultOrder;
+                    return new { PageContent = p, Order = finalOrder, Menu = m };
+                })
+                .Where(x => x.Menu != null && x.Menu.IsVisible)
+                .OrderBy(x => x.Order)
+                .ToList();
+
+            var result = new List<MenuItemDto>();
+            foreach (var item in activePageContents)
+            {
+                result.Add(new MenuItemDto
+                {
+                    Id = item.Menu!.Id,
+                    Title = item.Menu.Title,
+                    Page = item.Menu.Page,
+                    SortOrder = item.Order,
+                    IsVisible = item.Menu.IsVisible
                 });
+            }
+            return result;
         }
 
         public async Task<PageContentDto?> GetPublicPageAsync(

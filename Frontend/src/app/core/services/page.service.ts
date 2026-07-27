@@ -11,6 +11,7 @@ export interface PageContent {
   title: string;
   bodyHtml: string;
   status: string;
+  sortOrder?: number;
   templateId?: string;
   contentJson?: string;
 }
