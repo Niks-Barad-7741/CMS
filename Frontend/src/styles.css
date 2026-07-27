@@ -1,2 +1,187 @@
 @import 'grapesjs/dist/css/grapes.min.css';
 @import 'tailwindcss';
+
+/* ────────────────────────────────────────────────
+   Dark Mode Strategy: .dark class on <html>
+   ──────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ────────────────────────────────────────────────
+   Design Tokens — Light Mode
+   ──────────────────────────────────────────────── */
+:root {
+  --bg-base:        #F1F5F9;
+  --bg-card:        #FFFFFF;
+  --bg-sidebar:     #0B1121;
+  --border-card:    rgba(226,232,240,0.8);
+  --text-primary:   #1E293B;
+  --text-secondary: #64748B;
+  --text-muted:     #94A3B8;
+  --accent-blue:    #2563EB;
+  --accent-indigo:  #6366F1;
+  --accent-cyan:    #06B6D4;
+  --accent-violet:  #7C3AED;
+  --accent-emerald: #10B981;
+  --accent-amber:   #F59E0B;
+  --accent-rose:    #F43F5E;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,.08);
+}
+
+
+
+/* ────────────────────────────────────────────────
+   Base Reset
+   ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ────────────────────────────────────────────────
+   Custom Scrollbars
+   ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ────────────────────────────────────────────────
+   Animations
+   ──────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes chartDraw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .6; transform: scale(1.4); }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* ────────────────────────────────────────────────
+   Utility Classes
+   ──────────────────────────────────────────────── */
+.animate-fade-in-up   { animation: fadeInUp 0.35s ease both; }
+.animate-scale-in     { animation: scaleIn 0.2s ease both; }
+.animate-pulse-dot    { animation: pulse-dot 1.5s ease-in-out infinite; }
+.animate-spin-slow    { animation: spin-slow 3s linear infinite; }
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+
+
+/* Dashboard card base */
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.dash-card:hover { box-shadow: var(--shadow-hover); }
+
+/* Chart path draw animation */
+.chart-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  pathLength: 1;
+  animation: chartDraw 1.2s cubic-bezier(.4,0,.2,1) forwards;
+}
+
+/* SVG area gradient fade-in */
+.chart-area { animation: fadeInUp 0.8s ease both; }
+
+/* Donut ring animation */
+.donut-ring {
+  transition: stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1);
+}
+
+/* Badge variants */
+.badge-success { background: #D1FAE5; color: #065F46; }
+.badge-danger  { background: #FEE2E2; color: #991B1B; }
+.badge-warning { background: #FEF3C7; color: #92400E; }
+.badge-info    { background: #DBEAFE; color: #1E40AF; }
+.badge-neutral { background: #F1F5F9; color: #475569; }
+
+
+
+/* Activity item hover */
+.activity-item {
+  transition: background 0.15s ease;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.75rem;
+}
+.activity-item:hover { background: var(--bg-base); }
+
+/* Dark sidebar nav links */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #94A3B8;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
+}
+.sidebar-link:hover { background: rgba(255,255,255,.06); color: #F1F5F9; }
+.sidebar-link.active { background: rgba(99,102,241,.18); color: #fff; border-left-color: #6366F1; }
+.sidebar-link svg { margin-right: 0.75rem; width: 1.35rem; height: 1.35rem; flex-shrink: 0; }
+
+/* Organization table row hover */
+.org-table-row:hover { background: var(--bg-base) !important; }
+
+/* Search input */
+.search-input {
+  background: var(--bg-base);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.875rem 0.5rem 2.25rem;
+  font-size: 0.8125rem;
+  outline: none;
+  transition: all 0.15s ease;
+  width: 16rem;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
