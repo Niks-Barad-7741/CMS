@@ -72,19 +72,11 @@ namespace Dynamic_CMS.Application.Services
                 throw new InvalidOperationException($"A menu item with the title '{dto.Title}' already exists.");
             }
 
-            var existingWithSortOrder = await _repository.GetBySortOrderAsync(dto.SortOrder);
-            if (existingWithSortOrder != null)
-            {
-                // This could throw an exception and get caught by the controller, or we just return an error.
-                // However, the interface Task<MenuItemDto> doesn't return an error string. Let's throw an InvalidOperationException.
-                throw new InvalidOperationException($"A menu item with SortOrder {dto.SortOrder} already exists.");
-            }
-
             var menuItem = new MenuItem
             {
                 Id = Guid.NewGuid(),
                 Title = dto.Title,
-                Page = dto.Page.ToLower(), // ensure page is lower
+                Page = dto.Page.ToLower(),
                 SortOrder = dto.SortOrder,
                 IsVisible = dto.IsVisible,
                 CreatedAt = DateTime.UtcNow,
@@ -92,6 +84,7 @@ namespace Dynamic_CMS.Application.Services
             };
 
             await _repository.AddAsync(menuItem);
+            await ReorderMenuItemsAsync(menuItem.Id, dto.SortOrder);
 
             return new MenuItemDto
             {
@@ -110,7 +103,6 @@ namespace Dynamic_CMS.Application.Services
             var menu = await _repository.GetByIdAsync(id);
             if (menu == null) return (false, "Menu item not found.");
 
-            // Check if page is taken by another menu item
             var existingWithPage = await _repository.GetByPageAsync(dto.Page.ToLower());
             if (existingWithPage != null && existingWithPage.Id != id)
             {
@@ -123,12 +115,6 @@ namespace Dynamic_CMS.Application.Services
                 return (false, $"A menu item with the title '{dto.Title}' already exists.");
             }
 
-            var existingWithSortOrder = await _repository.GetBySortOrderAsync(dto.SortOrder);
-            if (existingWithSortOrder != null && existingWithSortOrder.Id != id)
-            {
-                return (false, $"A menu item with SortOrder {dto.SortOrder} already exists.");
-            }
-
             menu.Title = dto.Title;
             menu.Page = dto.Page.ToLower();
             menu.SortOrder = dto.SortOrder;
@@ -137,8 +123,38 @@ namespace Dynamic_CMS.Application.Services
             menu.ModifiedBy = userName;
 
             await _repository.UpdateAsync(menu);
+            await ReorderMenuItemsAsync(menu.Id, dto.SortOrder);
 
             return (true, null);
+        }
+
+        private async Task ReorderMenuItemsAsync(Guid targetId, int requestedOrder)
+        {
+            var allMenus = (await _repository.GetAllAsync())
+                .Where(m => !m.IsDeleted)
+                .OrderBy(m => m.SortOrder > 0 ? m.SortOrder : 999)
+                .ToList();
+
+            if (allMenus.Count == 0) return;
+
+            var target = allMenus.FirstOrDefault(m => m.Id == targetId);
+            if (target != null)
+            {
+                allMenus.Remove(target);
+                int insertIdx = Math.Clamp(requestedOrder - 1, 0, allMenus.Count);
+                allMenus.Insert(insertIdx, target);
+
+                for (int i = 0; i < allMenus.Count; i++)
+                {
+                    var m = allMenus[i];
+                    int expectedOrder = i + 1;
+                    if (m.SortOrder != expectedOrder)
+                    {
+                        m.SortOrder = expectedOrder;
+                        await _repository.UpdateAsync(m);
+                    }
+                }
+            }
         }
 
         public async Task<bool> DeleteMenuAsync(Guid id, string userName = "Admin")

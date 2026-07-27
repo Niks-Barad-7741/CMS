@@ -83,10 +83,14 @@
 
 
     <!-- Basic Info -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700">Page Title (H1)</label>
         <input type="text" [(ngModel)]="formData.title" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium" placeholder="e.g. Services">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700">Navbar Sequence Order</label>
+        <input type="number" [(ngModel)]="formData.sortOrder" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium" placeholder="1">
       </div>
       <div>
         <label class="block text-sm font-semibold text-gray-700">Status</label>

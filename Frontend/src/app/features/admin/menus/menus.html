@@ -23,8 +23,14 @@
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
-      <tr *ngFor="let menu of menus" class="hover:bg-gray-50">
-        <td class="px-6 py-4 text-gray-500 font-mono">{{ menu.sortOrder }}</td>
+      <tr *ngFor="let menu of menus; let i = index" class="hover:bg-gray-50">
+        <td class="px-6 py-4 text-gray-500 font-mono flex items-center gap-2">
+          <span>{{ menu.sortOrder }}</span>
+          <div class="inline-flex flex-col gap-0.5 ml-2">
+            <button (click)="moveUp(i)" [disabled]="i === 0" class="text-xs text-gray-400 hover:text-blue-600 disabled:opacity-30" title="Move Up">▲</button>
+            <button (click)="moveDown(i)" [disabled]="i === menus.length - 1" class="text-xs text-gray-400 hover:text-blue-600 disabled:opacity-30" title="Move Down">▼</button>
+          </div>
+        </td>
         <td class="px-6 py-4 font-medium text-gray-900">{{ menu.title }}</td>
         <td class="px-6 py-4 text-blue-600 text-sm">/{{ menu.page }}</td>
         <td class="px-6 py-4">

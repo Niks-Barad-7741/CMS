@@ -135,4 +135,40 @@ export class MenusComponent implements OnInit {
       });
     }
   }
+
+  moveUp(index: number) {
+    if (index <= 0) return;
+    const current = this.menus[index];
+    const prev = this.menus[index - 1];
+
+    const tempOrder = current.sortOrder;
+    current.sortOrder = prev.sortOrder;
+    prev.sortOrder = tempOrder;
+
+    this.menuService.updateMenu(current.id, current).subscribe({
+      next: () => {
+        this.menuService.updateMenu(prev.id, prev).subscribe({
+          next: () => this.loadMenus()
+        });
+      }
+    });
+  }
+
+  moveDown(index: number) {
+    if (index >= this.menus.length - 1) return;
+    const current = this.menus[index];
+    const next = this.menus[index + 1];
+
+    const tempOrder = current.sortOrder;
+    current.sortOrder = next.sortOrder;
+    next.sortOrder = tempOrder;
+
+    this.menuService.updateMenu(current.id, current).subscribe({
+      next: () => {
+        this.menuService.updateMenu(next.id, next).subscribe({
+          next: () => this.loadMenus()
+        });
+      }
+    });
+  }
 }
