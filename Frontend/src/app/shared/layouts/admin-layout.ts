@@ -196,7 +196,7 @@ export class AdminLayoutComponent implements OnInit {
   role        = '';
   roleInitial = '';
   isAdmin     = false;
-  currentPageTitle = 'Dashboard Overview';
+  currentPageTitle = 'Admin Dashboard';
 
   sidebarCollapsed = signal(false);
 
@@ -236,7 +236,7 @@ export class AdminLayoutComponent implements OnInit {
   ];
 
   private readonly routeTitleMap: Record<string, string> = {
-    '/admin/dashboard':       'Dashboard Overview',
+    '/admin/dashboard':       'Admin Dashboard',
     '/admin/client-dashboard':'Client Dashboard',
     '/admin/organizations':   'Organizations',
     '/admin/users':           'User Management',

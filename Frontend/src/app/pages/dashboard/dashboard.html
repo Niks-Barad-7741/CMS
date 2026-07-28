@@ -47,71 +47,7 @@
 
   @if (!isLoading) {
 
-  <!-- ══════════════════════════════════════════════════════
-       TOP BAR
-       ══════════════════════════════════════════════════════ -->
-  <div class="dash-card p-4 sm:p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in-up">
 
-    <!-- Left: Title -->
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-           style="background: linear-gradient(135deg,#6366F1,#8B5CF6); box-shadow: 0 4px 14px rgba(99,102,241,.35);">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-        </svg>
-      </div>
-      <div>
-        <h1 class="text-lg font-bold" style="color:var(--text-primary)">Admin Dashboard</h1>
-        <p class="text-xs" style="color:var(--text-muted)">Real-time CMS analytics</p>
-      </div>
-    </div>
-
-    <!-- Right: Actions -->
-    <div class="flex items-center gap-2 w-full md:w-auto flex-wrap">
-
-      <!-- Search -->
-      <div class="relative flex-1 md:flex-none">
-        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--text-muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input id="dashboard-search" type="text" placeholder="Search organizations…"
-               class="search-input pl-9"
-               [value]="searchQuery()"
-               (input)="onSearch($event)">
-      </div>
-
-      <!-- Refresh -->
-      <button (click)="refresh()" title="Refresh data"
-              class="p-2 rounded-xl transition-all"
-              style="background:var(--bg-base); border:1px solid var(--border-card); color:var(--text-secondary);"
-              [class.animate-spin-slow]="isRefreshing">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-      </button>
-
-
-      @if (isAdmin) {
-        <!-- Initialize Site button -->
-        <button (click)="openModal()" id="init-site-btn"
-                class="px-4 py-2 text-xs font-semibold rounded-xl text-white flex items-center gap-1.5 transition-all whitespace-nowrap"
-                style="background:linear-gradient(135deg,#6366F1,#8B5CF6); box-shadow:0 3px 10px rgba(99,102,241,.35);">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-          </svg>
-          Initialize Site
-        </button>
-      }
-
-      <!-- Last updated -->
-      @if (stats?.lastUpdated) {
-        <span class="text-xs hidden lg:block" style="color:var(--text-muted)">
-          Updated {{ stats!.lastUpdated | date:'HH:mm:ss' }}
-        </span>
-      }
-    </div>
-  </div>
 
   <!-- ══════════════════════════════════════════════════════
        ERROR BANNER
@@ -336,11 +272,18 @@
           <h3 class="text-sm font-bold" style="color:var(--text-primary)">Organizations</h3>
           <p class="text-xs mt-0.5" style="color:var(--text-muted)">{{ filteredOrgs().length }} of {{ stats?.totalOrgs ?? 0 }} organizations</p>
         </div>
-        <a routerLink="/admin/organizations"
-           class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-           style="color:#6366F1; background:rgba(99,102,241,.08);">
-          View All →
-        </a>
+        <div class="flex items-center gap-3">
+          <!-- Search -->
+          <div class="relative flex-1 md:flex-none">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--text-muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input id="dashboard-search" type="text" placeholder="Search organizations…"
+                   class="search-input pl-9 py-1.5 text-sm"
+                   [value]="searchQuery()"
+                   (input)="onSearch($event)">
+          </div>
+        </div>
       </div>
 
       <!-- Filter tags (role-based) -->
