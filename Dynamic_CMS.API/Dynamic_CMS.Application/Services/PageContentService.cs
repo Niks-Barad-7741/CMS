@@ -132,20 +132,16 @@ namespace Dynamic_CMS.Application.Services
             var existing = await _pageContentRepository.GetByOrgAndMenuItemAsync(organizationId, menuItemId, cancellationToken);
             if (existing != null)
             {
-                // Directly mutate the detached entity and persist via repository.
-                // Avoid calling UpdateAsync(id,...) which re-fetches the entity as tracked,
-                // causing an EF Core duplicate-tracking conflict (→ 500 error).
-                existing.Title = dto.Title;
-                existing.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status;
-                existing.TemplateId = dto.TemplateId;
-                existing.ContentJson = dto.ContentJson;
-                existing.UpdatedAt = DateTime.UtcNow;
-                existing.ModifiedBy = userName ?? "Admin";
-                existing.ModifiedDate = DateTime.UtcNow;
-
-                await _pageContentRepository.UpdateAsync(existing, cancellationToken);
-                _logger.LogInformation("Page content updated (via Save) with ID: {Id}", existing.Id);
-                return _mapper.Map<PageContentDto>(existing);
+                var updateDto = new UpdatePageContentDto
+                {
+                    Title = dto.Title,
+                    Status = dto.Status,
+                    TemplateId = dto.TemplateId,
+                    ContentJson = dto.ContentJson
+                };
+                await UpdateAsync(existing.Id, updateDto, userName, cancellationToken);
+                var updated = await _pageContentRepository.GetByIdAsync(existing.Id, cancellationToken);
+                return _mapper.Map<PageContentDto>(updated!);
             }
             else
             {
