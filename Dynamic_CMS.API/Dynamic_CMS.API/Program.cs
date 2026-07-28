@@ -84,7 +84,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<Dynamic_CMS.API.Middlewares.ExceptionHandlingMiddleware>();
 
-// app.UseHttpsRedirection();
+ //app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
 
