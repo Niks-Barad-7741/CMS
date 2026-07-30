@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dynamic_CMS.Application.DTOs.Menu;
+using Dynamic_CMS.Application.DTOs.SubMenu;
 using Dynamic_CMS.Application.Interfaces;
 using Dynamic_CMS.Domain.Entities;
 using Dynamic_CMS.Domain.Repositories;
@@ -14,35 +15,57 @@ namespace Dynamic_CMS.Application.Services
     public class MenuItemService : IMenuItemService
     {
         private readonly IMenuItemRepository _repository;
+        private readonly ISubMenuItemRepository _subMenuRepository;
 
-        public MenuItemService(IMenuItemRepository repository)
+        public MenuItemService(IMenuItemRepository repository, ISubMenuItemRepository subMenuRepository)
         {
             _repository = repository;
+            _subMenuRepository = subMenuRepository;
         }
 
         public async Task<IEnumerable<MenuItemDto>> GetAllMenusAsync()
         {
             var menus = await _repository.GetAllAsync();
             
-            // Map Entity to Dto manually (or use AutoMapper)
-            return menus.Select(m => new MenuItemDto
+            var menuDtos = new List<MenuItemDto>();
+            foreach (var m in menus.OrderBy(m => m.SortOrder))
             {
-                Id = m.Id,
-                Title = m.Title,
-                Page = m.Page,
-                SortOrder = m.SortOrder,
-                IsVisible = m.IsVisible,
-                CreatedAt = m.CreatedAt,
-                CreatedBy = m.CreatedBy,
-                ModifiedAt = m.ModifiedAt,
-                ModifiedBy = m.ModifiedBy
-            }).OrderBy(m => m.SortOrder);
+                var subMenus = await _subMenuRepository.GetByMenuItemIdAsync(m.Id);
+                menuDtos.Add(new MenuItemDto
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Page = m.Page,
+                    SortOrder = m.SortOrder,
+                    IsVisible = m.IsVisible,
+                    CreatedAt = m.CreatedAt,
+                    CreatedBy = m.CreatedBy,
+                    ModifiedAt = m.ModifiedAt,
+                    ModifiedBy = m.ModifiedBy,
+                    SubMenuItems = subMenus.Select(s => new SubMenuItemDto
+                    {
+                        Id = s.Id,
+                        MenuItemId = s.MenuItemId,
+                        Title = s.Title,
+                        Page = s.Page,
+                        SortOrder = s.SortOrder,
+                        IsVisible = s.IsVisible,
+                        CreatedAt = s.CreatedAt,
+                        CreatedBy = s.CreatedBy,
+                        ModifiedAt = s.ModifiedAt,
+                        ModifiedBy = s.ModifiedBy
+                    }).OrderBy(s => s.SortOrder).ToList()
+                });
+            }
+            return menuDtos;
         }
 
         public async Task<MenuItemDto?> GetMenuByIdAsync(Guid id)
         {
             var menu = await _repository.GetByIdAsync(id);
             if (menu == null) return null;
+
+            var subMenus = await _subMenuRepository.GetByMenuItemIdAsync(menu.Id);
 
             return new MenuItemDto
             {
@@ -54,7 +77,20 @@ namespace Dynamic_CMS.Application.Services
                 CreatedAt = menu.CreatedAt,
                 CreatedBy = menu.CreatedBy,
                 ModifiedAt = menu.ModifiedAt,
-                ModifiedBy = menu.ModifiedBy
+                ModifiedBy = menu.ModifiedBy,
+                SubMenuItems = subMenus.Select(s => new SubMenuItemDto
+                {
+                    Id = s.Id,
+                    MenuItemId = s.MenuItemId,
+                    Title = s.Title,
+                    Page = s.Page,
+                    SortOrder = s.SortOrder,
+                    IsVisible = s.IsVisible,
+                    CreatedAt = s.CreatedAt,
+                    CreatedBy = s.CreatedBy,
+                    ModifiedAt = s.ModifiedAt,
+                    ModifiedBy = s.ModifiedBy
+                }).OrderBy(s => s.SortOrder).ToList()
             };
         }
 
@@ -94,7 +130,8 @@ namespace Dynamic_CMS.Application.Services
                 SortOrder = menuItem.SortOrder,
                 IsVisible = menuItem.IsVisible,
                 CreatedAt = menuItem.CreatedAt,
-                CreatedBy = menuItem.CreatedBy
+                CreatedBy = menuItem.CreatedBy,
+                SubMenuItems = new List<SubMenuItemDto>()
             };
         }
 

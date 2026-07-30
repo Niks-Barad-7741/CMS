@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 
 namespace Dynamic_CMS.Domain.Entities
 {
-    public class MenuItem
+    public class SubMenuItem
     {
         public Guid Id { get; set; }
+        public Guid MenuItemId { get; set; }  // FK to parent MenuItem
         public string Title { get; set; } = string.Empty;
         public string Page { get; set; } = string.Empty;
         public int SortOrder { get; set; }
@@ -17,8 +17,7 @@ namespace Dynamic_CMS.Domain.Entities
         public DateTime? ModifiedAt { get; set; }
         public string? ModifiedBy { get; set; }
 
-        // Navigation property
-        public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();
-        public ICollection<SubMenuItem> SubMenuItems { get; set; } = new List<SubMenuItem>();
+        // Navigation
+        public MenuItem MenuItem { get; set; } = null!;
     }
 }
