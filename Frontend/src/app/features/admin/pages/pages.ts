@@ -209,7 +209,7 @@ export class PagesComponent implements OnInit {
         orgs: this.orgService.getOrganizations().pipe(catchError(() => of([])))
       }).subscribe(results => {
         this.processMenus(results.menus);
-        this.organizations = results.orgs;
+        this.organizations = (results.orgs || []).filter((o: any) => o.isActive);
         this.isInitializing = false;
         this.cdr.detectChanges();
 

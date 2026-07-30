@@ -29,7 +29,7 @@
           <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xl uppercase shadow-inner">
             {{ org.name.charAt(0) }}
           </div>
-          <span [class]="org.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-gray-50 text-gray-500 border-gray-200'" 
+          <span [class]="org.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'" 
             class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border">
             {{ org.isActive ? 'Active' : 'Inactive' }}
           </span>
@@ -40,8 +40,16 @@
       </div>
 
       <!-- Card Action -->
-      <button (click)="managePages(org.id)" 
-        class="w-full p-4 flex items-center justify-center gap-2 text-sm font-bold text-indigo-600 bg-white hover:bg-indigo-50 transition-colors group-hover:text-indigo-700">
+      <button (click)="org.isActive ? managePages(org.id) : null" 
+        [disabled]="!org.isActive"
+        class="w-full p-4 flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+        [class.text-indigo-600]="org.isActive"
+        [class.bg-white]="org.isActive"
+        [class.hover:bg-indigo-50]="org.isActive"
+        [class.group-hover:text-indigo-700]="org.isActive"
+        [class.text-gray-400]="!org.isActive"
+        [class.bg-gray-50]="!org.isActive"
+        [class.cursor-not-allowed]="!org.isActive">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         Manage Pages &amp; Content
       </button>
