@@ -56,14 +56,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly periodOptions: Array<'Day' | 'Week' | 'Month'> = ['Day', 'Week', 'Month'];
   selectedPeriod = signal<'Day' | 'Week' | 'Month'>('Week');
 
-  // ── Search ────────────────────────────────────────────────
+  // ── Search & Filters ──────────────────────────────────────
   searchQuery = signal('');
+  orgStatusFilter = signal<'All' | 'Active' | 'Inactive'>('All');
+
+  setOrgFilter(status: 'All' | 'Active' | 'Inactive'): void {
+    this.orgStatusFilter.set(status);
+    if (status === 'All') {
+      this.searchQuery.set('');
+    }
+  }
 
   filteredOrgs = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
+    const filter = this.orgStatusFilter();
+
     if (!this.stats) return [];
-    if (!q) return this.stats.organizations;
-    return this.stats.organizations.filter(o =>
+
+    let orgs = this.stats.organizations;
+
+    if (filter === 'Active') {
+      orgs = orgs.filter(o => o.isActive);
+    } else if (filter === 'Inactive') {
+      orgs = orgs.filter(o => !o.isActive);
+    }
+
+    if (!q) return orgs;
+    return orgs.filter(o =>
       o.name.toLowerCase().includes(q) ||
       o.slug.toLowerCase().includes(q)
     );
@@ -105,16 +124,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `${line} ${close}`;
   }
 
-  svgDotPoints(data: DayActivity[], key: 'total' | 'orgs'): { x: number; y: number; value: number }[] {
-    if (!data.length) return [];
-    const W = 500, H = 160, pad = 20;
-    const max = Math.max(...data.map(d => d[key]), 1);
-    return data.map((d, i) => ({
-      x: pad + (i / (data.length - 1)) * (W - pad * 2),
-      y: H - pad - ((d[key] / max) * (H - pad * 2)),
-      value: d[key]
-    }));
-  }
+
 
   // Donut chart (SVG circle)
   get donutDasharray(): string {
@@ -173,10 +183,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Actions ───────────────────────────────────────────────
-  setPeriod(p: 'Day' | 'Week' | 'Month'): void { this.selectedPeriod.set(p); }
+  setPeriod(p: 'Day' | 'Week' | 'Month'): void {
+    this.selectedPeriod.set(p);
+    this.dashboardService.setPeriod(p);
+  }
 
   setPeriodStr(p: string): void {
-    if (p === 'Day' || p === 'Week' || p === 'Month') this.selectedPeriod.set(p);
+    if (p === 'Day' || p === 'Week' || p === 'Month') {
+      this.selectedPeriod.set(p);
+      this.dashboardService.setPeriod(p);
+    }
   }
 
   onSearch(event: Event): void {

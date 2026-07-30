@@ -25,6 +25,12 @@ namespace Dynamic_CMS.Application.Services
             _mapper = mapper;
         }
 
+        public async Task<IEnumerable<OrganizationDto>> GetAllAsync()
+        {
+            var organizations = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<OrganizationDto>>(organizations);
+        }
+
         public async Task<IEnumerable<OrganizationDto>> GetAllActiveAsync()
         {
             var organizations = await _repository.GetAllActiveAsync();

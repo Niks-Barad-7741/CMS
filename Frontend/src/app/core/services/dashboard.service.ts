@@ -1,6 +1,6 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, forkJoin, of, interval, BehaviorSubject, EMPTY } from 'rxjs';
+import { Observable, forkJoin, of, interval, BehaviorSubject, EMPTY, combineLatest } from 'rxjs';
 import { map, catchError, switchMap, startWith, shareReplay, take, timeout } from 'rxjs/operators';
 import { OrganizationService, Organization } from './organization.service';
 import { PageService, PageContent } from './page.service';
@@ -39,7 +39,7 @@ export interface DashboardStats {
   pageGrowthPct: number;
 
   // Chart data
-  weeklyActivity: DayActivity[];   // last 7 days
+  weeklyActivity: DayActivity[];   // 24hrs, 7 days, or 30 days
   orgStatusRatio: number;          // 0-100 percent active
 
   // Recent items
@@ -58,7 +58,7 @@ export interface DashboardStats {
 
 function timeAgo(dateStr: string): string {
   const now = new Date();
-  const then = new Date(dateStr);
+  const then = parseUtcDate(dateStr);
   if (isNaN(then.getTime())) return 'recently';
   const diffMs = now.getTime() - then.getTime();
   const diffSec = Math.floor(diffMs / 1000);
@@ -77,37 +77,92 @@ function growthPct(current: number, previous: number): number {
   return Math.round(((current - previous) / previous) * 100);
 }
 
+function parseUtcDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  let dStr = dateStr;
+  if (/T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(dStr)) {
+    dStr += 'Z';
+  }
+  return new Date(dStr);
+}
+
 function countCreatedInRange(items: { createdAt?: string; [k: string]: any }[], from: Date, to: Date): number {
   return items.filter(i => {
     if (!i.createdAt) return false;
-    const d = new Date(i.createdAt);
+    const d = parseUtcDate(i.createdAt);
     return d >= from && d < to;
   }).length;
 }
 
-function buildWeeklyActivity(pages: PageContent[], orgs: Organization[]): DayActivity[] {
-  const days: DayActivity[] = [];
-  const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function buildActivityChart(pages: PageContent[], orgs: Organization[], period: 'Day' | 'Week' | 'Month'): DayActivity[] {
+  const points: DayActivity[] = [];
+  const now = new Date();
 
-  for (let i = 6; i >= 0; i--) {
-    const from = new Date();
-    from.setHours(0, 0, 0, 0);
-    from.setDate(from.getDate() - i);
-    const to = new Date(from);
-    to.setDate(to.getDate() + 1);
+  if (period === 'Day') {
+    for (let i = 23; i >= 0; i--) {
+      const from = new Date(now);
+      from.setHours(now.getHours() - i, 0, 0, 0);
+      const to = new Date(from);
+      to.setHours(to.getHours() + 1);
 
-    const pageCount = countCreatedInRange(pages as any[], from, to);
-    const orgCount  = countCreatedInRange(orgs  as any[], from, to);
+      const pageCount = countCreatedInRange(pages as any[], from, to);
+      const orgCount  = countCreatedInRange(orgs  as any[], from, to);
 
-    days.push({
-      day: DAY_LABELS[from.getDay()],
-      date: from.toISOString().split('T')[0],
-      pages: pageCount,
-      orgs: orgCount,
-      total: pageCount + orgCount
-    });
+      let label = from.getHours() + ':00';
+      if (from.getHours() === 0) label = '12am';
+      else if (from.getHours() === 12) label = '12pm';
+      else if (from.getHours() > 12) label = (from.getHours() - 12) + 'pm';
+      else label = from.getHours() + 'am';
+
+      points.push({
+        day: label,
+        date: from.toISOString(),
+        pages: pageCount,
+        orgs: orgCount,
+        total: pageCount + orgCount
+      });
+    }
+  } else if (period === 'Week') {
+    const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 6; i >= 0; i--) {
+      const from = new Date(now);
+      from.setHours(0, 0, 0, 0);
+      from.setDate(from.getDate() - i);
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
+
+      const pageCount = countCreatedInRange(pages as any[], from, to);
+      const orgCount  = countCreatedInRange(orgs  as any[], from, to);
+
+      points.push({
+        day: DAY_LABELS[from.getDay()],
+        date: from.toISOString().split('T')[0],
+        pages: pageCount,
+        orgs: orgCount,
+        total: pageCount + orgCount
+      });
+    }
+  } else {
+    for (let i = 29; i >= 0; i--) {
+      const from = new Date(now);
+      from.setHours(0, 0, 0, 0);
+      from.setDate(from.getDate() - i);
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
+
+      const pageCount = countCreatedInRange(pages as any[], from, to);
+      const orgCount  = countCreatedInRange(orgs  as any[], from, to);
+
+      points.push({
+        day: from.getDate().toString(),
+        date: from.toISOString().split('T')[0],
+        pages: pageCount,
+        orgs: orgCount,
+        total: pageCount + orgCount
+      });
+    }
   }
-  return days;
+  return points;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -117,56 +172,52 @@ export class DashboardService {
   private platformId  = inject(PLATFORM_ID);
 
   private _refreshTrigger$ = new BehaviorSubject<void>(undefined);
+  private _period$ = new BehaviorSubject<'Day' | 'Week' | 'Month'>('Week');
 
-  /**
-   * Emits fresh stats on demand.
-   * In the BROWSER: also auto-polls every 60 seconds.
-   * On the SERVER (SSR): fetches exactly once then completes so Angular
-   * can stabilize and pre-render without timing out.
-   */
-  readonly stats$: Observable<DashboardStats> = this._refreshTrigger$.pipe(
+  setPeriod(period: 'Day' | 'Week' | 'Month'): void {
+    this._period$.next(period);
+  }
+
+  private _raw$ = this._refreshTrigger$.pipe(
     switchMap(() => {
       if (isPlatformBrowser(this.platformId)) {
-        // Browser: fetch immediately, then repeat every 60 s
         return interval(60_000).pipe(startWith(0));
       } else {
-        // Server: emit once and complete so SSR can stabilize
         return of(0).pipe(take(1));
       }
     }),
-    switchMap(() => this._fetchAll()),
+    switchMap(() => {
+      const safe = <T>(obs: Observable<T>, fallback: T): Observable<T> =>
+        obs.pipe(
+          timeout(8000),
+          catchError(() => of(fallback))
+        );
+      return forkJoin({
+        orgs:  safe(this.orgService.getOrganizations(), [] as Organization[]),
+        pages: safe(this._getAllPages(),                [] as PageContent[]),
+      });
+    }),
     shareReplay(1)
+  );
+
+  readonly stats$: Observable<DashboardStats> = combineLatest([
+    this._raw$,
+    this._period$
+  ]).pipe(
+    map(([{ orgs, pages }, period]) => this._compute(orgs, pages, period)),
+    catchError(err => of(this._emptyStats(err?.message || 'Failed to load dashboard data')))
   );
 
   refresh(): void {
     this._refreshTrigger$.next();
   }
 
-  private _fetchAll(): Observable<DashboardStats> {
-    // Safe wrapper: 8s timeout per stream, always falls back to empty array
-    const safe = <T>(obs: Observable<T>, fallback: T): Observable<T> =>
-      obs.pipe(
-        timeout(8000),
-        catchError(() => of(fallback))
-      );
-
-    return forkJoin({
-      orgs:  safe(this.orgService.getOrganizations(), [] as Organization[]),
-      pages: safe(this._getAllPages(),                [] as PageContent[]),
-    }).pipe(
-      map(({ orgs, pages }) => this._compute(orgs, pages)),
-      catchError(err => of(this._emptyStats(err?.message || 'Failed to load dashboard data')))
-    );
-  }
-
   /** Fetch pages: try a few orgs, fall back to empty */
   private _getAllPages(): Observable<PageContent[]> {
-    // We don't have a global pages endpoint — we derive data we have from orgs
-    // and return empty so chart shows org-based data only
     return of([]);
   }
 
-  private _compute(orgs: Organization[], pages: PageContent[]): DashboardStats {
+  private _compute(orgs: Organization[], pages: PageContent[], period: 'Day'|'Week'|'Month'): DashboardStats {
     const now = new Date();
 
     // KPI
@@ -174,17 +225,28 @@ export class DashboardService {
     const inactiveOrgs   = orgs.length - activeOrgs;
     const publishedPages = pages.filter(p => p.status === 'Published').length;
 
-    // Growth: this week vs last week
-    const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - 7); weekStart.setHours(0,0,0,0);
-    const prevStart = new Date(weekStart); prevStart.setDate(prevStart.getDate() - 7);
+    // Growth: calculate based on period
+    let currentStart = new Date(now);
+    let prevStart = new Date(now);
 
-    const orgsThisWeek  = countCreatedInRange(orgs   as any[], weekStart, now);
-    const orgsPrevWeek  = countCreatedInRange(orgs   as any[], prevStart, weekStart);
-    const pagesThisWeek = countCreatedInRange(pages  as any[], weekStart, now);
-    const pagesPrevWeek = countCreatedInRange(pages  as any[], prevStart, weekStart);
+    if (period === 'Day') {
+      currentStart.setHours(now.getHours() - 24);
+      prevStart.setHours(currentStart.getHours() - 24);
+    } else if (period === 'Week') {
+      currentStart.setDate(now.getDate() - 7);
+      prevStart.setDate(currentStart.getDate() - 7);
+    } else {
+      currentStart.setDate(now.getDate() - 30);
+      prevStart.setDate(currentStart.getDate() - 30);
+    }
 
-    // Weekly activity chart
-    const weeklyActivity = buildWeeklyActivity(pages, orgs);
+    const orgsCurrent  = countCreatedInRange(orgs   as any[], currentStart, now);
+    const orgsPrev     = countCreatedInRange(orgs   as any[], prevStart, currentStart);
+    const pagesCurrent = countCreatedInRange(pages  as any[], currentStart, now);
+    const pagesPrev    = countCreatedInRange(pages  as any[], prevStart, currentStart);
+
+    // Chart
+    const weeklyActivity = buildActivityChart(pages, orgs, period);
 
     // Recent activity feed — orgs sorted by createdAt
     const recentActivity: RecentActivityItem[] = orgs
@@ -193,11 +255,11 @@ export class DashboardService {
         type:      'org' as const,
         icon:      'org' as const,
         title:     o.name,
-        subtitle:  `${o.slug}.com`,
+        subtitle: `${o.slug}.com`,
         createdAt: o.createdAt || '',
         timeAgo:   timeAgo(o.createdAt || '')
       }))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => parseUtcDate(b.createdAt).getTime() - parseUtcDate(a.createdAt).getTime())
       .slice(0, 10);
 
     return {
@@ -209,9 +271,9 @@ export class DashboardService {
       totalPages: pages.length,
       publishedPages,
       totalMenus: 0,
-      orgGrowthPct:  growthPct(orgsThisWeek,  orgsPrevWeek),
+      orgGrowthPct:  growthPct(orgsCurrent,  orgsPrev),
       userGrowthPct: 0,
-      pageGrowthPct: growthPct(pagesThisWeek, pagesPrevWeek),
+      pageGrowthPct: growthPct(pagesCurrent, pagesPrev),
       weeklyActivity,
       orgStatusRatio: orgs.length > 0 ? Math.round((activeOrgs / orgs.length) * 100) : 0,
       recentActivity,

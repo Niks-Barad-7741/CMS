@@ -7,6 +7,7 @@ namespace Dynamic_CMS.Application.Interfaces
 {
     public interface IOrganizationService
     {
+        Task<IEnumerable<OrganizationDto>> GetAllAsync();
         Task<IEnumerable<OrganizationDto>> GetAllActiveAsync();
         Task<OrganizationDto?> GetByIdAsync(Guid id);
         Task<OrganizationDto?> GetBySlugAsync(string slug);

@@ -18,6 +18,11 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             _context = context;
         }
 
+        public async Task<IEnumerable<Organization>> GetAllAsync()
+        {
+            return await _context.Organizations.ToListAsync();
+        }
+
         public async Task<IEnumerable<Organization>> GetAllActiveAsync()
         {
             return await _context.Organizations
