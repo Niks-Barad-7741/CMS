@@ -18,7 +18,7 @@ namespace Dynamic_CMS.Application.DTOs
         public string? ContactPhone { get; set; }
         public string? Address { get; set; }
         public string? SocialTwitter { get; set; }
-        public string? SocialLinkedin { get; set; }
-        public string? SocialGithub { get; set; }
+        public string? SocialFacebook { get; set; }
+        public string? SocialInstagram { get; set; }
     }
 }

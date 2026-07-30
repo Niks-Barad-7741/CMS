@@ -70,8 +70,8 @@ namespace Dynamic_CMS.Application.Services
                 ContactPhone = organization.ContactPhone,
                 Address = organization.Address,
                 SocialTwitter = organization.SocialTwitter,
-                SocialLinkedin = organization.SocialLinkedin,
-                SocialGithub = organization.SocialGithub
+                SocialFacebook = organization.SocialFacebook,
+                SocialInstagram = organization.SocialInstagram
             };
         }
 
