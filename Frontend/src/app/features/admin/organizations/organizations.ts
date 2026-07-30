@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OrganizationService, Organization } from '../../../core/services/organization.service';
 import { MenuService } from '../../../core/services/menu.service';
 import { PageService } from '../../../core/services/page.service';
+import { DashboardService } from '../../../core/services/dashboard.service';
 import { 
   HOME_TEMPLATE, 
   ABOUT_TEMPLATE, 
@@ -76,6 +77,7 @@ export class OrganizationsComponent implements OnInit {
     private orgService: OrganizationService,
     private menuService: MenuService,
     private pageService: PageService,
+    private dashboardService: DashboardService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -88,6 +90,7 @@ export class OrganizationsComponent implements OnInit {
       next: (data) => {
         this.organizations = data;
         this.cdr.detectChanges(); // Force UI update
+        this.dashboardService.refresh(); // Sync dashboard state
       },
       error: (err) => {
         console.error('Failed to load orgs', err);

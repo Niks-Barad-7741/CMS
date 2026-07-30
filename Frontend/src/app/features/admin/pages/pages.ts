@@ -43,6 +43,59 @@ const CORPORATE_WIREFRAME_HTML = `
   </section>
 </div>
 `;
+export interface FieldConfig {
+  key: string;
+  label: string;
+  type: 'text' | 'textarea' | 'image' | 'email';
+  placeholder: string;
+  fullWidth?: boolean;
+}
+
+export const MENU_FIELD_CONFIG: Record<string, FieldConfig[]> = {
+  home: [
+    { key: 'homeHeroTitle', label: 'Hero Main Title / Headline', type: 'text', placeholder: 'e.g. Build Your Digital Empire' },
+    { key: 'homeCtaText', label: 'Primary CTA Button Text', type: 'text', placeholder: 'e.g. Get Started Now' },
+    { key: 'homeHeroSubtitle', label: 'Hero Tagline / Subtitle', type: 'textarea', placeholder: 'Hero subtext...', fullWidth: true },
+    { key: 'homeBackgroundImage', label: 'Background Image URL (or upload)', type: 'image', placeholder: 'https://...', fullWidth: true },
+    { key: 'homeFeature1Title', label: 'Feature 1 Title', type: 'text', placeholder: 'Title' },
+    { key: 'homeFeature1Desc', label: 'Feature 1 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'homeFeature2Title', label: 'Feature 2 Title', type: 'text', placeholder: 'Title' },
+    { key: 'homeFeature2Desc', label: 'Feature 2 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'homeFeature3Title', label: 'Feature 3 Title', type: 'text', placeholder: 'Title' },
+    { key: 'homeFeature3Desc', label: 'Feature 3 Description', type: 'textarea', placeholder: 'Description' },
+  ],
+  about: [
+    { key: 'aboutTitle', label: 'Page Main Heading', type: 'text', placeholder: 'e.g. About Ayaan Corp' },
+    { key: 'aboutImage', label: 'Featured Image URL', type: 'text', placeholder: 'https://...' },
+    { key: 'aboutSubtitle', label: 'Mission / Header Tagline', type: 'text', placeholder: 'e.g. We are on a mission...', fullWidth: true },
+    { key: 'aboutStory1', label: 'Story Paragraph 1', type: 'textarea', placeholder: '...' },
+    { key: 'aboutStory2', label: 'Story Paragraph 2', type: 'textarea', placeholder: '...' },
+    { key: 'aboutPoint1', label: 'Key Highlight 1', type: 'text', placeholder: 'Bullet 1' },
+    { key: 'aboutPoint2', label: 'Key Highlight 2', type: 'text', placeholder: 'Bullet 2' },
+    { key: 'aboutPoint3', label: 'Key Highlight 3', type: 'text', placeholder: 'Bullet 3' },
+  ],
+  services: [
+    { key: 'servicesTitle', label: 'Services Page Heading', type: 'text', placeholder: 'e.g. Our Services' },
+    { key: 'servicesSubtitle', label: 'Services Subtitle', type: 'text', placeholder: 'Subtitle...' },
+    { key: 'service1Title', label: 'Service 1 Title', type: 'text', placeholder: 'Title' },
+    { key: 'service1Desc', label: 'Service 1 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'service2Title', label: 'Service 2 Title', type: 'text', placeholder: 'Title' },
+    { key: 'service2Desc', label: 'Service 2 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'service3Title', label: 'Service 3 Title', type: 'text', placeholder: 'Title' },
+    { key: 'service3Desc', label: 'Service 3 Description', type: 'textarea', placeholder: 'Description' },
+  ],
+  contact: [
+    { key: 'contactTitle', label: 'Page Title', type: 'text', placeholder: 'e.g. Get in Touch' },
+    { key: 'contactSubtitle', label: 'Page Subtitle', type: 'text', placeholder: 'Subtext...' },
+    { key: 'email', label: 'Contact Email', type: 'email', placeholder: 'hello@ayaan.com' },
+    { key: 'phone', label: 'Contact Phone', type: 'text', placeholder: '+1 (555) 123-4567' },
+    { key: 'address', label: 'Office Address', type: 'text', placeholder: 'Address...', fullWidth: true },
+  ],
+  generic: [
+    { key: 'tagline', label: 'Tagline / Headline', type: 'text', placeholder: 'e.g. Building Next-Gen Platform Solutions', fullWidth: true },
+    { key: 'description', label: 'Page Subtitle / Description', type: 'textarea', placeholder: 'Describe your page content or offerings...', fullWidth: true },
+  ]
+};
 
 @Component({
   selector: 'app-pages',
@@ -68,6 +121,11 @@ export class PagesComponent implements OnInit {
   templates: SiteTemplate[] = SITE_TEMPLATES;
   selectedTemplateId: string = 'blank';
   
+  formData: any = { title: '', status: 'Draft' };
+
+  get currentFields(): FieldConfig[] {
+    return MENU_FIELD_CONFIG[this.getSelectedMenuType()] || [];
+  }
   formData: any = { title: '', status: 'Draft', sortOrder: 1 };
   
   // Clean Input Fields for Content Customization

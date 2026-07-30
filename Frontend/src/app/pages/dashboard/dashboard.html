@@ -155,7 +155,9 @@
       <!-- Chart header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <div>
-          <h3 class="text-sm font-bold" style="color:var(--text-primary)">Weekly Activity</h3>
+          <h3 class="text-sm font-bold" style="color:var(--text-primary)">
+            {{ selectedPeriod() === 'Day' ? 'Daily' : selectedPeriod() === 'Week' ? 'Weekly' : 'Monthly' }} Activity
+          </h3>
           <div class="flex items-center gap-4 mt-1.5">
             <span class="flex items-center gap-1.5 text-xs font-medium" style="color:var(--text-muted)">
               <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#6366F1"></span>
@@ -221,26 +223,14 @@
                   stroke-linecap="round" stroke-linejoin="round"
                   class="chart-line" pathLength="1" style="animation-delay:.2s"/>
 
-            <!-- Dot points: total -->
-            @for (pt of svgDotPoints(stats!.weeklyActivity, 'total'); track pt.x) {
-              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4"
-                      fill="white" stroke="#06B6D4" stroke-width="2.5">
-                <title>{{ pt.value }} events</title>
-              </circle>
-            }
-            <!-- Dot points: orgs -->
-            @for (pt of svgDotPoints(stats!.weeklyActivity, 'orgs'); track pt.x) {
-              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4"
-                      fill="white" stroke="#6366F1" stroke-width="2.5">
-                <title>{{ pt.value }} org events</title>
-              </circle>
-            }
+
           </svg>
 
-          <!-- X-axis labels -->
           <div class="flex justify-between mt-2 px-4">
-            @for (day of stats!.weeklyActivity; track day.date) {
-              <span class="text-[11px] font-medium" style="color:var(--text-muted)">{{ day.day }}</span>
+            @for (day of stats!.weeklyActivity; track day.date; let idx = $index) {
+              <span class="text-[11px] font-medium text-center w-6" style="color:var(--text-muted)">
+                {{ (stats!.weeklyActivity.length > 7 && idx % 3 !== 0) ? '' : day.day }}
+              </span>
             }
           </div>
         </div>
@@ -290,10 +280,13 @@
       @if (isAdmin) {
         <div class="flex gap-2 mb-4 flex-wrap">
           @for (tag of ['All','Active','Inactive']; track tag) {
-            <span class="text-xs px-2.5 py-1 rounded-full cursor-pointer font-medium transition-colors"
-                  style="background:var(--bg-base); color:var(--text-secondary);">
+            <button type="button"
+                    (click)="setOrgFilter($any(tag))"
+                    class="text-xs px-2.5 py-1 rounded-full cursor-pointer font-medium transition-colors border-none"
+                    [style.background]="orgStatusFilter() === tag ? 'var(--text-primary)' : 'var(--bg-base)'"
+                    [style.color]="orgStatusFilter() === tag ? 'var(--bg-base)' : 'var(--text-secondary)'">
               {{ tag }}
-            </span>
+            </button>
           }
         </div>
       }
@@ -340,10 +333,7 @@
                   <div class="flex items-center justify-end gap-3">
                     <a [href]="'/site/' + org.slug + '/home'" target="_blank"
                        class="text-xs font-semibold transition-colors"
-                       style="color:#6366F1;">View</a>
-                    <a routerLink="/admin/organizations"
-                       class="text-xs font-medium transition-colors"
-                       style="color:var(--text-muted);">Edit</a>
+                       style="color:#6366F1;">View Site</a>
                   </div>
                 </td>
               </tr>

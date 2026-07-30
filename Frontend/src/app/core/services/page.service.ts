@@ -39,7 +39,7 @@ export class PageService {
 
   // Admin / Client Editor
   getPagesForOrg(orgId: string): Observable<PageContent[]> {
-    return this.http.get<PageContent[]>(`${this.baseUrl}/admin/organizations/${orgId}/pages`);
+    return this.http.get<PageContent[]>(`${this.baseUrl}/admin/content/${orgId}`);
   }
 
   savePageContent(orgId: string, menuItemId: string, data: any): Observable<any> {

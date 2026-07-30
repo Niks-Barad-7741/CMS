@@ -146,8 +146,10 @@ interface NavItem {
 
           <!-- Right actions -->
           <div class="flex items-center gap-3">
-            <!-- Profile Info with Online Status & Logout -->
-            <div class="hidden sm:flex items-center gap-3 pl-3"
+
+
+            <!-- Role badge -->
+            <div class="hidden sm:flex items-center gap-2.5 pl-3"
                  style="border-left:1px solid var(--border-card);">
               <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
                    style="background: linear-gradient(135deg,#6366F1,#8B5CF6);">

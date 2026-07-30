@@ -102,7 +102,7 @@ export class PageViewerComponent implements OnInit {
                ${bgStyle}>
             
             <!-- Overlay to ensure text readability -->
-            <div class="absolute inset-0 bg-white/70 backdrop-blur-[2px]"></div>
+            <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
 
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
               <div class="max-w-3xl">

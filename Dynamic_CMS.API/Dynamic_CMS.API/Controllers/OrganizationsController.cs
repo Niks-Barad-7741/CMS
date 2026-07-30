@@ -42,7 +42,7 @@ namespace Dynamic_CMS.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var organizations = await _organizationService.GetAllActiveAsync();
+            var organizations = await _organizationService.GetAllAsync();
             if (organizations == null || !organizations.Any())
                 return NotFound(ApiResponse.FailureResponse("No records found.", 404));
 
