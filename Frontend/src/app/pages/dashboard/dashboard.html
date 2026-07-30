@@ -319,8 +319,10 @@
                   <span class="text-xs font-mono" style="color:#6366F1;">{{ org.slug }}.com</span>
                 </td>
                 <td class="py-3.5 px-2">
-                  <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                        [class]="org.isActive ? 'badge-success' : 'badge-danger'">
+                  <span class="text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider"
+                        [style.background]="org.isActive ? '#E6F4EA' : '#FCE8E6'"
+                        [style.color]="org.isActive ? '#137333' : '#C5221F'"
+                        [style.border]="org.isActive ? '1px solid #A3E2AB' : '1px solid #FAD2CF'">
                     {{ org.isActive ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
@@ -331,9 +333,12 @@
                 </td>
                 <td class="py-3.5 px-2 text-right">
                   <div class="flex items-center justify-end gap-3">
-                    <a [href]="'/site/' + org.slug + '/home'" target="_blank"
+                    <a [href]="org.isActive ? '/site/' + org.slug + '/home' : 'javascript:void(0)'" 
+                       [target]="org.isActive ? '_blank' : '_self'"
                        class="text-xs font-semibold transition-colors"
-                       style="color:#6366F1;">View Site</a>
+                       [style.color]="org.isActive ? '#6366F1' : '#9ca3af'"
+                       [style.pointer-events]="org.isActive ? 'auto' : 'none'"
+                       [style.cursor]="org.isActive ? 'pointer' : 'default'">View Site</a>
                   </div>
                 </td>
               </tr>

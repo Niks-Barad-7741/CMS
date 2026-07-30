@@ -149,5 +149,19 @@ namespace Dynamic_CMS.Application.Services
 
             return true;
         }
+
+        public async Task<bool> ToggleStatusAsync(Guid id, string? userName = null)
+        {
+            var organization = await _repository.GetByIdAsync(id);
+            if (organization == null) return false;
+
+            organization.IsActive = !organization.IsActive;
+            organization.ModifiedDate = DateTime.UtcNow;
+            organization.ModifiedBy = userName;
+            _repository.Update(organization);
+            await _repository.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

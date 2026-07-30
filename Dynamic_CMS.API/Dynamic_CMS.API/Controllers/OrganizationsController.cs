@@ -141,5 +141,21 @@ namespace Dynamic_CMS.API.Controllers
                 return BadRequest(ApiResponse.FailureResponse(ex.Message, 400));
             }
         }
+
+        [HttpPut("{id}/toggle-status")]
+        public async Task<IActionResult> ToggleStatus(Guid id)
+        {
+            try
+            {
+                var result = await _organizationService.ToggleStatusAsync(id, GetCurrentUserName());
+                if (!result) return NotFound(ApiResponse.FailureResponse("Resource not found.", 404));
+
+                return Ok(ApiResponse.SuccessResponse("Status updated successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse.FailureResponse(ex.Message, 400));
+            }
+        }
     }
 }
