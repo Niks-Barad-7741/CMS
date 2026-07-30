@@ -14,6 +14,7 @@ namespace Dynamic_CMS.Infrastructure.Data
         public DbSet<MenuItem> MenuItems { get; set; } = null!;
         public DbSet<PageContent> PageContents { get; set; } = null!;
         public DbSet<Media> Media { get; set; } = null!;
+        public DbSet<SubMenuItem> SubMenuItems { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -102,6 +103,25 @@ namespace Dynamic_CMS.Infrastructure.Data
                     .WithMany()
                     .HasForeignKey(m => m.UploadedByUserId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SubMenuItem>(entity =>
+            {
+                entity.ToTable("SubMenuItems");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Page).IsRequired().HasMaxLength(100);
+
+                // Soft delete filter
+                entity.HasQueryFilter(e => !e.IsDeleted);
+
+                // Foreign key to MenuItem
+                entity.HasOne(s => s.MenuItem)
+                    .WithMany(m => m.SubMenuItems)
+                    .HasForeignKey(s => s.MenuItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(s => s.MenuItemId);
             });
         }
     }

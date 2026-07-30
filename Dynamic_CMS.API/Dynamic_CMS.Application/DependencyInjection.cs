@@ -27,6 +27,7 @@ namespace Dynamic_CMS.Application
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IOrganizationService, Dynamic_CMS.Application.Services.OrganizationService>();
             services.AddScoped<Dynamic_CMS.Application.Interfaces.IPageContentService, Dynamic_CMS.Application.Services.PageContentService>();
             services.AddScoped<Dynamic_CMS.Application.Interfaces.ISiteProvisioningService, Dynamic_CMS.Application.Services.SiteProvisioningService>();
+            services.AddScoped<Dynamic_CMS.Application.Interfaces.ISubMenuItemService, Dynamic_CMS.Application.Services.SubMenuItemService>();
 
             return services;
         }
