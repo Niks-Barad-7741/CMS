@@ -5,7 +5,7 @@
 <!-- TOP UPSIDE SUCCESS BANNER -->
 <div *ngIf="successMessage" class="mb-6 bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 flex items-center justify-between shadow-lg transition-all transform animate-fade-in">
   <div class="flex items-center gap-3">
-    <span class="text-2xl">✅</span>
+    <svg class="w-8 h-8 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     <div>
       <h4 class="text-sm font-bold text-emerald-900">Saved Successfully!</h4>
       <p class="text-xs text-emerald-700 mt-0.5 font-medium">{{ successMessage }}</p>
@@ -23,7 +23,7 @@
 <!-- TOP UPSIDE ERROR BANNER -->
 <div *ngIf="errorMessage" class="mb-6 bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 flex items-start justify-between shadow-lg transition-all animate-fade-in">
   <div class="flex items-start gap-3">
-    <span class="text-2xl">⚠️</span>
+    <svg class="w-8 h-8 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
     <div>
       <h4 class="text-sm font-bold text-rose-900">Notice</h4>
       <p class="text-xs text-rose-700 mt-0.5 font-medium leading-relaxed">{{ errorMessage }}</p>
@@ -32,44 +32,171 @@
   <button (click)="dismissError()" class="text-rose-400 hover:text-rose-600 p-1 text-base font-bold">✕</button>
 </div>
 
+<!-- Initializing State -->
+<div *ngIf="isInitializing" class="text-center p-12 bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 animate-pulse">
+  <div class="inline-block w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+  <h3 class="text-xl font-bold text-gray-800">Loading Builder...</h3>
+  <p class="text-gray-500 mt-2">Please wait while we initialize the Visual Website Builder.</p>
+</div>
+
+<ng-container *ngIf="!isInitializing">
 <!-- Selectors -->
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     
-    <div *ngIf="role === 'Admin'">
+    <div *ngIf="role === 'Admin'" class="md:col-span-2 relative">
       <label class="block text-sm font-semibold text-gray-700">Target Organization</label>
-      <select [(ngModel)]="selectedOrgId" (change)="onSelectionChange()" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium">
-        <option [ngValue]="null">-- Select Organization --</option>
-        <option *ngFor="let org of organizations" [ngValue]="org.id">{{ org.name }}</option>
-      </select>
-    </div>
-
-    <div>
-      <label class="block text-sm font-semibold text-gray-700">Page / Menu Item</label>
-      <select [(ngModel)]="selectedMenuId" (change)="onSelectionChange()" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium">
-        <option [ngValue]="null">-- Select Page --</option>
-        <option *ngFor="let menu of menus" [ngValue]="menu.id">{{ menu.title }}</option>
-      </select>
+      <div class="relative mt-2">
+        <button (click)="isOrgDropdownOpen = !isOrgDropdownOpen" type="button" class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-gray-50 p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+           <span class="font-medium text-gray-900">{{ getSelectedOrgName() || '-- Select Organization --' }}</span>
+           <svg class="h-5 w-5 text-gray-500 transition-transform" [class.rotate-180]="isOrgDropdownOpen" viewBox="0 0 20 20" fill="currentColor">
+             <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+           </svg>
+        </button>
+        
+        <!-- Backdrop -->
+        <div *ngIf="isOrgDropdownOpen" (click)="isOrgDropdownOpen = false" class="fixed inset-0 z-10"></div>
+        
+        <!-- Dropdown Menu -->
+        <div *ngIf="isOrgDropdownOpen" class="absolute z-20 mt-2 w-full origin-top rounded-xl bg-white shadow-xl ring-1 ring-black/5 focus:outline-none overflow-hidden animate-fade-in">
+          <div class="max-h-60 overflow-y-auto p-1">
+            <div (click)="selectOrg(null)" 
+                 class="relative cursor-pointer select-none py-2.5 px-4 rounded-lg transition-colors font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                 [class.bg-indigo-50]="!selectedOrgId" [class.text-indigo-700]="!selectedOrgId">
+              -- Select Organization --
+            </div>
+            <div *ngFor="let org of organizations" 
+                 (click)="selectOrg(org.id)" 
+                 class="relative cursor-pointer select-none py-2.5 px-4 rounded-lg transition-colors font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                 [class.bg-indigo-50]="selectedOrgId === org.id" [class.text-indigo-700]="selectedOrgId === org.id">
+              {{ org.name }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<div *ngIf="!selectedOrgId || !selectedMenuId" class="text-center p-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+<div *ngIf="!selectedOrgId" class="text-center p-12 bg-white rounded-2xl shadow-sm border border-gray-100">
   <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
   </div>
-  <h3 class="text-xl font-bold text-gray-800">Waiting for selection</h3>
-  <p class="text-gray-500 mt-2">Please select an Organization and a Page above to start editing.</p>
+  <h3 class="text-xl font-bold text-gray-800">No Organization Selected</h3>
+  <p class="text-gray-500 mt-2">Please select a Target Organization above to manage its pages.</p>
+</div>
+
+<!-- Menu List Table (Visible when Org is selected but no specific Menu is selected for editing) -->
+<div *ngIf="selectedOrgId && !selectedMenuId" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+    <div>
+      <h3 class="text-xl font-bold text-gray-900 flex items-center">
+        <svg class="w-6 h-6 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        Pages for {{ getOrgName() }}
+      </h3>
+      <p class="text-gray-500 text-sm mt-0.5">Drag rows up and down to reorder the website navigation menu.</p>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
+          <th class="p-4 font-semibold w-12 text-center">≡</th>
+          <th class="p-4 font-semibold">Menu Name</th>
+          <th class="p-4 font-semibold">Status</th>
+          <th class="p-4 font-semibold text-center w-24">Sort Order</th>
+          <th class="p-4 font-semibold text-right w-32">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading State -->
+        <tr *ngIf="isLoadingPages">
+          <td colspan="5" class="p-12 text-center text-gray-500">
+            <div class="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mb-2"></div>
+            <p>Loading pages...</p>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr *ngIf="!isLoadingPages && menuListItems.length === 0">
+          <td colspan="5" class="p-8 text-center text-gray-500">No menus available.</td>
+        </tr>
+        
+        <!-- Interactive Rows -->
+        <ng-container *ngIf="!isLoadingPages">
+          <tr *ngFor="let item of menuListItems; let i = index" 
+            class="border-b border-gray-100 transition-colors"
+            [class.bg-indigo-50]="dragIndex === i"
+            [class.hover:bg-gray-50]="dragIndex !== i"
+            [attr.draggable]="item.hasContent ? 'true' : 'false'"
+            (dragstart)="onDragStart(i)"
+            (dragover)="onDragOver($event, i)"
+            (drop)="onDrop(i)">
+          
+          <!-- Drag Handle -->
+          <td class="p-4 text-center text-gray-400" [class.cursor-move]="item.hasContent" [class.opacity-30]="!item.hasContent">
+            <svg *ngIf="item.hasContent" class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+          </td>
+          
+          <!-- Menu Title -->
+          <td class="p-4 font-medium text-gray-900">
+            {{ item.menu.title }}
+            <span *ngIf="!item.hasContent" class="ml-2 text-xs text-gray-400 font-normal">(Template available)</span>
+          </td>
+          
+          <!-- Status Badge -->
+          <td class="p-4">
+            <span *ngIf="item.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Published
+            </span>
+            <span *ngIf="item.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              Draft
+            </span>
+            <span *ngIf="item.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+              Not Added
+            </span>
+          </td>
+          
+          <!-- Sort Order -->
+          <td class="p-4 text-center font-bold text-gray-700">
+            {{ item.hasContent ? item.sortOrder : '—' }}
+          </td>
+          
+          <!-- Actions -->
+          <td class="p-4 text-right">
+            <button *ngIf="item.hasContent" (click)="editPage(item.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              Edit
+            </button>
+            <button *ngIf="!item.hasContent" (click)="addPage(item.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+              Add
+            </button>
+          </td>
+        </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 
 
 <!-- Edit / Create Form Block -->
-<div *ngIf="selectedOrgId && selectedMenuId" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+<div *ngIf="selectedOrgId && selectedMenuId" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 animate-fade-in">
   <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
-    <div>
-      <h3 class="text-xl font-bold text-gray-900">Page Content Details</h3>
-      <p class="text-gray-500 text-sm mt-0.5">Customize your page text & settings, then save to publish to your website.</p>
+    <div class="flex items-center gap-4">
+      <button (click)="backToList()" class="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500 hover:text-gray-800" title="Back to Menu List">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      </button>
+      <div>
+        <h3 class="text-xl font-bold text-gray-900">Page Content Details</h3>
+        <p class="text-gray-500 text-sm mt-0.5">Customize your page text & settings, then save to publish to your website.</p>
+      </div>
     </div>
 
   </div>
@@ -79,21 +206,32 @@
 
 
     <!-- Basic Info -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700">Page Title (H1)</label>
         <input type="text" [(ngModel)]="formData.title" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium" placeholder="e.g. Services">
       </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-700">Navbar Sequence Order</label>
-        <input type="number" [(ngModel)]="formData.sortOrder" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium" placeholder="1">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-700">Status</label>
-        <select [(ngModel)]="formData.status" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium">
-          <option value="Draft">Draft</option>
-          <option value="Published">Published</option>
-        </select>
+      <div class="flex flex-col md:items-end">
+          <label class="block text-sm font-semibold text-gray-700 w-full md:text-right">Status</label>
+          <div class="flex items-center gap-3 mt-2 h-[50px] justify-start md:justify-end w-full">
+            <button type="button" 
+                    (click)="formData.status = formData.status === 'Published' ? 'Draft' : 'Published'"
+                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    [class.bg-emerald-500]="formData.status === 'Published'"
+                    [class.bg-gray-200]="formData.status !== 'Published'"
+                    role="switch" 
+                    [attr.aria-checked]="formData.status === 'Published'">
+              <span aria-hidden="true" 
+                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                    [class.translate-x-5]="formData.status === 'Published'"
+                    [class.translate-x-0]="formData.status !== 'Published'"></span>
+            </button>
+            <span class="text-sm font-medium" 
+                  [class.text-emerald-700]="formData.status === 'Published'"
+                  [class.text-gray-500]="formData.status !== 'Published'">
+              {{ formData.status }}
+            </span>
+          </div>
       </div>
     </div>
 
@@ -279,7 +417,7 @@
     <div class="pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
 
       <div class="flex items-center gap-3">
-        <button (click)="createAndOpenBuilder()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-6 py-3 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 transition-all">
+        <button (click)="createAndOpenBuilder()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-6 py-3.5 border border-indigo-200 rounded-xl text-base font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 transition-all">
           Open Visual Builder
         </button>
 
@@ -291,3 +429,4 @@
     </div>
   </div>
 </div>
+</ng-container>

@@ -63,7 +63,15 @@ namespace Dynamic_CMS.Infrastructure.Repositories
 
         public async Task UpdateAsync(PageContent pageContent, CancellationToken cancellationToken)
         {
-            _context.PageContents.Update(pageContent);
+            var tracked = _context.Set<PageContent>().Local.FirstOrDefault(e => e.Id == pageContent.Id);
+            if (tracked != null && tracked != pageContent)
+            {
+                _context.Entry(tracked).CurrentValues.SetValues(pageContent);
+            }
+            else if (tracked == null)
+            {
+                _context.PageContents.Update(pageContent);
+            }
             await _context.SaveChangesAsync(cancellationToken);
         }
 
