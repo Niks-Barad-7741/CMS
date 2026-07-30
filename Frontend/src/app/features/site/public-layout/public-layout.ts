@@ -90,4 +90,28 @@ export class PublicLayoutComponent implements OnInit {
   getPageLink(page: string): string[] {
     return ['/site', this.orgSlug, page];
   }
+
+  getSocialUrl(platform: string, value: string): string {
+    if (!value) return '#';
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    let cleanVal = value.trim();
+    while (cleanVal.startsWith('/')) {
+      cleanVal = cleanVal.substring(1);
+    }
+    while (cleanVal.endsWith('/')) {
+      cleanVal = cleanVal.substring(0, cleanVal.length - 1);
+    }
+    switch (platform.toLowerCase()) {
+      case 'twitter':
+        return `https://x.com/${cleanVal}`;
+      case 'facebook':
+        return `https://facebook.com/${cleanVal}`;
+      case 'instagram':
+        return `https://instagram.com/${cleanVal}`;
+      default:
+        return cleanVal;
+    }
+  }
 }

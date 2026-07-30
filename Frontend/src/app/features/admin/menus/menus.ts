@@ -15,8 +15,95 @@ export class MenusComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   formData: any = { title: '', page: '', sortOrder: 0, isVisible: true };
-
   errorMessage: string | null = null;
+
+  // Inline Creation Properties
+  newMenuData = { title: '', page: '' };
+
+  // Toast & Modal Notification Properties
+  toastMessage: string | null = null;
+  showDeleteModal = false;
+  deleteTargetId: string | null = null;
+  deleteTargetTitle = '';
+
+  showToast(msg: string) {
+    this.toastMessage = msg;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.toastMessage = null;
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
+  confirmDelete(menu: MenuItem) {
+    this.deleteTargetId = menu.id;
+    this.deleteTargetTitle = menu.title;
+    this.showDeleteModal = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelDelete() {
+    this.showDeleteModal = false;
+    this.deleteTargetId = null;
+    this.deleteTargetTitle = '';
+    this.cdr.detectChanges();
+  }
+
+  executeDelete() {
+    if (!this.deleteTargetId) return;
+    this.menuService.deleteMenu(this.deleteTargetId).subscribe({
+      next: () => {
+        this.showToast(`Menu '${this.deleteTargetTitle}' deleted successfully.`);
+        this.loadMenus();
+        this.cancelDelete();
+      },
+      error: (err) => {
+        console.error('Delete failed:', err);
+        this.errorMessage = 'Delete failed: ' + this.extractErrorMessage(err);
+        this.cancelDelete();
+      }
+    });
+  }
+
+  get nextSortOrder(): number {
+    return this.menus.length > 0 ? Math.max(...this.menus.map(m => m.sortOrder)) + 1 : 1;
+  }
+
+  generateInlineSlug() {
+    this.newMenuData.page = (this.newMenuData.title || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  submittedEmptyInline = false;
+
+  saveInline() {
+    if (!this.newMenuData.title || !this.newMenuData.page) {
+      this.submittedEmptyInline = true;
+      this.cdr.detectChanges();
+      return;
+    }
+    const payload = {
+      title: this.newMenuData.title,
+      page: this.newMenuData.page,
+      sortOrder: this.nextSortOrder,
+      isVisible: true
+    };
+    this.menuService.createMenu(payload).subscribe({
+      next: () => {
+        this.submittedEmptyInline = false;
+        this.showToast(`Menu '${payload.title}' added successfully.`);
+        this.loadMenus();
+        this.newMenuData = { title: '', page: '' };
+      },
+      error: (err) => {
+        console.error('Create failed:', err);
+        alert(this.extractErrorMessage(err));
+      }
+    });
+  }
 
   constructor(
     private menuService: MenuService,
@@ -89,6 +176,7 @@ export class MenusComponent implements OnInit {
     if (this.editingId) {
       this.menuService.updateMenu(this.editingId, this.formData).subscribe({
         next: () => {
+          this.showToast(`Menu '${this.formData.title}' updated successfully.`);
           this.loadMenus();
           this.closeForm();
         },
@@ -101,6 +189,7 @@ export class MenusComponent implements OnInit {
     } else {
       this.menuService.createMenu(this.formData).subscribe({
         next: () => {
+          this.showToast(`Menu '${this.formData.title}' added successfully.`);
           this.loadMenus();
           this.closeForm();
         },
@@ -125,14 +214,9 @@ export class MenusComponent implements OnInit {
   }
 
   deleteMenu(id: string) {
-    if (confirm('WARNING: Deleting a menu item will remove its associated content across ALL organizations! Are you completely sure?')) {
-      this.menuService.deleteMenu(id).subscribe({
-        next: () => this.loadMenus(),
-        error: (err) => {
-           console.error('Delete failed:', err);
-           alert('Delete failed: ' + this.extractErrorMessage(err));
-        }
-      });
+    const menu = this.menus.find(m => m.id === id);
+    if (menu) {
+      this.confirmDelete(menu);
     }
   }
 
