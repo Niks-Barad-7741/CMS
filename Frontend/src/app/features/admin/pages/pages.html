@@ -129,14 +129,14 @@
             class="border-b border-gray-100 transition-colors"
             [class.bg-indigo-50]="dragIndex === i"
             [class.hover:bg-gray-50]="dragIndex !== i"
-            [attr.draggable]="item.hasContent ? 'true' : 'false'"
+            draggable="true"
             (dragstart)="onDragStart(i)"
             (dragover)="onDragOver($event, i)"
             (drop)="onDrop(i)">
           
           <!-- Drag Handle -->
-          <td class="p-4 text-center text-gray-400" [class.cursor-move]="item.hasContent" [class.opacity-30]="!item.hasContent">
-            <svg *ngIf="item.hasContent" class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+          <td class="p-4 text-center text-gray-400 cursor-move">
+            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
           </td>
           
           <!-- Menu Title -->
