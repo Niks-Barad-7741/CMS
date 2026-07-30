@@ -53,8 +53,8 @@ namespace Dynamic_CMS.API.Controllers
         */
 
         // ADMIN/CLIENT: GET /api/admin/content/{organizationId} or /api/admin/organizations/{organizationId}/pages
-        [HttpGet("api/admin/content/{organizationId:guid}")]
-       // [HttpGet("api/admin/organizations/{organizationId:guid}/pages")]
+       // [HttpGet("api/admin/content/{organizationId:guid}")]
+        [HttpGet("api/admin/organizations/{organizationId:guid}/pages")]
         [Authorize]
         public async Task<IActionResult> GetAllByOrganization(Guid organizationId, CancellationToken cancellationToken)
         {

@@ -10,7 +10,7 @@
    Design Tokens — Light Mode
    ──────────────────────────────────────────────── */
 :root {
-  --bg-base:        #F1F5F9;
+  --bg-base:        #E5E7EB;
   --bg-card:        #FFFFFF;
   --bg-sidebar:     #0B1121;
   --border-card:    rgba(226,232,240,0.8);

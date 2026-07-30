@@ -28,6 +28,51 @@ export class OrganizationsComponent implements OnInit {
   errorMessage: string | null = null;
   isSaving = false;
 
+  // Toast & Modal Notification Properties
+  toastMessage: string | null = null;
+  showDeleteModal = false;
+  deleteTargetId: string | null = null;
+  deleteTargetName = '';
+
+  showToast(msg: string) {
+    this.toastMessage = msg;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.toastMessage = null;
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
+  confirmDelete(org: Organization) {
+    this.deleteTargetId = org.id;
+    this.deleteTargetName = org.name;
+    this.showDeleteModal = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelDelete() {
+    this.showDeleteModal = false;
+    this.deleteTargetId = null;
+    this.deleteTargetName = '';
+    this.cdr.detectChanges();
+  }
+
+  executeDelete() {
+    if (!this.deleteTargetId) return;
+    this.orgService.deleteOrganization(this.deleteTargetId).subscribe({
+      next: () => {
+        this.showToast(`Organization '${this.deleteTargetName}' deleted successfully.`);
+        this.loadOrganizations();
+        this.cancelDelete();
+      },
+      error: (err) => {
+        console.error('Delete failed:', err);
+        this.errorMessage = 'Delete failed: ' + this.extractErrorMessage(err);
+        this.cancelDelete();
+      }
+    });
+  }
+
   constructor(
     private orgService: OrganizationService,
     private menuService: MenuService,
@@ -70,8 +115,8 @@ export class OrganizationsComponent implements OnInit {
       contactPhone: '',
       address: '',
       socialTwitter: '',
-      socialLinkedin: '',
-      socialGithub: ''
+      socialFacebook: '',
+      socialInstagram: ''
     };
     this.errorMessage = null;
     this.showForm = true;
@@ -99,6 +144,79 @@ export class OrganizationsComponent implements OnInit {
 
   save() {
     this.errorMessage = null;
+
+    // Contact Email Validation
+    if (this.formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.formData.contactEmail)) {
+      this.errorMessage = 'Contact Email must be a valid email address.';
+      return;
+    }
+
+    // Contact Phone Validation (exactly 10 digits)
+    if (this.formData.contactPhone && !/^\d{10}$/.test(this.formData.contactPhone)) {
+      this.errorMessage = 'Contact Phone must be exactly a 10-digit number (e.g. 9876543210).';
+      return;
+    }
+
+    // Twitter URL Validation (valid HTTP/HTTPS URL containing twitter.com or x.com)
+    if (this.formData.socialTwitter) {
+      try {
+        const url = new URL(this.formData.socialTwitter);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          throw new Error();
+        }
+        const host = url.hostname.toLowerCase();
+        if (!host.includes('twitter.com') && !host.includes('x.com')) {
+          this.errorMessage = 'Twitter link must be a valid URL containing twitter.com or x.com.';
+          return;
+        }
+      } catch (_) {
+        this.errorMessage = 'Twitter link must be a valid URL starting with http:// or https://.';
+        return;
+      }
+    }
+
+    // Facebook ID/URL Validation (valid URL containing facebook.com or handle allowing slashes)
+    if (this.formData.socialFacebook) {
+      const val = this.formData.socialFacebook;
+      if (val.startsWith('http://') || val.startsWith('https://')) {
+        try {
+          const url = new URL(val);
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error();
+          if (!url.hostname.toLowerCase().includes('facebook.com')) {
+            this.errorMessage = 'Facebook link must be a valid URL containing facebook.com.';
+            return;
+          }
+        } catch (_) {
+          this.errorMessage = 'Facebook link must be a valid URL starting with http:// or https://.';
+          return;
+        }
+      } else if (!/^[a-zA-Z0-9._/]+$/.test(val)) {
+        this.errorMessage = 'Facebook ID must be a valid alphanumeric handle (dots, underscores, and slashes allowed).';
+        return;
+      }
+    }
+
+    // Instagram ID/URL Validation (valid URL containing instagram.com or handle allowing slashes)
+    if (this.formData.socialInstagram) {
+      const val = this.formData.socialInstagram;
+      if (val.startsWith('http://') || val.startsWith('https://')) {
+        try {
+          const url = new URL(val);
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error();
+          if (!url.hostname.toLowerCase().includes('instagram.com')) {
+            this.errorMessage = 'Instagram link must be a valid URL containing instagram.com.';
+            return;
+          }
+        } catch (_) {
+          this.errorMessage = 'Instagram link must be a valid URL starting with http:// or https://.';
+          return;
+        }
+      } else if (!/^[a-zA-Z0-9._/]+$/.test(val)) {
+        this.errorMessage = 'Instagram ID must be a valid alphanumeric handle (dots, underscores, and slashes allowed).';
+        return;
+      }
+    }
+
     this.isSaving = true;
 
     const payload = {
@@ -110,13 +228,14 @@ export class OrganizationsComponent implements OnInit {
       contactPhone: this.formData.contactPhone,
       address: this.formData.address,
       socialTwitter: this.formData.socialTwitter,
-      socialLinkedin: this.formData.socialLinkedin,
-      socialGithub: this.formData.socialGithub
+      socialFacebook: this.formData.socialFacebook,
+      socialInstagram: this.formData.socialInstagram
     };
 
     if (this.editingId) {
       this.orgService.updateOrganization(this.editingId, payload).subscribe({
         next: () => {
+          this.showToast(`Organization '${payload.name}' updated successfully.`);
           this.loadOrganizations();
           this.closeForm();
         },
@@ -130,6 +249,7 @@ export class OrganizationsComponent implements OnInit {
     } else {
       this.orgService.createOrganization(payload).subscribe({
         next: (org) => {
+          this.showToast(`Organization '${payload.name}' created successfully.`);
           if (this.formData.initializeTemplates) {
             this.setupSiteContent(org);
           } else {
@@ -207,10 +327,9 @@ export class OrganizationsComponent implements OnInit {
   }
 
   deleteOrg(id: string) {
-    if (confirm('Are you sure you want to delete this organization?')) {
-      this.orgService.deleteOrganization(id).subscribe({
-        next: () => this.loadOrganizations()
-      });
+    const org = this.organizations.find(o => o.id === id);
+    if (org) {
+      this.confirmDelete(org);
     }
   }
 }

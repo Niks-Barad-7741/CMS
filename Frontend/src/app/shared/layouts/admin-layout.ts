@@ -151,25 +151,28 @@ interface NavItem {
             <!-- Role badge -->
             <div class="hidden sm:flex items-center gap-2.5 pl-3"
                  style="border-left:1px solid var(--border-card);">
-              <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm"
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
                    style="background: linear-gradient(135deg,#6366F1,#8B5CF6);">
                 {{ roleInitial }}
               </div>
-              <div class="hidden md:block">
-                <p class="text-sm font-semibold" style="color:var(--text-primary);">{{ role }}</p>
-                <p class="text-xs" style="color:var(--text-muted)">{{ isAdmin ? 'System Admin' : 'Workspace Client' }}</p>
+              <div class="hidden md:block text-left min-w-0">
+                <p class="text-sm font-semibold truncate" style="color:var(--text-primary);">{{ role }}</p>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot"></span>
+                  <p class="text-xs" style="color:var(--text-muted);">Online</p>
+                </div>
               </div>
+              
+              <!-- Logout Button -->
+              <button (click)="logout()" title="Logout" class="p-2 rounded-lg transition-all ml-1"
+                      style="color:var(--text-muted);"
+                      onmouseenter="this.style.color='#F87171'; this.style.background='rgba(239,68,68,.1)'"
+                      onmouseleave="this.style.color='var(--text-muted)'; this.style.background=''">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+              </button>
             </div>
-
-            <!-- Topbar Logout -->
-            <button (click)="logout()" title="Logout" class="p-2 rounded-xl transition-all ml-1"
-                    style="color:var(--text-muted); background:var(--bg-base);"
-                    onmouseenter="this.style.color='#F87171'; this.style.background='rgba(239,68,68,.1)'"
-                    onmouseleave="this.style.color='var(--text-muted)'; this.style.background='var(--bg-base)'">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-              </svg>
-            </button>
           </div>
         </header>
 

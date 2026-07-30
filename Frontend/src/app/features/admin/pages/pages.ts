@@ -1,5 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 // Trigger Angular build refresh
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -15,6 +17,14 @@ import {
   SERVICES_TEMPLATE, 
   CONTACT_TEMPLATE 
 } from '../../../core/constants/template-data';
+
+interface MenuListItem {
+  menu: MenuItem;
+  page: PageContent | null;
+  hasContent: boolean;
+  status: string; // 'Published' | 'Draft' | 'Not Added'
+  sortOrder: number;
+}
 
 const CORPORATE_WIREFRAME_HTML = `
 <div class="font-sans text-gray-900 bg-white">
@@ -104,6 +114,9 @@ export class PagesComponent implements OnInit {
   selectedMenuId: string | null = null;
   
   pageContent: PageContent | null = null;
+  orgPages: PageContent[] = [];
+  menuListItems: MenuListItem[] = [];
+  dragIndex: number | null = null;
   
   templates: SiteTemplate[] = SITE_TEMPLATES;
   selectedTemplateId: string = 'blank';
@@ -113,6 +126,7 @@ export class PagesComponent implements OnInit {
   get currentFields(): FieldConfig[] {
     return MENU_FIELD_CONFIG[this.getSelectedMenuType()] || [];
   }
+  formData: any = { title: '', status: 'Draft', sortOrder: 1 };
   
   // Clean Input Fields for Content Customization
   // Clean Input Fields for Content Customization
@@ -168,6 +182,9 @@ export class PagesComponent implements OnInit {
 
   isCreating = false;
   isUploadingImage = false;
+  isInitializing = true;
+  isLoadingPages = false;
+  isOrgDropdownOpen = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
@@ -186,58 +203,64 @@ export class PagesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadMenus();
     if (this.role === 'Admin') {
-      this.route.queryParams.subscribe(params => {
-        if (params['orgId']) {
-          this.selectedOrgId = params['orgId'];
-          this.onSelectionChange();
-        }
+      forkJoin({
+        menus: this.menuService.getMenus().pipe(catchError(() => of([]))),
+        orgs: this.orgService.getOrganizations().pipe(catchError(() => of([])))
+      }).subscribe(results => {
+        this.processMenus(results.menus);
+        this.organizations = results.orgs;
+        this.isInitializing = false;
+        this.cdr.detectChanges();
+
+        this.route.queryParams.subscribe(params => {
+          if (params['orgId'] && params['orgId'] !== this.selectedOrgId) {
+            this.selectedOrgId = params['orgId'];
+            this.onSelectionChange();
+          }
+        });
       });
-      this.loadOrganizations();
     } else {
-      this.selectedOrgId = this.clientOrgId;
+      this.menuService.getMenus().pipe(catchError(() => of([]))).subscribe(menus => {
+        this.processMenus(menus);
+        this.selectedOrgId = this.clientOrgId;
+        this.isInitializing = false;
+        this.cdr.detectChanges();
+        this.onSelectionChange();
+      });
     }
   }
 
-  loadOrganizations() {
-    this.orgService.getOrganizations().subscribe(data => {
-      this.organizations = data;
-      this.cdr.detectChanges();
+  processMenus(data: any) {
+    const fetched = (data && Array.isArray(data)) ? data : [];
+    const defaults: MenuItem[] = [
+      { id: 'def-1', title: 'Home', page: 'home', isVisible: true, sortOrder: 1 },
+      { id: 'def-2', title: 'About Us', page: 'about-us', isVisible: true, sortOrder: 2 },
+      { id: 'def-3', title: 'Services', page: 'services', isVisible: true, sortOrder: 3 },
+      { id: 'def-4', title: 'Contact Us', page: 'contact-us', isVisible: true, sortOrder: 4 }
+    ];
+
+    const merged = [...defaults];
+    fetched.forEach(item => {
+      const pageSlug = (item.page || '').toLowerCase();
+      const idx = merged.findIndex(m => 
+        m.page.toLowerCase() === pageSlug || 
+        (pageSlug.includes('about') && m.page.includes('about')) ||
+        (pageSlug.includes('service') && m.page.includes('service')) ||
+        (pageSlug.includes('contact') && m.page.includes('contact')) ||
+        (pageSlug.includes('home') && m.page.includes('home'))
+      );
+      if (idx !== -1) {
+        merged[idx] = item;
+      } else {
+        merged.push(item);
+      }
     });
+
+    this.menus = merged.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
-  loadMenus() {
-    this.menuService.getMenus().subscribe(data => {
-      const fetched = (data && Array.isArray(data)) ? data : [];
-      const defaults: MenuItem[] = [
-        { id: 'def-1', title: 'Home', page: 'home', isVisible: true, sortOrder: 1 },
-        { id: 'def-2', title: 'About Us', page: 'about-us', isVisible: true, sortOrder: 2 },
-        { id: 'def-3', title: 'Services', page: 'services', isVisible: true, sortOrder: 3 },
-        { id: 'def-4', title: 'Contact Us', page: 'contact-us', isVisible: true, sortOrder: 4 }
-      ];
 
-      const merged = [...defaults];
-      fetched.forEach(item => {
-        const pageSlug = (item.page || '').toLowerCase();
-        const idx = merged.findIndex(m => 
-          m.page.toLowerCase() === pageSlug || 
-          (pageSlug.includes('about') && m.page.includes('about')) ||
-          (pageSlug.includes('service') && m.page.includes('service')) ||
-          (pageSlug.includes('contact') && m.page.includes('contact')) ||
-          (pageSlug.includes('home') && m.page.includes('home'))
-        );
-        if (idx !== -1) {
-          merged[idx] = item;
-        } else {
-          merged.push(item);
-        }
-      });
-
-      this.menus = merged.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      this.cdr.detectChanges();
-    });
-  }
 
   getSelectedMenuType(): 'home' | 'about' | 'services' | 'contact' | 'generic' {
     if (!this.selectedMenuId || !this.menus) return 'generic';
@@ -254,12 +277,173 @@ export class PagesComponent implements OnInit {
   onSelectionChange() {
     this.errorMessage = null;
     this.successMessage = null;
-    if (this.selectedOrgId && this.selectedMenuId) {
-      this.loadPageContent();
+    this.selectedMenuId = null; // Always reset selected menu when org changes
+    this.pageContent = null;
+    this.isOrgDropdownOpen = false;
+    
+    if (this.selectedOrgId) {
+      this.loadOrgPages();
     } else {
-      this.pageContent = null;
+      this.orgPages = [];
+      this.menuListItems = [];
       this.cdr.detectChanges();
     }
+  }
+
+  getSelectedOrgName(): string {
+    if (!this.selectedOrgId || !this.organizations) return '';
+    const org = this.organizations.find(o => o.id === this.selectedOrgId);
+    return org ? org.name : '';
+  }
+
+  selectOrg(id: string | null) {
+    this.selectedOrgId = id;
+    this.onSelectionChange();
+  }
+
+  loadOrgPages() {
+    if (!this.selectedOrgId) return;
+    this.isLoadingPages = true;
+    this.pageService.getPagesForOrg(this.selectedOrgId).subscribe({
+      next: (pages) => {
+        this.orgPages = pages || [];
+        this.buildMenuList();
+        this.isLoadingPages = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.orgPages = [];
+        this.buildMenuList();
+        this.isLoadingPages = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  buildMenuList() {
+    if (!this.menus || this.menus.length === 0) {
+      this.menuListItems = [];
+      return;
+    }
+
+    const items: MenuListItem[] = this.menus.map(menu => {
+      const page = this.orgPages.find(p => p.menuItemId === menu.id) || null;
+      const hasContent = !!page;
+      let status = 'Not Added';
+      if (page) {
+        status = page.status === 'Published' ? 'Published' : 'Draft';
+      }
+      
+      // Inherit sort order from page if exists, otherwise use menu default
+      const sortOrder = (page && page.sortOrder && page.sortOrder > 0) 
+        ? page.sortOrder 
+        : (menu.sortOrder || 1);
+
+      return {
+        menu,
+        page,
+        hasContent,
+        status,
+        sortOrder
+      };
+    });
+
+    // Sort items: Items with content first (sorted by their page sortOrder), then items without content (sorted by menu sortOrder)
+    this.menuListItems = items.sort((a, b) => {
+      if (a.hasContent && b.hasContent) {
+        return a.sortOrder - b.sortOrder;
+      }
+      if (a.hasContent && !b.hasContent) return -1;
+      if (!a.hasContent && b.hasContent) return 1;
+      return a.sortOrder - b.sortOrder; // Both no content
+    });
+  }
+
+  // --- Drag and Drop Sort Logic ---
+  onDragStart(index: number) {
+    this.dragIndex = index;
+  }
+
+  onDragOver(event: DragEvent, index: number) {
+    event.preventDefault();
+  }
+
+  onDrop(dropIndex: number) {
+    if (this.dragIndex === null || this.dragIndex === dropIndex) {
+      this.dragIndex = null;
+      return;
+    }
+
+    const draggedItem = this.menuListItems[this.dragIndex];
+    
+    // Only allow reordering items that have content (the "active" navbar links)
+    if (!draggedItem.hasContent || !this.menuListItems[dropIndex].hasContent) {
+       this.dragIndex = null;
+       return;
+    }
+
+    // Remove item from old position
+    this.menuListItems.splice(this.dragIndex, 1);
+    // Insert item at new position
+    this.menuListItems.splice(dropIndex, 0, draggedItem);
+
+    // Update sortOrder values based on new array indices (1-based)
+    // Only update those that have content
+    let currentOrder = 1;
+    let newSortOrderForDragged = 1;
+
+    this.menuListItems.forEach(item => {
+      if (item.hasContent) {
+        item.sortOrder = currentOrder++;
+        if (item.page) {
+          item.page.sortOrder = item.sortOrder;
+        }
+        if (item === draggedItem) {
+          newSortOrderForDragged = item.sortOrder;
+        }
+      }
+    });
+
+    // We only need to send ONE request to the backend with the dragged item's new sort order.
+    // The backend's ReorderPageContentsAsync will handle shifting the other items.
+    if (draggedItem.page && draggedItem.page.id) {
+       this.pageService.updatePage(draggedItem.page.id, { 
+         ...draggedItem.page, 
+         sortOrder: newSortOrderForDragged 
+       }).subscribe({
+         error: err => console.error('Failed to update sort order', err)
+       });
+    }
+
+    this.dragIndex = null;
+    this.cdr.detectChanges();
+  }
+
+  // --- Edit / Add Actions ---
+  editPage(menuId: string) {
+    this.selectedMenuId = menuId;
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.loadPageContent();
+  }
+
+  addPage(menuId: string) {
+    this.selectedMenuId = menuId;
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.pageContent = null;
+    const defaultOrder = this.getMenuDefaultSortOrder(menuId);
+    this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
+    this.resetDefaultDemoData();
+    this.updateGeneratedHtml();
+    this.cdr.detectChanges();
+  }
+
+  backToList() {
+    this.selectedMenuId = null;
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.loadOrgPages(); // Refresh the list
   }
 
   getMenuDefaultSortOrder(menuId: string | null): number {
@@ -606,8 +790,8 @@ export class PagesComponent implements OnInit {
     this.isCreating = false;
     
     let message = 'Unable to save page. Please check your form details and try again.';
-    if (err.status === 404 || (err.message && err.message.includes('Http failure response'))) {
-      message = 'This page content has not been initialized in the database yet. Creating a new page entry for you...';
+    if (err.status === 404) {
+      message = 'This page content has not been initialized in the database yet.';
     } else if (err.error?.errors) {
       const msgs = [];
       for (const key in err.error.errors) {
@@ -629,6 +813,12 @@ export class PagesComponent implements OnInit {
     return org ? org.slug : 'site';
   }
 
+  getOrgName(): string {
+    if (!this.selectedOrgId) return '';
+    const org = this.organizations.find(o => o.id === this.selectedOrgId);
+    return org ? org.name : 'Unknown Organization';
+  }
+
   getSelectedPageSlug(): string {
     if (!this.selectedMenuId || !this.menus) return 'home';
     const menu = this.menus.find(m => m.id === this.selectedMenuId);
@@ -636,7 +826,10 @@ export class PagesComponent implements OnInit {
   }
 
   getViewSiteUrl(): string {
-    const slug = this.getOrgSlug();
+    let slug = this.getOrgSlug();
+    if (slug.startsWith('.')) {
+      slug = slug.substring(1);
+    }
     const page = this.getSelectedPageSlug();
     return `/site/${slug}/${page}`;
   }
@@ -669,13 +862,12 @@ export class PagesComponent implements OnInit {
         ? 'Draft saved successfully!' 
         : 'Page saved & published to website successfully!';
       
-      // Reset selections to redirect back to initial Page Content view
-      if (this.role === 'Admin') {
-        this.selectedOrgId = null;
-      }
+      // Don't reset selectedOrgId, just go back to list
       this.selectedMenuId = null;
       this.pageContent = null;
-      this.formData = { title: '', status: 'Draft' };
+      this.formData = { title: '', status: 'Draft', sortOrder: 1 };
+      
+      this.loadOrgPages(); // Refresh the list
 
       this.cdr.detectChanges();
       
@@ -694,7 +886,18 @@ export class PagesComponent implements OnInit {
     } else {
       this.pageService.createPage(payload).subscribe({
         next: () => handleSuccess(),
-        error: (err) => this.handleCreateOrUpdateError(err)
+        error: (err) => {
+          // If page already exists, fall back to savePageContent (upsert)
+          const errText = err.error?.message || err.message || '';
+          if (errText.includes('already exists')) {
+            this.pageService.savePageContent(this.selectedOrgId!, this.selectedMenuId!, payload).subscribe({
+              next: () => handleSuccess(),
+              error: (updateErr) => this.handleCreateOrUpdateError(updateErr)
+            });
+          } else {
+            this.handleCreateOrUpdateError(err);
+          }
+        }
       });
     }
   }
