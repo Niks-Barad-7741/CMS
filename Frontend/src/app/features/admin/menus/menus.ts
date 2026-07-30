@@ -19,6 +19,7 @@ export class MenusComponent implements OnInit {
 
   // Inline Creation Properties
   newMenuData = { title: '', page: '' };
+  submittedEmptyEdit = false;
 
   // Toast & Modal Notification Properties
   toastMessage: string | null = null;
@@ -141,6 +142,7 @@ export class MenusComponent implements OnInit {
     const nextSort = this.menus.length > 0 ? Math.max(...this.menus.map(m => m.sortOrder)) + 1 : 1;
     this.formData = { title: '', page: '', sortOrder: nextSort, isVisible: true };
     this.errorMessage = null;
+    this.submittedEmptyEdit = false;
   }
 
   openEditForm(menu: MenuItem) {
@@ -153,12 +155,14 @@ export class MenusComponent implements OnInit {
       isVisible: menu.isVisible 
     };
     this.errorMessage = null;
+    this.submittedEmptyEdit = false;
   }
 
   closeForm() {
     this.showForm = false;
     this.editingId = null;
     this.errorMessage = null;
+    this.submittedEmptyEdit = false;
   }
 
   generateSlug() {
@@ -174,6 +178,11 @@ export class MenusComponent implements OnInit {
   save() {
     this.errorMessage = null;
     if (this.editingId) {
+      if (!this.formData.title || !this.formData.page) {
+        this.submittedEmptyEdit = true;
+        this.cdr.detectChanges();
+        return;
+      }
       this.menuService.updateMenu(this.editingId, this.formData).subscribe({
         next: () => {
           this.showToast(`Menu '${this.formData.title}' updated successfully.`);
