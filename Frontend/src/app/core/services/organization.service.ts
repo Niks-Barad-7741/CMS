@@ -41,4 +41,8 @@ export class OrganizationService {
   deactivateOrganization(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${id}`);
   }
+
+  toggleStatus(id: string): Observable<any> {
+    return this.http.put(`${this.baseUrl}/${id}/toggle-status`, {});
+  }
 }

@@ -326,10 +326,17 @@ export class OrganizationsComponent implements OnInit {
     return err.error?.message || err.message || 'An unknown error occurred.';
   }
 
-  deleteOrg(id: string) {
-    const org = this.organizations.find(o => o.id === id);
-    if (org) {
-      this.confirmDelete(org);
-    }
+  toggleOrgStatus(org: Organization) {
+    this.orgService.toggleStatus(org.id).subscribe({
+      next: () => {
+        const nextStatus = !org.isActive ? 'Active' : 'Inactive';
+        this.showToast(`Organization '${org.name}' is now ${nextStatus}.`);
+        this.loadOrganizations();
+      },
+      error: (err) => {
+        console.error('Toggle status failed:', err);
+        this.showToast('Failed to change status: ' + this.extractErrorMessage(err));
+      }
+    });
   }
 }

@@ -14,5 +14,6 @@ namespace Dynamic_CMS.Application.Interfaces
         Task<OrganizationDto> CreateAsync(CreateOrganizationDto dto, string? userName = null);
         Task<OrganizationDto> UpdateAsync(Guid id, UpdateOrganizationDto dto, string? userName = null);
         Task<bool> DeleteAsync(Guid id, string? userName = null);
+        Task<bool> ToggleStatusAsync(Guid id, string? userName = null);
     }
 }
