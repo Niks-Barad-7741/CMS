@@ -53,19 +53,13 @@ namespace Dynamic_CMS.API.Controllers
         */
 
         // ADMIN/CLIENT: GET /api/admin/content/{organizationId} or /api/admin/organizations/{organizationId}/pages
-       // [HttpGet("api/admin/content/{organizationId:guid}")]
+        [HttpGet("api/admin/content/{organizationId:guid}")]
         [HttpGet("api/admin/organizations/{organizationId:guid}/pages")]
         [Authorize]
         public async Task<IActionResult> GetAllByOrganization(Guid organizationId, CancellationToken cancellationToken)
         {
             var contents = await _service.GetAllByOrganizationAsync(organizationId, cancellationToken);
-            if (contents == null || !contents.Any())
-            {
-                var failResponse = ApiResponse.FailureResponse("No records found.", 404);
-                return StatusCode(failResponse.StatusCode, failResponse);
-            }
-
-            var response = ApiResponse<IEnumerable<PageContentDto>>.SuccessResponse(contents, "Operation successful");
+            var response = ApiResponse<IEnumerable<PageContentDto>>.SuccessResponse(contents ?? new List<PageContentDto>(), "Operation successful");
             return StatusCode(response.StatusCode, response);
         }
 
