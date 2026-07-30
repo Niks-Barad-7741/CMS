@@ -121,7 +121,7 @@ export class PagesComponent implements OnInit {
   templates: SiteTemplate[] = SITE_TEMPLATES;
   selectedTemplateId: string = 'blank';
   
-  formData: any = { title: '', status: 'Draft' };
+  //formData: any = { title: '', status: 'Draft' };
 
   get currentFields(): FieldConfig[] {
     return MENU_FIELD_CONFIG[this.getSelectedMenuType()] || [];
@@ -327,14 +327,29 @@ export class PagesComponent implements OnInit {
     }
 
     const items: MenuListItem[] = this.menus.map(menu => {
-      const page = this.orgPages.find(p => p.menuItemId === menu.id) || null;
+      const menuTitle = (menu.title || menu.page || '').toLowerCase();
+      const page = this.orgPages.find(p => {
+        if (!p) return false;
+        // 1. Direct menuItemId match (case-insensitive)
+        if (p.menuItemId && menu.id && p.menuItemId.toLowerCase() === menu.id.toLowerCase()) {
+          return true;
+        }
+        // 2. Fallback match by page title / template keyword
+        const pTitle = (p.title || '').toLowerCase();
+        const pTemplate = (p.templateId || '').toLowerCase();
+        if (menuTitle.includes('home') && (pTitle.includes('home') || pTemplate.includes('home'))) return true;
+        if (menuTitle.includes('about') && (pTitle.includes('about') || pTemplate.includes('about'))) return true;
+        if (menuTitle.includes('service') && (pTitle.includes('service') || pTemplate.includes('service'))) return true;
+        if (menuTitle.includes('contact') && (pTitle.includes('contact') || pTemplate.includes('contact'))) return true;
+        return false;
+      }) || null;
+
       const hasContent = !!page;
       let status = 'Not Added';
       if (page) {
         status = page.status === 'Published' ? 'Published' : 'Draft';
       }
       
-      // Inherit sort order from page if exists, otherwise use menu default
       const sortOrder = (page && page.sortOrder && page.sortOrder > 0) 
         ? page.sortOrder 
         : (menu.sortOrder || 1);
@@ -355,7 +370,7 @@ export class PagesComponent implements OnInit {
       }
       if (a.hasContent && !b.hasContent) return -1;
       if (!a.hasContent && b.hasContent) return 1;
-      return a.sortOrder - b.sortOrder; // Both no content
+      return a.sortOrder - b.sortOrder;
     });
   }
 
@@ -376,36 +391,25 @@ export class PagesComponent implements OnInit {
 
     const draggedItem = this.menuListItems[this.dragIndex];
     
-    // Only allow reordering items that have content (the "active" navbar links)
-    if (!draggedItem.hasContent || !this.menuListItems[dropIndex].hasContent) {
-       this.dragIndex = null;
-       return;
-    }
-
     // Remove item from old position
     this.menuListItems.splice(this.dragIndex, 1);
     // Insert item at new position
     this.menuListItems.splice(dropIndex, 0, draggedItem);
 
     // Update sortOrder values based on new array indices (1-based)
-    // Only update those that have content
     let currentOrder = 1;
     let newSortOrderForDragged = 1;
 
     this.menuListItems.forEach(item => {
-      if (item.hasContent) {
-        item.sortOrder = currentOrder++;
-        if (item.page) {
-          item.page.sortOrder = item.sortOrder;
-        }
-        if (item === draggedItem) {
-          newSortOrderForDragged = item.sortOrder;
-        }
+      item.sortOrder = currentOrder++;
+      if (item.page) {
+        item.page.sortOrder = item.sortOrder;
+      }
+      if (item === draggedItem) {
+        newSortOrderForDragged = item.sortOrder;
       }
     });
 
-    // We only need to send ONE request to the backend with the dragged item's new sort order.
-    // The backend's ReorderPageContentsAsync will handle shifting the other items.
     if (draggedItem.page && draggedItem.page.id) {
        this.pageService.updatePage(draggedItem.page.id, { 
          ...draggedItem.page, 
