@@ -24,16 +24,17 @@ namespace Dynamic_CMS.Application.Services
             _pageContentRepository = pageContentRepository;
         }
 
-        public async Task EnsureDefaultMenusAsync()
+        public async Task EnsureDefaultMenusAsync(Guid organizationId)
         {
             foreach (var menu in DefaultSitePages.Menus)
             {
-                var existing = await _menuItemRepository.GetByPageAsync(menu.Page);
+                var existing = await _menuItemRepository.GetByPageAsync(organizationId, menu.Page);
                 if (existing != null) continue;
 
                 await _menuItemRepository.AddAsync(new MenuItem
                 {
                     Id = Guid.NewGuid(),
+                    OrganizationId = organizationId,
                     Title = menu.Title,
                     Page = menu.Page,
                     SortOrder = menu.SortOrder,
@@ -46,7 +47,7 @@ namespace Dynamic_CMS.Application.Services
 
         public async Task EnsureDefaultPagesForOrganizationAsync(Guid organizationId, string orgSlug, string orgName)
         {
-            await EnsureDefaultMenusAsync();
+            await EnsureDefaultMenusAsync(organizationId);
             // No default pages inserted into PageContents table automatically.
             // PageContent table remains empty until explicitly saved by admin/user.
         }
@@ -81,10 +82,10 @@ namespace Dynamic_CMS.Application.Services
             if (organization == null || !organization.IsActive)
                 return Enumerable.Empty<MenuItemDto>();
 
-            await EnsureDefaultMenusAsync();
+            await EnsureDefaultMenusAsync(organization.Id);
 
             var orgPageContents = await _pageContentRepository.GetAllByOrganizationIdAsync(organization.Id, CancellationToken.None);
-            var allMenus = (await _menuItemRepository.GetAllAsync()).ToDictionary(m => m.Id);
+            var allMenus = (await _menuItemRepository.GetAllAsync(organization.Id)).ToDictionary(m => m.Id);
 
             var activePageContents = orgPageContents
                 .Where(p => !p.IsDeleted && p.Status == "Published")

@@ -39,7 +39,7 @@ namespace Dynamic_CMS.Application.Services
             return MapToDto(subMenu);
         }
 
-        public async Task<SubMenuItemDto> CreateSubMenuAsync(CreateSubMenuItemDto dto, string userName = "Admin")
+        public async Task<SubMenuItemDto> CreateSubMenuAsync(CreateSubMenuItemDto dto, Guid organizationId, string userName = "Admin")
         {
             // Validate parent menu exists
             var parentMenu = await _menuRepository.GetByIdAsync(dto.MenuItemId);
@@ -47,18 +47,19 @@ namespace Dynamic_CMS.Application.Services
                 throw new InvalidOperationException("Parent menu item not found.");
 
             // Validate unique title within same parent
-            var existingWithTitle = await _repository.GetByTitleAsync(dto.Title, dto.MenuItemId);
+            var existingWithTitle = await _repository.GetByTitleAsync(organizationId, dto.Title, dto.MenuItemId);
             if (existingWithTitle != null)
                 throw new InvalidOperationException($"A sub-menu item with the title '{dto.Title}' already exists under this menu.");
 
             // Validate unique page name
-            var existingWithPage = await _repository.GetByPageAsync(dto.Page.ToLower());
+            var existingWithPage = await _repository.GetByPageAsync(organizationId, dto.Page.ToLower());
             if (existingWithPage != null)
                 throw new InvalidOperationException("A sub-menu item with this page name already exists.");
 
             var subMenuItem = new SubMenuItem
             {
                 Id = Guid.NewGuid(),
+                OrganizationId = organizationId,
                 MenuItemId = dto.MenuItemId,
                 Title = dto.Title,
                 Page = dto.Page.ToLower(),
@@ -78,14 +79,16 @@ namespace Dynamic_CMS.Application.Services
         {
             var subMenu = await _repository.GetByIdAsync(id);
             if (subMenu == null) return (false, "Sub-menu item not found.");
+            
+            var organizationId = subMenu.OrganizationId ?? Guid.Empty;
 
             // Validate unique page name
-            var existingWithPage = await _repository.GetByPageAsync(dto.Page.ToLower());
+            var existingWithPage = await _repository.GetByPageAsync(organizationId, dto.Page.ToLower());
             if (existingWithPage != null && existingWithPage.Id != id)
                 return (false, "Another sub-menu item is already using this page name.");
 
             // Validate unique title within same parent
-            var existingWithTitle = await _repository.GetByTitleAsync(dto.Title, subMenu.MenuItemId);
+            var existingWithTitle = await _repository.GetByTitleAsync(organizationId, dto.Title, subMenu.MenuItemId);
             if (existingWithTitle != null && existingWithTitle.Id != id)
                 return (false, $"A sub-menu item with the title '{dto.Title}' already exists under this menu.");
 

@@ -14,5 +14,8 @@ namespace Dynamic_CMS.Application.DTOs.Menu
 
         public int SortOrder { get; set; }
         public bool IsVisible { get; set; } = true;
+        
+        [Required]
+        public Guid OrganizationId { get; set; }
     }
 }

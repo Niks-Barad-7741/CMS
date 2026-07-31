@@ -36,16 +36,16 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             return await _context.SubMenuItems.FindAsync(id);
         }
 
-        public async Task<SubMenuItem?> GetByPageAsync(string page)
+        public async Task<SubMenuItem?> GetByPageAsync(Guid organizationId, string page)
         {
             return await _context.SubMenuItems
-                .FirstOrDefaultAsync(s => s.Page == page && !s.IsDeleted);
+                .FirstOrDefaultAsync(s => s.OrganizationId == organizationId && s.Page == page && !s.IsDeleted);
         }
 
-        public async Task<SubMenuItem?> GetByTitleAsync(string title, Guid menuItemId)
+        public async Task<SubMenuItem?> GetByTitleAsync(Guid organizationId, string title, Guid menuItemId)
         {
             return await _context.SubMenuItems
-                .FirstOrDefaultAsync(s => s.Title.ToLower() == title.ToLower() && s.MenuItemId == menuItemId && !s.IsDeleted);
+                .FirstOrDefaultAsync(s => s.OrganizationId == organizationId && s.Title.ToLower() == title.ToLower() && s.MenuItemId == menuItemId && !s.IsDeleted);
         }
 
         public async Task<SubMenuItem> AddAsync(SubMenuItem subMenuItem)

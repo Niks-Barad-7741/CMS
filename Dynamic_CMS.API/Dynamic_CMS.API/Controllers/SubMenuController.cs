@@ -57,7 +57,7 @@ namespace Dynamic_CMS.API.Controllers
 
             try
             {
-                var created = await _service.CreateSubMenuAsync(dto);
+                var created = await _service.CreateSubMenuAsync(dto, dto.OrganizationId);
                 var response = ApiResponse<SubMenuItemDto>.SuccessResponse(created, "Sub-menu created successfully.");
                 return StatusCode(201, response);
             }

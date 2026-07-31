@@ -6,7 +6,7 @@ namespace Dynamic_CMS.Application.Interfaces
 {
     public interface ISiteProvisioningService
     {
-        Task EnsureDefaultMenusAsync();
+        Task EnsureDefaultMenusAsync(Guid organizationId);
         Task EnsureDefaultPagesForOrganizationAsync(Guid organizationId, string orgSlug, string orgName);
         Task<IEnumerable<MenuItemDto>> GetPublicMenusAsync(string orgSlug);
         Task<SiteProfileDto?> GetSiteProfileAsync(string orgSlug);
