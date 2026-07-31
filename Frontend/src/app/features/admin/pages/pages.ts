@@ -431,6 +431,36 @@ export class PagesComponent implements OnInit {
     this.loadPageContent();
   }
 
+  togglePageStatus(item: MenuListItem) {
+    if (!item.page || !item.page.id) return;
+    
+    const newStatus = item.status === 'Published' ? 'Draft' : 'Published';
+    
+    const payload = {
+      title: item.page.title,
+      status: newStatus,
+      sortOrder: item.page.sortOrder || item.sortOrder,
+      templateId: item.page.templateId,
+      contentJson: item.page.contentJson
+    };
+    
+    this.pageService.updatePage(item.page.id, payload).subscribe({
+      next: () => {
+        item.status = newStatus;
+        if (item.page) {
+          item.page.status = newStatus;
+        }
+        this.successMessage = `Page "${item.menu.title}" status updated to ${newStatus}`;
+        this.loadOrgPages(); // Refresh the list to reflect status
+        setTimeout(() => this.dismissSuccess(), 3000);
+      },
+      error: (err) => {
+        this.errorMessage = 'Failed to toggle page status';
+        console.error(err);
+      }
+    });
+  }
+
   addPage(menuId: string) {
     this.selectedMenuId = menuId;
     this.errorMessage = null;
@@ -518,7 +548,11 @@ export class PagesComponent implements OnInit {
           id: 'sec-' + Date.now(),
           sortOrder: 1,
           style: {
+            backgroundType: 'color',
             backgroundColor: '#ffffff',
+            backgroundImageUrl: '',
+            overlayOpacity: 0,
+            backgroundSize: 'cover',
             textColor: '#1f2937',
             paddingY: 'py-16'
           },
@@ -554,7 +588,11 @@ export class PagesComponent implements OnInit {
       id: 'sec-' + Date.now(),
       sortOrder: this.clientData.sections.length + 1,
       style: {
+        backgroundType: 'color',
         backgroundColor: '#ffffff',
+        backgroundImageUrl: '',
+        overlayOpacity: 0,
+        backgroundSize: 'cover',
         textColor: '#1f2937',
         paddingY: 'py-16'
       },
@@ -594,7 +632,7 @@ export class PagesComponent implements OnInit {
     });
   }
 
-  addBlock(section: any, type: 'heading' | 'paragraph' | 'gallery') {
+  addBlock(section: any, type: 'heading' | 'paragraph' | 'gallery' | 'image' | 'hero' | 'button' | 'divider' | 'columns' | 'quote' | 'video') {
     if (!section.blocks) {
       section.blocks = [];
     }
@@ -619,6 +657,60 @@ export class PagesComponent implements OnInit {
         ]
       };
       newBlock.style = { gridCols: 'grid-cols-2' };
+    } else if (type === 'image') {
+      newBlock.content = { 
+        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600', 
+        caption: 'Sample Image Caption', 
+        alt: 'Sample description' 
+      };
+      newBlock.style = { 
+        displayMode: 'inline', 
+        objectFit: 'cover', 
+        aspectRatio: 'auto' 
+      };
+    } else if (type === 'hero') {
+      newBlock.content = { 
+        bgImageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200', 
+        heading: 'Crafting Dynamic Digital Experiences', 
+        subtext: 'Build beautiful, customizable page sections and professional websites in seconds.', 
+        ctaText: 'Get Started Today', 
+        ctaUrl: '#', 
+        overlayOpacity: 50 
+      };
+      newBlock.style = {};
+    } else if (type === 'button') {
+      newBlock.content = { 
+        label: 'Explore Services', 
+        url: '#', 
+        style: 'primary', 
+        align: 'left' 
+      };
+      newBlock.style = {};
+    } else if (type === 'divider') {
+      newBlock.content = { 
+        height: 40 
+      };
+      newBlock.style = {};
+    } else if (type === 'columns') {
+      newBlock.content = {
+        columns: [
+          { title: 'Responsive Design', text: 'Looks gorgeous on any device, automatically resizing grids and text.', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=150' },
+          { title: 'Supercharged Speed', text: 'Optimized for performance and fast loading, keeping your visitors engaged.', imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=150' }
+        ]
+      };
+      newBlock.style = { gridCols: 'grid-cols-2' };
+    } else if (type === 'quote') {
+      newBlock.content = { 
+        text: 'A satisfied customer is the best business strategy of all.', 
+        author: 'Michael LeBoeuf', 
+        avatarUrl: '' 
+      };
+      newBlock.style = {};
+    } else if (type === 'video') {
+      newBlock.content = { 
+        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' 
+      };
+      newBlock.style = {};
     }
 
     section.blocks.push(newBlock);
@@ -665,6 +757,19 @@ export class PagesComponent implements OnInit {
 
   removeImageFromGallery(block: any, imgIdx: number) {
     block.content.images.splice(imgIdx, 1);
+    this.cdr.detectChanges();
+  }
+
+  addColumn(block: any) {
+    if (!block.content.columns) {
+      block.content.columns = [];
+    }
+    block.content.columns.push({ title: 'New Feature', text: 'Feature description goes here.', imageUrl: '' });
+    this.cdr.detectChanges();
+  }
+
+  removeColumn(block: any, colIdx: number) {
+    block.content.columns.splice(colIdx, 1);
     this.cdr.detectChanges();
   }
 
