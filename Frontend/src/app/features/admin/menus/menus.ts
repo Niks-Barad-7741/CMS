@@ -1,7 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MenuService, MenuItem } from '../../../core/services/menu.service';
+import { MenuService, MenuItem, SubMenuItem } from '../../../core/services/menu.service';
+import { SubMenuService } from '../../../core/services/submenu.service';
 
 @Component({
   selector: 'app-menus',
@@ -19,13 +20,24 @@ export class MenusComponent implements OnInit {
 
   // Inline Creation Properties
   newMenuData = { title: '', page: '' };
+  submittedEmptyInline = false;
   submittedEmptyEdit = false;
+
+  // Sub-menu properties
+  expandedMenuId: string | null = null;
+  subMenus: { [menuId: string]: SubMenuItem[] } = {};
+  subMenuFormData: any = { title: '', page: '', sortOrder: 1, isVisible: true, menuItemId: '' };
+  editingSubMenuId: string | null = null;
+  showSubMenuForm: string | null = null;
+  newSubMenuData: { [menuId: string]: { title: string; page: string } } = {};
 
   // Toast & Modal Notification Properties
   toastMessage: string | null = null;
   showDeleteModal = false;
   deleteTargetId: string | null = null;
   deleteTargetTitle = '';
+  deleteTargetType: 'menu' | 'submenu' = 'menu';
+  deleteTargetParentId: string | null = null;
 
   showToast(msg: string) {
     this.toastMessage = msg;
@@ -36,9 +48,11 @@ export class MenusComponent implements OnInit {
     }, 4000);
   }
 
-  confirmDelete(menu: MenuItem) {
-    this.deleteTargetId = menu.id;
-    this.deleteTargetTitle = menu.title;
+  confirmDelete(id: string, title: string, type: 'menu' | 'submenu', parentId: string | null = null) {
+    this.deleteTargetId = id;
+    this.deleteTargetTitle = title;
+    this.deleteTargetType = type;
+    this.deleteTargetParentId = parentId;
     this.showDeleteModal = true;
     this.cdr.detectChanges();
   }
@@ -47,23 +61,41 @@ export class MenusComponent implements OnInit {
     this.showDeleteModal = false;
     this.deleteTargetId = null;
     this.deleteTargetTitle = '';
+    this.deleteTargetType = 'menu';
+    this.deleteTargetParentId = null;
     this.cdr.detectChanges();
   }
 
   executeDelete() {
     if (!this.deleteTargetId) return;
-    this.menuService.deleteMenu(this.deleteTargetId).subscribe({
-      next: () => {
-        this.showToast(`Menu '${this.deleteTargetTitle}' deleted successfully.`);
-        this.loadMenus();
-        this.cancelDelete();
-      },
-      error: (err) => {
-        console.error('Delete failed:', err);
-        this.errorMessage = 'Delete failed: ' + this.extractErrorMessage(err);
-        this.cancelDelete();
-      }
-    });
+    
+    if (this.deleteTargetType === 'menu') {
+      this.menuService.deleteMenu(this.deleteTargetId).subscribe({
+        next: () => {
+          this.showToast(`Menu '${this.deleteTargetTitle}' deleted successfully.`);
+          this.loadMenus();
+          this.cancelDelete();
+        },
+        error: (err) => {
+          console.error('Delete failed:', err);
+          this.errorMessage = 'Delete failed: ' + this.extractErrorMessage(err);
+          this.cancelDelete();
+        }
+      });
+    } else {
+      const parentId = this.deleteTargetParentId;
+      this.subMenuService.deleteSubMenu(this.deleteTargetId).subscribe({
+        next: () => {
+          this.showToast(`Sub-menu '${this.deleteTargetTitle}' deleted successfully.`);
+          if (parentId) this.loadSubMenus(parentId);
+          this.cancelDelete();
+        },
+        error: (err) => {
+          this.errorMessage = 'Delete failed: ' + this.extractErrorMessage(err);
+          this.cancelDelete();
+        }
+      });
+    }
   }
 
   get nextSortOrder(): number {
@@ -78,7 +110,7 @@ export class MenusComponent implements OnInit {
       .replace(/^-|-$/g, '');
   }
 
-  submittedEmptyInline = false;
+
 
   saveInline() {
     if (!this.newMenuData.title || !this.newMenuData.page) {
@@ -108,6 +140,7 @@ export class MenusComponent implements OnInit {
 
   constructor(
     private menuService: MenuService,
+    private subMenuService: SubMenuService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -225,7 +258,7 @@ export class MenusComponent implements OnInit {
   deleteMenu(id: string) {
     const menu = this.menus.find(m => m.id === id);
     if (menu) {
-      this.confirmDelete(menu);
+      this.confirmDelete(menu.id, menu.title, 'menu');
     }
   }
 
@@ -263,5 +296,97 @@ export class MenusComponent implements OnInit {
         });
       }
     });
+  }
+
+  toggleSubMenus(menuId: string) {
+    if (this.expandedMenuId === menuId) {
+      this.expandedMenuId = null;
+      return;
+    }
+    this.expandedMenuId = menuId;
+    this.loadSubMenus(menuId);
+  }
+
+  loadSubMenus(menuId: string) {
+    this.subMenuService.getSubMenus(menuId).subscribe({
+      next: (data) => {
+        this.subMenus[menuId] = (data || []).sort((a, b) => a.sortOrder - b.sortOrder);
+        if (!this.newSubMenuData[menuId]) {
+          this.newSubMenuData[menuId] = { title: '', page: '' };
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.subMenus[menuId] = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateSubMenuSlug(menuId: string) {
+    if (this.newSubMenuData[menuId]) {
+      this.newSubMenuData[menuId].page = (this.newSubMenuData[menuId].title || '')
+        .toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    }
+  }
+
+  getNextSubSortOrder(menuId: string): number {
+    const subs = this.subMenus[menuId] || [];
+    return subs.length > 0 ? Math.max(...subs.map(s => s.sortOrder)) + 1 : 1;
+  }
+
+  saveSubMenuInline(menuId: string) {
+    const data = this.newSubMenuData[menuId];
+    if (!data || !data.title || !data.page) return;
+    const payload = {
+      menuItemId: menuId,
+      title: data.title,
+      page: data.page,
+      sortOrder: this.getNextSubSortOrder(menuId),
+      isVisible: true
+    };
+    this.subMenuService.createSubMenu(payload).subscribe({
+      next: () => {
+        this.showToast(`Sub-menu '${payload.title}' added successfully.`);
+        this.newSubMenuData[menuId] = { title: '', page: '' };
+        this.loadSubMenus(menuId);
+      },
+      error: (err) => {
+        alert(this.extractErrorMessage(err));
+      }
+    });
+  }
+
+  startEditSubMenu(sub: SubMenuItem) {
+    this.editingSubMenuId = sub.id;
+    this.subMenuFormData = {
+      title: sub.title,
+      page: sub.page,
+      sortOrder: sub.sortOrder,
+      isVisible: sub.isVisible,
+      menuItemId: sub.menuItemId
+    };
+    this.cdr.detectChanges();
+  }
+
+  cancelEditSubMenu() {
+    this.editingSubMenuId = null;
+    this.cdr.detectChanges();
+  }
+
+  saveEditSubMenu() {
+    if (!this.editingSubMenuId || !this.subMenuFormData.title || !this.subMenuFormData.page) return;
+    this.subMenuService.updateSubMenu(this.editingSubMenuId, this.subMenuFormData).subscribe({
+      next: () => {
+        this.showToast(`Sub-menu '${this.subMenuFormData.title}' updated.`);
+        this.editingSubMenuId = null;
+        this.loadSubMenus(this.subMenuFormData.menuItemId);
+      },
+      error: (err) => alert(this.extractErrorMessage(err))
+    });
+  }
+
+  deleteSubMenu(sub: SubMenuItem) {
+    this.confirmDelete(sub.id, sub.title, 'submenu', sub.menuItemId);
   }
 }

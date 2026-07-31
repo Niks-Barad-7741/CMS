@@ -28,14 +28,27 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let menu of menus; let i = index"
-            class="org-table-row transition-colors"
+        <ng-container *ngFor="let menu of menus; let i = index">
+        <!-- Main Menu Row -->
+        <tr class="org-table-row transition-colors"
             style="border-bottom:1px solid var(--border-card);">
           
           <!-- Read-only View -->
           <ng-container *ngIf="editingId !== menu.id">
             <td class="px-6 py-4 font-mono text-sm" style="color:var(--text-muted)">{{ menu.sortOrder }}</td>
-            <td class="px-6 py-4 text-sm font-semibold" style="color:var(--text-primary)">{{ menu.title }}</td>
+            <td class="px-6 py-4 text-sm font-semibold" style="color:var(--text-primary)">
+              <div class="flex items-center gap-2">
+                <button (click)="toggleSubMenus(menu.id)" class="p-1 rounded-lg hover:bg-indigo-50 transition-colors" title="Toggle sub-menus">
+                  <svg class="w-4 h-4 transition-transform" [class.rotate-90]="expandedMenuId === menu.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+                {{ menu.title }}
+                <span *ngIf="subMenus[menu.id]?.length" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-600">
+                  {{ subMenus[menu.id].length }} sub
+                </span>
+              </div>
+            </td>
             <td class="px-6 py-4 text-sm font-mono" style="color:#6366F1;">/{{ menu.page }}</td>
 
             <td class="px-6 py-4 text-right text-sm font-medium">
@@ -83,6 +96,64 @@
           </ng-container>
         </tr>
 
+        <!-- Sub-Menu Accordion -->
+        <tr *ngIf="expandedMenuId === menu.id">
+          <td colspan="4" class="p-0">
+            <div class="bg-slate-50/80 border-t border-b" style="border-color: var(--border-card);">
+              <div class="px-8 py-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
+                  </svg>
+                  <span class="text-xs font-bold uppercase tracking-wider" style="color:var(--text-muted)">Sub-Menus for "{{ menu.title }}"</span>
+                </div>
+
+                <!-- Existing Sub-Menu Items -->
+                <div *ngFor="let sub of subMenus[menu.id]" class="flex items-center gap-3 py-2.5 px-4 rounded-xl mb-1 hover:bg-white/80 transition-colors" style="border: 1px solid transparent;">
+                  <ng-container *ngIf="editingSubMenuId !== sub.id">
+                    <span class="text-xs font-mono w-8 text-center" style="color:var(--text-muted)">{{ sub.sortOrder }}</span>
+                    <span class="text-sm font-semibold flex-1" style="color:var(--text-primary)">{{ sub.title }}</span>
+                    <span class="text-xs font-mono" style="color:#6366F1">/{{ sub.page }}</span>
+                    <button (click)="startEditSubMenu(sub)" class="text-xs font-medium px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors" style="color:#6366F1;">Edit</button>
+                    <button (click)="deleteSubMenu(sub)" class="text-xs font-medium px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors" style="color:#F43F5E;">Delete</button>
+                  </ng-container>
+
+                  <ng-container *ngIf="editingSubMenuId === sub.id">
+                    <span class="text-xs font-mono w-8 text-center" style="color:var(--text-muted)">{{ sub.sortOrder }}</span>
+                    <input type="text" [(ngModel)]="subMenuFormData.title" class="text-sm px-3 py-1.5 rounded-lg flex-1 outline-none" style="background:var(--bg-base); border:1px solid var(--border-card); color:var(--text-primary);">
+                    <div class="flex rounded-lg overflow-hidden" style="border:1px solid var(--border-card);">
+                      <span class="px-2 flex items-center text-xs font-mono" style="background:var(--bg-base); color:var(--text-muted); border-right:1px solid var(--border-card);">/</span>
+                      <input type="text" [(ngModel)]="subMenuFormData.page" class="text-xs font-mono px-2 py-1.5 outline-none w-28" style="background:var(--bg-base); color:var(--text-primary); border:none;">
+                    </div>
+                    <button (click)="saveEditSubMenu()" class="text-xs font-bold px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors" style="color:#10B981;">Save</button>
+                    <button (click)="cancelEditSubMenu()" class="text-xs font-medium px-2 py-1 rounded-lg transition-colors" style="color:var(--text-secondary);">Cancel</button>
+                  </ng-container>
+                </div>
+
+                <!-- Inline Add Sub-Menu -->
+                <div class="flex items-center gap-3 py-2.5 px-4 rounded-xl mt-2" style="border: 1px dashed var(--border-card);">
+                  <span class="text-xs font-mono w-8 text-center" style="color:var(--text-muted)">{{ getNextSubSortOrder(menu.id) }}</span>
+                  <input type="text" [(ngModel)]="newSubMenuData[menu.id].title" (input)="generateSubMenuSlug(menu.id)" placeholder="Sub-menu title *"
+                         class="text-sm px-3 py-1.5 rounded-lg flex-1 outline-none" style="background:var(--bg-base); border:1px solid var(--border-card); color:var(--text-primary);">
+                  <div class="flex rounded-lg overflow-hidden" style="border:1px solid var(--border-card);">
+                    <span class="px-2 flex items-center text-xs font-mono" style="background:var(--bg-base); color:var(--text-muted); border-right:1px solid var(--border-card);">/</span>
+                    <input type="text" [(ngModel)]="newSubMenuData[menu.id].page" placeholder="slug *"
+                           class="text-xs font-mono px-2 py-1.5 outline-none w-28" style="background:var(--bg-base); color:var(--text-primary); border:none;">
+                  </div>
+                  <button (click)="saveSubMenuInline(menu.id)" class="px-3 py-1.5 text-xs font-bold rounded-lg text-white transition-all hover:scale-[1.02]" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);">
+                    + Add
+                  </button>
+                </div>
+
+                <div *ngIf="!subMenus[menu.id]?.length" class="text-xs py-3 text-center" style="color:var(--text-muted)">
+                  No sub-menus yet. Add one above.
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        </ng-container>
+
         <!-- Inline Add Menu Row -->
         <tr *ngIf="!showForm" class="bg-indigo-50/5" style="border-bottom:1px solid var(--border-card);">
           <td class="px-6 py-4 font-mono text-sm" style="color:var(--text-muted)">
@@ -119,7 +190,7 @@
         </tr>
 
         <tr *ngIf="menus.length === 0">
-          <td colspan="5" class="px-6 py-16 text-center">
+          <td colspan="4" class="px-6 py-16 text-center">
             <p class="text-sm" style="color:var(--text-muted)">No menu items found.</p>
           </td>
         </tr>
@@ -139,10 +210,7 @@
 
 <!-- Custom Delete Confirmation Modal -->
 <div *ngIf="showDeleteModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4">
-  <!-- Backdrop -->
   <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" (click)="cancelDelete()"></div>
-
-  <!-- Modal Content -->
   <div class="dash-card max-w-md w-full p-6 relative z-10 animate-scale-up" style="background: var(--bg-card); border: 1px solid var(--border-card); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
     <div class="flex items-center gap-4 mb-4">
       <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background: rgba(244,63,94,.08); color: #F43F5E;">

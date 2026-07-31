@@ -3,12 +3,22 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+export interface SubMenuItem {
+  id: string;
+  menuItemId: string;
+  title: string;
+  page: string;
+  sortOrder: number;
+  isVisible: boolean;
+}
+
 export interface MenuItem {
   id: string;
   title: string;
   page: string;
   sortOrder: number;
   isVisible: boolean;
+  subMenuItems?: SubMenuItem[];
 }
 
 @Injectable({
@@ -21,7 +31,9 @@ export class MenuService {
   constructor(private http: HttpClient) {}
 
   getMenus(): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(this.publicUrl);
+    return this.http.get<any>(this.publicUrl).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
   createMenu(data: any): Observable<MenuItem> {

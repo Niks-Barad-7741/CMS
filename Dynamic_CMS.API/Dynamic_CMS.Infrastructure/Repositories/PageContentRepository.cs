@@ -24,6 +24,7 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             return await _context.PageContents
                 .AsNoTracking()
                 .Where(p => p.OrganizationId == organizationId && !p.IsDeleted)
+                .OrderBy(p => p.SortOrder)
                 .ToListAsync(cancellationToken);
         }
 

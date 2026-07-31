@@ -1,8 +1,8 @@
 using Dynamic_CMS.Application.DTOs;
 using Dynamic_CMS.Application.DTOs.Menu;
+using Dynamic_CMS.Application.DTOs.SubMenu;
 using Dynamic_CMS.Application.DTOs.PageContent;
 using Dynamic_CMS.Application.Interfaces;
-using Dynamic_CMS.Application.Services;
 using Dynamic_CMS.Domain.Entities;
 using Dynamic_CMS.Domain.Repositories;
 
@@ -102,13 +102,30 @@ namespace Dynamic_CMS.Application.Services
             var result = new List<MenuItemDto>();
             foreach (var item in activePageContents)
             {
+                var subMenus = item.Menu!.SubMenuItems?
+                    .Where(s => !s.IsDeleted && s.IsVisible)
+                    .Select(s => new SubMenuItemDto
+                    {
+                        Id = s.Id,
+                        MenuItemId = s.MenuItemId,
+                        Title = s.Title,
+                        Page = s.Page,
+                        SortOrder = s.SortOrder,
+                        IsVisible = s.IsVisible,
+                        CreatedAt = s.CreatedAt,
+                        CreatedBy = s.CreatedBy,
+                        ModifiedAt = s.ModifiedAt,
+                        ModifiedBy = s.ModifiedBy
+                    }).OrderBy(s => s.SortOrder).ToList() ?? new List<SubMenuItemDto>();
+
                 result.Add(new MenuItemDto
                 {
-                    Id = item.Menu!.Id,
+                    Id = item.Menu.Id,
                     Title = item.Menu.Title,
                     Page = item.Menu.Page,
                     SortOrder = item.Order,
-                    IsVisible = item.Menu.IsVisible
+                    IsVisible = item.Menu.IsVisible,
+                    SubMenuItems = subMenus
                 });
             }
             return result;
