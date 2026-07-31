@@ -61,7 +61,7 @@ namespace Dynamic_CMS.API.Controllers
             }
 
             return CreatedAtAction(nameof(GetById), new { id = result.data!.Id }, 
-                ApiResponse.CreatedResponse("Created successfully."));
+                ApiResponse<MediaDto>.SuccessResponse(result.data, "Created successfully."));
         }
 
         [HttpDelete("{id}")]

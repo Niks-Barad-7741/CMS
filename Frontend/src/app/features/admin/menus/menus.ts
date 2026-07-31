@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService, MenuItem, SubMenuItem } from '../../../core/services/menu.service';
 import { SubMenuService } from '../../../core/services/submenu.service';
+import { OrganizationService, Organization } from '../../../core/services/organization.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { catchError } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-menus',
@@ -11,6 +15,12 @@ import { SubMenuService } from '../../../core/services/submenu.service';
   templateUrl: './menus.html'
 })
 export class MenusComponent implements OnInit {
+  role: string | null = '';
+  clientOrgId: string | null = null;
+  organizations: Organization[] = [];
+  selectedOrgId: string | null = null;
+  isOrgDropdownOpen = false;
+
   menus: MenuItem[] = [];
   
   showForm = false;
@@ -124,7 +134,7 @@ export class MenusComponent implements OnInit {
       sortOrder: this.nextSortOrder,
       isVisible: true
     };
-    this.menuService.createMenu(payload).subscribe({
+    this.menuService.createMenu(this.selectedOrgId!, payload).subscribe({
       next: () => {
         this.submittedEmptyInline = false;
         this.showToast(`Menu '${payload.title}' added successfully.`);
@@ -141,15 +151,44 @@ export class MenusComponent implements OnInit {
   constructor(
     private menuService: MenuService,
     private subMenuService: SubMenuService,
+    private orgService: OrganizationService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.role = this.authService.getRole();
+    this.clientOrgId = this.authService.getOrganizationId();
+  }
 
   ngOnInit() {
+    if (this.role === 'Admin') {
+      this.orgService.getOrganizations().pipe(catchError(() => of([]))).subscribe(orgs => {
+        this.organizations = (orgs || []).filter((o: any) => o.isActive);
+        if (this.organizations.length > 0) {
+          this.selectedOrgId = this.organizations[0].id;
+        }
+        this.loadMenus();
+      });
+    } else {
+      this.selectedOrgId = this.clientOrgId;
+      this.loadMenus();
+    }
+  }
+
+  selectOrg(id: string | null) {
+    this.selectedOrgId = id;
+    this.isOrgDropdownOpen = false;
     this.loadMenus();
   }
 
+  getSelectedOrgName(): string {
+    if (!this.selectedOrgId || !this.organizations) return '';
+    const org = this.organizations.find(o => o.id === this.selectedOrgId);
+    return org ? org.name : '';
+  }
+
   loadMenus() {
-    this.menuService.getMenus().subscribe({
+    if (!this.selectedOrgId) return;
+    this.menuService.getMenus(this.selectedOrgId).subscribe({
       next: (data) => {
         // Sort by sortOrder locally just in case
         if (data && Array.isArray(data)) {
@@ -229,7 +268,7 @@ export class MenusComponent implements OnInit {
         }
       });
     } else {
-      this.menuService.createMenu(this.formData).subscribe({
+      this.menuService.createMenu(this.selectedOrgId!, this.formData).subscribe({
         next: () => {
           this.showToast(`Menu '${this.formData.title}' added successfully.`);
           this.loadMenus();
@@ -345,7 +384,7 @@ export class MenusComponent implements OnInit {
       sortOrder: this.getNextSubSortOrder(menuId),
       isVisible: true
     };
-    this.subMenuService.createSubMenu(payload).subscribe({
+    this.subMenuService.createSubMenu(this.selectedOrgId!, payload).subscribe({
       next: () => {
         this.showToast(`Sub-menu '${payload.title}' added successfully.`);
         this.newSubMenuData[menuId] = { title: '', page: '' };

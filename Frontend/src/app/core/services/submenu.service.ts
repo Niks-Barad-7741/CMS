@@ -19,7 +19,8 @@ export class SubMenuService {
     );
   }
 
-  createSubMenu(data: any): Observable<SubMenuItem> {
+  createSubMenu(orgId: string, data: any): Observable<SubMenuItem> {
+    data.organizationId = orgId;
     return this.http.post<any>(this.adminUrl, data).pipe(
       map(res => res?.data || res)
     );

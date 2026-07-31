@@ -23,9 +23,9 @@ namespace Dynamic_CMS.Application.Services
             _subMenuRepository = subMenuRepository;
         }
 
-        public async Task<IEnumerable<MenuItemDto>> GetAllMenusAsync()
+        public async Task<IEnumerable<MenuItemDto>> GetAllMenusAsync(Guid organizationId)
         {
-            var menus = await _repository.GetAllAsync();
+            var menus = await _repository.GetAllAsync(organizationId);
             
             var menuDtos = new List<MenuItemDto>();
             foreach (var m in menus.OrderBy(m => m.SortOrder))
@@ -94,15 +94,15 @@ namespace Dynamic_CMS.Application.Services
             };
         }
 
-        public async Task<bool> MenuExistsAsync(string page)
+        public async Task<bool> MenuExistsAsync(Guid organizationId, string page)
         {
-            var menu = await _repository.GetByPageAsync(page);
+            var menu = await _repository.GetByPageAsync(organizationId, page);
             return menu != null;
         }
 
-        public async Task<MenuItemDto> CreateMenuAsync(CreateMenuItemDto dto, string userName = "Admin")
+        public async Task<MenuItemDto> CreateMenuAsync(CreateMenuItemDto dto, Guid organizationId, string userName = "Admin")
         {
-            var existingWithTitle = await _repository.GetByTitleAsync(dto.Title);
+            var existingWithTitle = await _repository.GetByTitleAsync(organizationId, dto.Title);
             if (existingWithTitle != null)
             {
                 throw new InvalidOperationException($"A menu item with the title '{dto.Title}' already exists.");
@@ -111,6 +111,7 @@ namespace Dynamic_CMS.Application.Services
             var menuItem = new MenuItem
             {
                 Id = Guid.NewGuid(),
+                OrganizationId = organizationId,
                 Title = dto.Title,
                 Page = dto.Page.ToLower(),
                 SortOrder = dto.SortOrder,
@@ -120,7 +121,7 @@ namespace Dynamic_CMS.Application.Services
             };
 
             await _repository.AddAsync(menuItem);
-            await ReorderMenuItemsAsync(menuItem.Id, dto.SortOrder);
+            await ReorderMenuItemsAsync(organizationId, menuItem.Id, dto.SortOrder);
 
             return new MenuItemDto
             {
@@ -139,14 +140,16 @@ namespace Dynamic_CMS.Application.Services
         {
             var menu = await _repository.GetByIdAsync(id);
             if (menu == null) return (false, "Menu item not found.");
+            
+            var organizationId = menu.OrganizationId ?? Guid.Empty; // Handle potential null if data exists before migration
 
-            var existingWithPage = await _repository.GetByPageAsync(dto.Page.ToLower());
+            var existingWithPage = await _repository.GetByPageAsync(organizationId, dto.Page.ToLower());
             if (existingWithPage != null && existingWithPage.Id != id)
             {
                 return (false, "Another menu item is already using this page name.");
             }
 
-            var existingWithTitle = await _repository.GetByTitleAsync(dto.Title);
+            var existingWithTitle = await _repository.GetByTitleAsync(organizationId, dto.Title);
             if (existingWithTitle != null && existingWithTitle.Id != id)
             {
                 return (false, $"A menu item with the title '{dto.Title}' already exists.");
@@ -160,14 +163,14 @@ namespace Dynamic_CMS.Application.Services
             menu.ModifiedBy = userName;
 
             await _repository.UpdateAsync(menu);
-            await ReorderMenuItemsAsync(menu.Id, dto.SortOrder);
+            await ReorderMenuItemsAsync(menu.OrganizationId ?? Guid.Empty, menu.Id, dto.SortOrder);
 
             return (true, null);
         }
 
-        private async Task ReorderMenuItemsAsync(Guid targetId, int requestedOrder)
+        private async Task ReorderMenuItemsAsync(Guid organizationId, Guid targetId, int requestedOrder)
         {
-            var allMenus = (await _repository.GetAllAsync())
+            var allMenus = (await _repository.GetAllAsync(organizationId))
                 .Where(m => !m.IsDeleted)
                 .OrderBy(m => m.SortOrder > 0 ? m.SortOrder : 999)
                 .ToList();

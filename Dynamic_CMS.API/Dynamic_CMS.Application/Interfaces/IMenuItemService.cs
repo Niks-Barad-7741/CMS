@@ -7,10 +7,10 @@ namespace Dynamic_CMS.Application.Interfaces
 {
     public interface IMenuItemService
     {
-        Task<IEnumerable<MenuItemDto>> GetAllMenusAsync();
+        Task<IEnumerable<MenuItemDto>> GetAllMenusAsync(Guid organizationId);
         Task<MenuItemDto?> GetMenuByIdAsync(Guid id);
-        Task<bool> MenuExistsAsync(string page);
-        Task<MenuItemDto> CreateMenuAsync(CreateMenuItemDto dto, string userName = "Admin");
+        Task<bool> MenuExistsAsync(Guid organizationId, string page);
+        Task<MenuItemDto> CreateMenuAsync(CreateMenuItemDto dto, Guid organizationId, string userName = "Admin");
         Task<(bool success, string? error)> UpdateMenuAsync(Guid id, UpdateMenuItemDto dto, string userName = "Admin");
         Task<bool> DeleteMenuAsync(Guid id, string userName = "Admin");
     }

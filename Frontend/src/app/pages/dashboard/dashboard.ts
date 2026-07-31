@@ -263,7 +263,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     from(menus).pipe(
       concatMap(m =>
-        this.menuService.createMenu({
+        this.menuService.createMenu(org.id, {
           organizationId: org.id, title: m.title,
           page: m.page, sortOrder: m.sortOrder, isVisible: m.isVisible
         }).pipe(

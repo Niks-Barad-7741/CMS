@@ -18,6 +18,8 @@ namespace Dynamic_CMS.Domain.Entities
         public string? ModifiedBy { get; set; }
 
         // Navigation
+        public Guid? OrganizationId { get; set; }
+        public Organization? Organization { get; set; }
         public MenuItem MenuItem { get; set; } = null!;
     }
 }

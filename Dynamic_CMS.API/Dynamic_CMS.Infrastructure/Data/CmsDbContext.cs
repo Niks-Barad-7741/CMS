@@ -56,6 +56,12 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Page).IsRequired().HasMaxLength(100);
                 
+                // Navigations
+                entity.HasOne(m => m.Organization)
+                    .WithMany(o => o.MenuItems)
+                    .HasForeignKey(m => m.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
                 // Soft delete filter
                 entity.HasQueryFilter(e => !e.IsDeleted);
             });
@@ -120,6 +126,11 @@ namespace Dynamic_CMS.Infrastructure.Data
                     .WithMany(m => m.SubMenuItems)
                     .HasForeignKey(s => s.MenuItemId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(s => s.Organization)
+                    .WithMany(o => o.SubMenuItems)
+                    .HasForeignKey(s => s.OrganizationId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(s => s.MenuItemId);
             });

@@ -30,13 +30,14 @@ export class MenuService {
 
   constructor(private http: HttpClient) {}
 
-  getMenus(): Observable<MenuItem[]> {
-    return this.http.get<any>(this.publicUrl).pipe(
+  getMenus(orgId: string): Observable<MenuItem[]> {
+    return this.http.get<any>(`https://localhost:7170/api/admin/organizations/${orgId}/menus`).pipe(
       map(res => res?.data || res || [])
     );
   }
 
-  createMenu(data: any): Observable<MenuItem> {
+  createMenu(orgId: string, data: any): Observable<MenuItem> {
+    data.organizationId = orgId;
     return this.http.post<MenuItem>(this.adminUrl, data);
   }
 
