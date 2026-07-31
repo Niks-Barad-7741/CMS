@@ -145,17 +145,30 @@
             <span *ngIf="!item.hasContent" class="ml-2 text-xs text-gray-400 font-normal">(Template available)</span>
           </td>
           
-          <!-- Status Badge -->
+          <!-- Status Badge / Toggle Switch -->
           <td class="p-4">
-            <span *ngIf="item.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-              Published
-            </span>
-            <span *ngIf="item.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-              Draft
-            </span>
-            <span *ngIf="item.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+            <div *ngIf="item.hasContent" class="flex items-center gap-3">
+              <button type="button" 
+                      (click)="togglePageStatus(item)"
+                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm"
+                      [class.bg-emerald-500]="item.status === 'Published'"
+                      [class.bg-gray-200]="item.status !== 'Published'"
+                      role="switch" 
+                      [attr.aria-checked]="item.status === 'Published'"
+                      title="Toggle page status">
+                <span aria-hidden="true" 
+                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                      [class.translate-x-5]="item.status === 'Published'"
+                      [class.translate-x-0]="item.status !== 'Published'"></span>
+              </button>
+              <span class="text-sm font-medium" 
+                    [class.text-emerald-700]="item.status === 'Published'"
+                    [class.text-gray-500]="item.status !== 'Published'">
+                {{ item.status }}
+              </span>
+            </div>
+            
+            <span *ngIf="!item.hasContent" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
               <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
               Not Added
             </span>
@@ -206,106 +219,545 @@
 
 
     <!-- Basic Info -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700">Page Title (H1)</label>
         <input type="text" [(ngModel)]="formData.title" class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border bg-gray-50 font-medium" placeholder="e.g. Services">
       </div>
-      <div class="flex flex-col md:items-end">
-          <label class="block text-sm font-semibold text-gray-700 w-full md:text-right">Status</label>
-          <div class="flex items-center gap-3 mt-2 h-[50px] justify-start md:justify-end w-full">
-            <button type="button" 
-                    (click)="formData.status = formData.status === 'Published' ? 'Draft' : 'Published'"
-                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    [class.bg-emerald-500]="formData.status === 'Published'"
-                    [class.bg-gray-200]="formData.status !== 'Published'"
-                    role="switch" 
-                    [attr.aria-checked]="formData.status === 'Published'">
-              <span aria-hidden="true" 
-                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                    [class.translate-x-5]="formData.status === 'Published'"
-                    [class.translate-x-0]="formData.status !== 'Published'"></span>
-            </button>
-            <span class="text-sm font-medium" 
-                  [class.text-emerald-700]="formData.status === 'Published'"
-                  [class.text-gray-500]="formData.status !== 'Published'">
-              {{ formData.status }}
-            </span>
-          </div>
-      </div>
     </div>
 
-    <!-- DYNAMIC CONTENT INPUT FIELDS -->
-    <div *ngIf="formData.status !== 'Draft'" class="bg-gradient-to-b from-indigo-50/50 to-white border border-indigo-100 rounded-3xl p-8 space-y-8 shadow-sm">
+    <!-- DYNAMIC SECTION & BLOCK BUILDER FORM -->
+    <div class="bg-gradient-to-b from-indigo-50/50 to-white border border-indigo-100 rounded-3xl p-8 space-y-8 shadow-sm">
       
-      <!-- HEADER -->
-      <div class="flex items-center justify-between border-b border-indigo-100/60 pb-5">
+      <!-- Theme & Global Customization -->
+      <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-4">
         <h4 class="text-sm font-extrabold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
-          <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          Customize {{ getSelectedMenuType() | titlecase }} Content
+          🎨 Global Theme Style
         </h4>
-        <span class="px-3.5 py-1.5 bg-indigo-100/80 text-indigo-700 text-[11px] font-bold rounded-xl uppercase tracking-widest shadow-sm">
-          {{ getSelectedMenuType() }} Template
-        </span>
-      </div>
-
-      <!-- COMMON FIELD: BRAND NAME -->
-      <div class="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-        <label class="block text-xs font-bold text-gray-700 mb-2 tracking-wide">Company / Brand Name</label>
-        <input type="text" [(ngModel)]="clientData.companyName" (input)="updateGeneratedHtml()" class="w-full p-3.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all shadow-inner" placeholder="e.g. Ayaan Corp">
-      </div>
-
-      <!-- DYNAMIC FIELDS LOOP -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div *ngFor="let field of currentFields" 
-             [ngClass]="{'md:col-span-2': field.fullWidth}" 
-             class="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <label class="block text-xs font-bold text-gray-700 mb-2 tracking-wide">{{ field.label }}</label>
-          
-          <ng-container [ngSwitch]="field.type">
-            <!-- TEXT -->
-            <input *ngSwitchCase="'text'" type="text" [(ngModel)]="clientData[field.key]" (input)="updateGeneratedHtml()" 
-                   class="w-full p-3.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all shadow-inner" 
-                   [placeholder]="field.placeholder">
-            
-            <!-- EMAIL -->
-            <input *ngSwitchCase="'email'" type="email" [(ngModel)]="clientData[field.key]" (input)="updateGeneratedHtml()" 
-                   class="w-full p-3.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all shadow-inner" 
-                   [placeholder]="field.placeholder">
-            
-            <!-- TEXTAREA -->
-            <textarea *ngSwitchCase="'textarea'" [(ngModel)]="clientData[field.key]" (input)="updateGeneratedHtml()" rows="3" 
-                      class="w-full p-3.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all resize-none shadow-inner" 
-                      [placeholder]="field.placeholder"></textarea>
-            
-            <!-- IMAGE -->
-            <div *ngSwitchCase="'image'" class="flex gap-3 items-center">
-              <input type="text" [(ngModel)]="clientData[field.key]" (input)="updateGeneratedHtml()" 
-                     class="flex-1 w-full p-3.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all shadow-inner" 
-                     [placeholder]="field.placeholder">
-              <input type="file" [id]="'upload-' + field.key" (change)="uploadBackgroundImage($event)" class="hidden" accept="image/*">
-              <label [for]="'upload-' + field.key" class="cursor-pointer bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-5 py-3.5 rounded-xl border border-indigo-100 font-bold text-sm transition-colors flex items-center justify-center whitespace-nowrap shadow-sm">
-                Upload
-              </label>
-            </div>
-            <div *ngIf="field.type === 'image' && isUploadingImage" class="text-[11px] font-bold text-indigo-500 mt-2 flex items-center gap-1.5">
-               <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-               Uploading image...
-            </div>
-          </ng-container>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-2">Primary Accent Color</label>
+            <input type="color" [(ngModel)]="clientData.globalTheme.primaryColor" 
+                   class="w-full h-11 p-1 rounded-xl border border-gray-200 cursor-pointer bg-gray-50">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-2">Base Font Family</label>
+            <select [(ngModel)]="clientData.globalTheme.fontFamily" 
+                    class="w-full p-3 text-sm rounded-xl border border-gray-200 bg-gray-50 outline-none">
+              <option value="Inter">Inter (Sans-serif)</option>
+              <option value="Georgia">Georgia (Serif)</option>
+              <option value="monospace">Courier (Monospace)</option>
+            </select>
+          </div>
         </div>
       </div>
+
+      <!-- Sections Loop -->
+      <div class="space-y-8">
+        <div *ngFor="let section of clientData.sections; let secIdx = index" 
+             class="p-6 bg-white rounded-2xl border border-indigo-100 shadow-md space-y-6 hover:shadow-lg transition-shadow relative">
+          
+          <!-- Section Actions Header -->
+          <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm">
+                {{ secIdx + 1 }}
+              </span>
+              <h4 class="text-base font-bold text-gray-900">Section Layout</h4>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="moveSectionUp(secIdx)" [disabled]="secIdx === 0" 
+                      class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-600 disabled:opacity-40 transition-colors">
+                ▲
+              </button>
+              <button type="button" (click)="moveSectionDown(secIdx)" [disabled]="secIdx === clientData.sections.length - 1" 
+                      class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-600 disabled:opacity-40 transition-colors">
+                ▼
+              </button>
+              <button type="button" (click)="deleteSection(secIdx)" 
+                      class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors ml-2 font-bold text-sm">
+                Delete Section
+              </button>
+            </div>
+          </div>
+
+          <!-- Section Styling Options -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-2">Background Type</label>
+              <select [(ngModel)]="section.style.backgroundType" 
+                      class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                <option value="color">Solid Color</option>
+                <option value="image">Background Image</option>
+              </select>
+            </div>
+            
+            <div *ngIf="section.style.backgroundType !== 'image'">
+              <label class="block text-xs font-bold text-gray-700 mb-2">Solid Color</label>
+              <input type="color" [(ngModel)]="section.style.backgroundColor" 
+                     class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
+            </div>
+            
+            <div *ngIf="section.style.backgroundType === 'image'" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Image URL</label>
+                <input type="text" [(ngModel)]="section.style.backgroundImageUrl" placeholder="https://..."
+                       class="w-full p-2 text-sm rounded-lg border border-gray-200 bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Overlay Opacity ({{ section.style.overlayOpacity || 0 }}%)</label>
+                <input type="range" min="0" max="100" [(ngModel)]="section.style.overlayOpacity"
+                       class="w-full h-10 cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Size/Position</label>
+                <select [(ngModel)]="section.style.backgroundSize" 
+                        class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                  <option value="cover">Cover (Fits Screen)</option>
+                  <option value="contain">Contain (Letterboxed)</option>
+                  <option value="repeat">Repeat (Pattern)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-2">Text Color</label>
+              <input type="color" [(ngModel)]="section.style.textColor" 
+                     class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-2">Vertical Spacing (Padding)</label>
+              <select [(ngModel)]="section.style.paddingY" 
+                      class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                <option value="py-8">Small (py-8)</option>
+                <option value="py-16">Medium (py-16)</option>
+                <option value="py-24">Large (py-24)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Nested Blocks inside Section -->
+          <div class="space-y-4">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-gray-400">Content Blocks</h5>
+            
+            <div *ngIf="!section.blocks || section.blocks.length === 0" class="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm">
+              No blocks in this section. Add a Heading, Paragraph, or Image Gallery below.
+            </div>
+
+            <div *ngFor="let block of section.blocks; let blkIdx = index" 
+                 class="p-5 bg-slate-50/50 rounded-xl border border-gray-100 space-y-4 hover:border-indigo-100 transition-colors">
+              
+              <!-- Block Header -->
+              <div class="flex items-center justify-between border-b border-gray-100/80 pb-3">
+                <span class="text-xs font-extrabold uppercase tracking-wide text-indigo-700">
+                  Block {{ blkIdx + 1 }}: {{ block.type }}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" (click)="moveBlockUp(section, blkIdx)" [disabled]="blkIdx === 0" 
+                          class="px-2 py-1 bg-white hover:bg-gray-100 text-xs text-gray-500 rounded border disabled:opacity-40">
+                    ▲
+                  </button>
+                  <button type="button" (click)="moveBlockDown(section, blkIdx)" [disabled]="blkIdx === section.blocks.length - 1" 
+                          class="px-2 py-1 bg-white hover:bg-gray-100 text-xs text-gray-500 rounded border disabled:opacity-40">
+                    ▼
+                  </button>
+                  <button type="button" (click)="deleteBlock(section, blkIdx)" 
+                          class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-xs text-rose-600 font-bold rounded border border-rose-100 ml-1">
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <!-- Block Settings based on Type -->
+              <div [ngSwitch]="block.type" class="space-y-4">
+                
+                <!-- HEADING BLOCK -->
+                <div *ngSwitchCase="'heading'" class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Heading Text</label>
+                    <input type="text" [(ngModel)]="block.content.text" 
+                           class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">H-Level</label>
+                      <select [(ngModel)]="block.content.level" class="w-full p-2 text-xs rounded border">
+                        <option [ngValue]="1">H1 (Hero Heading)</option>
+                        <option [ngValue]="2">H2 (Section Heading)</option>
+                        <option [ngValue]="3">H3 (Sub Heading)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Font Size</label>
+                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border">
+                        <option value="text-xl">Small (text-xl)</option>
+                        <option value="text-2xl">Normal (text-2xl)</option>
+                        <option value="text-3xl">Medium (text-3xl)</option>
+                        <option value="text-4xl">Large (text-4xl)</option>
+                        <option value="text-5xl">Extra Large (text-5xl)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Color Override</label>
+                      <input type="color" [(ngModel)]="block.style.textColor" class="w-full h-8 p-0 rounded cursor-pointer">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PARAGRAPH BLOCK -->
+                <div *ngSwitchCase="'paragraph'" class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Paragraph Text</label>
+                    <textarea [(ngModel)]="block.content.text" rows="3" 
+                              class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none"></textarea>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Font Size</label>
+                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border">
+                        <option value="text-xs">Extra Small (text-xs)</option>
+                        <option value="text-sm">Small (text-sm)</option>
+                        <option value="text-base">Normal (text-base)</option>
+                        <option value="text-lg">Large (text-lg)</option>
+                        <option value="text-xl">Extra Large (text-xl)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Color Override</label>
+                      <input type="color" [(ngModel)]="block.style.textColor" class="w-full h-8 p-0 rounded cursor-pointer">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- GALLERY BLOCK -->
+                <div *ngSwitchCase="'gallery'" class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <label class="text-[11px] font-bold text-gray-600 mr-2">Grid Columns Layout</label>
+                      <select [(ngModel)]="block.style.gridCols" class="p-1.5 text-xs rounded border inline-block">
+                        <option value="grid-cols-1">1 Column</option>
+                        <option value="grid-cols-2">2 Columns</option>
+                        <option value="grid-cols-3">3 Columns</option>
+                        <option value="grid-cols-4">4 Columns</option>
+                      </select>
+                    </div>
+                    <button type="button" (click)="addImageToGallery(block)" 
+                            class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded border border-indigo-100 transition-colors">
+                      + Add Image to Gallery
+                    </button>
+                  </div>
+                  
+                  <div class="space-y-3">
+                    <div *ngFor="let img of block.content.images; let imgIdx = index" 
+                         class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-150 relative">
+                       <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                         <input type="text" [(ngModel)]="img.url" placeholder="Image URL (https://...)" 
+                                class="p-2 text-xs rounded border">
+                         <input type="text" [(ngModel)]="img.caption" placeholder="Image Caption (Optional)" 
+                                class="p-2 text-xs rounded border">
+                       </div>
+                       <button type="button" (click)="removeImageFromGallery(block, imgIdx)" 
+                               class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded border border-rose-100">
+                         Remove
+                       </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- IMAGE BLOCK -->
+                <div *ngSwitchCase="'image'" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Image URL</label>
+                      <input type="text" [(ngModel)]="block.content.url" placeholder="https://..."
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Caption</label>
+                      <input type="text" [(ngModel)]="block.content.caption" placeholder="Optional caption"
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Alt Text (SEO/Access)</label>
+                      <input type="text" [(ngModel)]="block.content.alt" placeholder="Image description"
+                             class="w-full p-2 text-xs rounded border">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Display Mode</label>
+                      <select [(ngModel)]="block.style.displayMode" class="w-full p-2 text-xs rounded border">
+                        <option value="inline">Inline (Contained)</option>
+                        <option value="full-width">Full Width</option>
+                        <option value="full-screen">Full Screen (Edge-to-Edge)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Object Fit</label>
+                      <select [(ngModel)]="block.style.objectFit" class="w-full p-2 text-xs rounded border">
+                        <option value="cover">Cover (Cropped/Filled)</option>
+                        <option value="contain">Contain (Entire Image)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Aspect Ratio</label>
+                      <select [(ngModel)]="block.style.aspectRatio" class="w-full p-2 text-xs rounded border">
+                        <option value="auto">Auto</option>
+                        <option value="16:9">16:9 (Landscape)</option>
+                        <option value="1:1">1:1 (Square)</option>
+                        <option value="4:3">4:3 (Photo)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- HERO BLOCK -->
+                <div *ngSwitchCase="'hero'" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Heading Title</label>
+                      <input type="text" [(ngModel)]="block.content.heading" placeholder="Banner Headline"
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white font-bold">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Subtext / Description</label>
+                      <textarea [(ngModel)]="block.content.subtext" placeholder="Tagline or main page description" rows="2"
+                                class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none"></textarea>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="col-span-1 md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Background Image URL</label>
+                      <input type="text" [(ngModel)]="block.content.bgImageUrl" placeholder="https://..."
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA Text</label>
+                      <input type="text" [(ngModel)]="block.content.ctaText" placeholder="e.g. Get Started"
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA URL</label>
+                      <input type="text" [(ngModel)]="block.content.ctaUrl" placeholder="e.g. /services"
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Overlay Opacity ({{ block.content.overlayOpacity || 0 }}%)</label>
+                      <input type="range" min="0" max="100" [(ngModel)]="block.content.overlayOpacity"
+                             class="w-full h-8 cursor-pointer">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BUTTON BLOCK -->
+                <div *ngSwitchCase="'button'" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Label</label>
+                    <input type="text" [(ngModel)]="block.content.label" placeholder="Button Text"
+                           class="w-full p-2 text-xs rounded border">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Link URL</label>
+                    <input type="text" [(ngModel)]="block.content.url" placeholder="https://..."
+                           class="w-full p-2 text-xs rounded border">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Style</label>
+                    <select [(ngModel)]="block.content.style" class="w-full p-2 text-xs rounded border">
+                      <option value="primary">Primary (Filled)</option>
+                      <option value="outline">Outline</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Alignment</label>
+                    <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- DIVIDER BLOCK -->
+                <div *ngSwitchCase="'divider'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Height (Vertical Spacer) ({{ block.content.height || 20 }}px)</label>
+                    <input type="range" min="10" max="150" step="5" [(ngModel)]="block.content.height"
+                           class="w-full h-8 cursor-pointer">
+                  </div>
+                  <div class="flex items-center pt-5">
+                    <span class="text-xs text-gray-400 font-medium">Adds visual vertical space on the public page.</span>
+                  </div>
+                </div>
+
+                <!-- COLUMNS BLOCK -->
+                <div *ngSwitchCase="'columns'" class="space-y-4">
+                  <div class="flex items-center justify-between border-b border-gray-150 pb-2">
+                    <div>
+                      <label class="text-[11px] font-bold text-gray-600 mr-2">Columns Layout</label>
+                      <select [(ngModel)]="block.style.gridCols" class="p-1 text-xs rounded border inline-block">
+                        <option value="grid-cols-1">1 Column</option>
+                        <option value="grid-cols-2">2 Columns</option>
+                        <option value="grid-cols-3">3 Columns</option>
+                      </select>
+                    </div>
+                    <button type="button" (click)="addColumn(block)"
+                            class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded border border-indigo-100 transition-colors">
+                      + Add Column
+                    </button>
+                  </div>
+                  
+                  <div class="space-y-4">
+                    <div *ngFor="let col of block.content.columns; let colIdx = index"
+                         class="p-4 bg-white rounded-lg border border-gray-150 relative space-y-3 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-gray-500">Column {{ colIdx + 1 }}</span>
+                        <button type="button" (click)="removeColumn(block, colIdx)"
+                                class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded border border-rose-100">
+                          Remove Column
+                        </button>
+                      </div>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 mb-1">Column Title</label>
+                          <input type="text" [(ngModel)]="col.title" placeholder="Feature Title"
+                                 class="w-full p-1.5 text-xs rounded border">
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 mb-1">Description</label>
+                          <textarea [(ngModel)]="col.text" placeholder="Detail description text..." rows="2"
+                                    class="w-full p-1.5 text-xs rounded border resize-none"></textarea>
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 mb-1">Image URL (Optional)</label>
+                          <input type="text" [(ngModel)]="col.imageUrl" placeholder="https://..."
+                                 class="w-full p-1.5 text-xs rounded border">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- QUOTE BLOCK -->
+                <div *ngSwitchCase="'quote'" class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Quote Text</label>
+                    <textarea [(ngModel)]="block.content.text" rows="2" placeholder="Write quote here..."
+                              class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none"></textarea>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Author Name / Citation</label>
+                      <input type="text" [(ngModel)]="block.content.author" placeholder="Steve Jobs"
+                             class="w-full p-2 text-xs rounded border">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Avatar Image URL (Optional)</label>
+                      <input type="text" [(ngModel)]="block.content.avatarUrl" placeholder="https://..."
+                             class="w-full p-2 text-xs rounded border">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- VIDEO BLOCK -->
+                <div *ngSwitchCase="'video'" class="grid grid-cols-1 gap-4">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">YouTube/Vimeo Embed URL</label>
+                    <input type="text" [(ngModel)]="block.content.embedUrl" placeholder="e.g. https://www.youtube.com/embed/dQw4w9WgXcQ"
+                           class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    <span class="text-[10px] text-gray-400">Make sure to use the <b>embed</b> format URL for YouTube videos (e.g., https://www.youtube.com/embed/VIDEO_ID).</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Block Actions Bar -->
+          <div class="flex flex-wrap items-center gap-2 pt-4 border-t border-gray-100">
+            <span class="text-xs font-bold text-gray-400 uppercase mr-2">Add Block:</span>
+            <button type="button" (click)="addBlock(section, 'heading')" 
+                    class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-100 transition-colors">
+              + Heading
+            </button>
+            <button type="button" (click)="addBlock(section, 'paragraph')" 
+                    class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-lg border border-sky-100 transition-colors">
+              + Paragraph
+            </button>
+            <button type="button" (click)="addBlock(section, 'gallery')" 
+                    class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold rounded-lg border border-teal-100 transition-colors">
+              + Gallery
+            </button>
+            <button type="button" (click)="addBlock(section, 'image')" 
+                    class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-100 transition-colors">
+              + Image (Fixed Size)
+            </button>
+            <button type="button" (click)="addBlock(section, 'hero')" 
+                    class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-lg border border-purple-100 transition-colors">
+              + Hero/Banner
+            </button>
+            <button type="button" (click)="addBlock(section, 'button')" 
+                    class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-xs font-bold rounded-lg border border-pink-100 transition-colors">
+              + CTA Button
+            </button>
+            <button type="button" (click)="addBlock(section, 'divider')" 
+                    class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-100 transition-colors">
+              + Divider/Spacer
+            </button>
+            <button type="button" (click)="addBlock(section, 'columns')" 
+                    class="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold rounded-lg border border-orange-100 transition-colors">
+              + Grid Columns
+            </button>
+            <button type="button" (click)="addBlock(section, 'quote')" 
+                    class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-100 transition-colors">
+              + Quote/Testimonial
+            </button>
+            <button type="button" (click)="addBlock(section, 'video')" 
+                    class="px-3 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-bold rounded-lg border border-cyan-100 transition-colors">
+              + Video Embed
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Add Section Action -->
+      <div class="flex justify-center py-4">
+        <button type="button" (click)="addSection()" 
+                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow transition-all">
+          + Add Layout Section Block
+        </button>
+      </div>
+
     </div>
 
+    <!-- Actions Footer -->
     <div class="pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
-
       <div class="flex items-center gap-3">
-        <button (click)="createAndOpenBuilder()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-6 py-3.5 border border-indigo-200 rounded-xl text-base font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 transition-all">
-          Open Visual Builder
-        </button>
-
-        <button (click)="saveAndPublishPage()" [disabled]="!formData.title || isCreating" class="inline-flex items-center px-8 py-3.5 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
-          <svg *ngIf="isCreating" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <button (click)="saveAndPublishPage()" [disabled]="!formData.title || isCreating" 
+                class="inline-flex items-center px-8 py-3.5 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
+          <svg *ngIf="isCreating" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
           {{ isCreating ? 'Saving...' : (formData.status === 'Draft' ? 'Save Draft' : 'Save & Publish to Website') }}
         </button>
       </div>

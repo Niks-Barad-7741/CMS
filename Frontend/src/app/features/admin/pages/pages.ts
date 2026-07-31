@@ -431,6 +431,36 @@ export class PagesComponent implements OnInit {
     this.loadPageContent();
   }
 
+  togglePageStatus(item: MenuListItem) {
+    if (!item.page || !item.page.id) return;
+    
+    const newStatus = item.status === 'Published' ? 'Draft' : 'Published';
+    
+    const payload = {
+      title: item.page.title,
+      status: newStatus,
+      sortOrder: item.page.sortOrder || item.sortOrder,
+      templateId: item.page.templateId,
+      contentJson: item.page.contentJson
+    };
+    
+    this.pageService.updatePage(item.page.id, payload).subscribe({
+      next: () => {
+        item.status = newStatus;
+        if (item.page) {
+          item.page.status = newStatus;
+        }
+        this.successMessage = `Page "${item.menu.title}" status updated to ${newStatus}`;
+        this.loadOrgPages(); // Refresh the list to reflect status
+        setTimeout(() => this.dismissSuccess(), 3000);
+      },
+      error: (err) => {
+        this.errorMessage = 'Failed to toggle page status';
+        console.error(err);
+      }
+    });
+  }
+
   addPage(menuId: string) {
     this.selectedMenuId = menuId;
     this.errorMessage = null;
@@ -507,58 +537,240 @@ export class PagesComponent implements OnInit {
   }
 
   resetDefaultDemoData(): any {
-    const demoData = {
-      companyName: 'Ayaan Corp',
-      tagline: 'Building Next-Gen Platform Solutions',
-      description: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
-      email: 'hello@ayaan.com',
-      phone: '+1 (555) 123-4567',
-      address: '123 Innovation Way, Tech City',
-
-      // Home
-      homeHeroTitle: 'Build Your Digital Empire',
-      homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
-      homeBackgroundImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
-      stat1Value: '500+',
-      stat2Value: '100',
-      stat3Value: '50+',
-      stat4Value: '12+',
-      homeCtaText: 'Get Started Now',
-      homeSecondaryCtaText: 'Learn More',
-      homeFeature1Title: 'Lightning Fast',
-      homeFeature1Desc: 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.',
-      homeFeature2Title: 'Bank-Grade Security',
-      homeFeature2Desc: 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.',
-      homeFeature3Title: 'Limitless Scaling',
-      homeFeature3Desc: 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.',
-
-      // About
-      aboutTitle: 'About Ayaan Corp',
-      aboutSubtitle: 'We are on a mission to transform how the world creates and interacts with digital content.',
-      aboutStory1: 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.',
-      aboutStory2: 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.',
-      aboutImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop',
-      aboutPoint1: 'Innovation-driven approach',
-      aboutPoint2: 'Customer-centric design',
-      aboutPoint3: 'Commitment to excellence',
-
-      // Services
-      servicesTitle: 'Our Services',
-      servicesSubtitle: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
-      service1Title: 'Web Development',
-      service1Desc: 'Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences.',
-      service2Title: 'App Design',
-      service2Desc: 'Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI/UX principles.',
-      service3Title: 'Digital Marketing',
-      service3Desc: 'Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers.',
-
-      // Contact
-      contactTitle: 'Get in Touch',
-      contactSubtitle: "Have a question or ready to start a project? We'd love to hear from you."
+    const defaultData = {
+      schemaVersion: '1.0',
+      globalTheme: {
+        primaryColor: '#6366F1',
+        fontFamily: 'Inter'
+      },
+      sections: [
+        {
+          id: 'sec-' + Date.now(),
+          sortOrder: 1,
+          style: {
+            backgroundType: 'color',
+            backgroundColor: '#ffffff',
+            backgroundImageUrl: '',
+            overlayOpacity: 0,
+            backgroundSize: 'cover',
+            textColor: '#1f2937',
+            paddingY: 'py-16'
+          },
+          blocks: [
+            {
+              id: 'blk-' + Date.now() + '-1',
+              type: 'heading',
+              sortOrder: 1,
+              content: { text: this.formData.title || 'Dynamic Heading Title', level: 1, align: 'center' },
+              style: { fontSize: 'text-4xl', textColor: '#1f2937' }
+            },
+            {
+              id: 'blk-' + Date.now() + '-2',
+              type: 'paragraph',
+              sortOrder: 2,
+              content: { text: 'Customize your sections and add headers, text paragraphs, or image galleries dynamically.', align: 'center' },
+              style: { fontSize: 'text-base', textColor: '#4b5563' }
+            }
+          ]
+        }
+      ]
     };
 
-    this.clientData = { ...demoData };
-    return demoData;
+    this.clientData = defaultData;
+    return defaultData;
+  }
+
+  addSection() {
+    if (!this.clientData.sections) {
+      this.clientData.sections = [];
+    }
+    const newSection = {
+      id: 'sec-' + Date.now(),
+      sortOrder: this.clientData.sections.length + 1,
+      style: {
+        backgroundType: 'color',
+        backgroundColor: '#ffffff',
+        backgroundImageUrl: '',
+        overlayOpacity: 0,
+        backgroundSize: 'cover',
+        textColor: '#1f2937',
+        paddingY: 'py-16'
+      },
+      blocks: []
+    };
+    this.clientData.sections.push(newSection);
+    this.cdr.detectChanges();
+  }
+
+  deleteSection(sectionIndex: number) {
+    this.clientData.sections.splice(sectionIndex, 1);
+    this.reorderSections();
+    this.cdr.detectChanges();
+  }
+
+  moveSectionUp(index: number) {
+    if (index === 0) return;
+    const temp = this.clientData.sections[index];
+    this.clientData.sections[index] = this.clientData.sections[index - 1];
+    this.clientData.sections[index - 1] = temp;
+    this.reorderSections();
+    this.cdr.detectChanges();
+  }
+
+  moveSectionDown(index: number) {
+    if (index === this.clientData.sections.length - 1) return;
+    const temp = this.clientData.sections[index];
+    this.clientData.sections[index] = this.clientData.sections[index + 1];
+    this.clientData.sections[index + 1] = temp;
+    this.reorderSections();
+    this.cdr.detectChanges();
+  }
+
+  reorderSections() {
+    this.clientData.sections.forEach((sec: any, idx: number) => {
+      sec.sortOrder = idx + 1;
+    });
+  }
+
+  addBlock(section: any, type: 'heading' | 'paragraph' | 'gallery' | 'image' | 'hero' | 'button' | 'divider' | 'columns' | 'quote' | 'video') {
+    if (!section.blocks) {
+      section.blocks = [];
+    }
+    const newBlock: any = {
+      id: 'blk-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+      type: type,
+      sortOrder: section.blocks.length + 1,
+      content: {},
+      style: {}
+    };
+
+    if (type === 'heading') {
+      newBlock.content = { text: 'Heading Text', level: 2, align: 'left' };
+      newBlock.style = { fontSize: 'text-2xl', textColor: '#1f2937' };
+    } else if (type === 'paragraph') {
+      newBlock.content = { text: 'Paragraph description block content goes here.', align: 'left' };
+      newBlock.style = { fontSize: 'text-base', textColor: '#4b5563' };
+    } else if (type === 'gallery') {
+      newBlock.content = {
+        images: [
+          { url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=300', caption: 'Image Caption' }
+        ]
+      };
+      newBlock.style = { gridCols: 'grid-cols-2' };
+    } else if (type === 'image') {
+      newBlock.content = { 
+        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600', 
+        caption: 'Sample Image Caption', 
+        alt: 'Sample description' 
+      };
+      newBlock.style = { 
+        displayMode: 'inline', 
+        objectFit: 'cover', 
+        aspectRatio: 'auto' 
+      };
+    } else if (type === 'hero') {
+      newBlock.content = { 
+        bgImageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200', 
+        heading: 'Crafting Dynamic Digital Experiences', 
+        subtext: 'Build beautiful, customizable page sections and professional websites in seconds.', 
+        ctaText: 'Get Started Today', 
+        ctaUrl: '#', 
+        overlayOpacity: 50 
+      };
+      newBlock.style = {};
+    } else if (type === 'button') {
+      newBlock.content = { 
+        label: 'Explore Services', 
+        url: '#', 
+        style: 'primary', 
+        align: 'left' 
+      };
+      newBlock.style = {};
+    } else if (type === 'divider') {
+      newBlock.content = { 
+        height: 40 
+      };
+      newBlock.style = {};
+    } else if (type === 'columns') {
+      newBlock.content = {
+        columns: [
+          { title: 'Responsive Design', text: 'Looks gorgeous on any device, automatically resizing grids and text.', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=150' },
+          { title: 'Supercharged Speed', text: 'Optimized for performance and fast loading, keeping your visitors engaged.', imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=150' }
+        ]
+      };
+      newBlock.style = { gridCols: 'grid-cols-2' };
+    } else if (type === 'quote') {
+      newBlock.content = { 
+        text: 'A satisfied customer is the best business strategy of all.', 
+        author: 'Michael LeBoeuf', 
+        avatarUrl: '' 
+      };
+      newBlock.style = {};
+    } else if (type === 'video') {
+      newBlock.content = { 
+        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' 
+      };
+      newBlock.style = {};
+    }
+
+    section.blocks.push(newBlock);
+    this.cdr.detectChanges();
+  }
+
+  deleteBlock(section: any, blockIndex: number) {
+    section.blocks.splice(blockIndex, 1);
+    this.reorderBlocks(section);
+    this.cdr.detectChanges();
+  }
+
+  moveBlockUp(section: any, index: number) {
+    if (index === 0) return;
+    const temp = section.blocks[index];
+    section.blocks[index] = section.blocks[index - 1];
+    section.blocks[index - 1] = temp;
+    this.reorderBlocks(section);
+    this.cdr.detectChanges();
+  }
+
+  moveBlockDown(section: any, index: number) {
+    if (index === section.blocks.length - 1) return;
+    const temp = section.blocks[index];
+    section.blocks[index] = section.blocks[index + 1];
+    section.blocks[index + 1] = temp;
+    this.reorderBlocks(section);
+    this.cdr.detectChanges();
+  }
+
+  reorderBlocks(section: any) {
+    section.blocks.forEach((blk: any, idx: number) => {
+      blk.sortOrder = idx + 1;
+    });
+  }
+
+  addImageToGallery(block: any) {
+    if (!block.content.images) {
+      block.content.images = [];
+    }
+    block.content.images.push({ url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=300', caption: 'New Image Caption' });
+    this.cdr.detectChanges();
+  }
+
+  removeImageFromGallery(block: any, imgIdx: number) {
+    block.content.images.splice(imgIdx, 1);
+    this.cdr.detectChanges();
+  }
+
+  addColumn(block: any) {
+    if (!block.content.columns) {
+      block.content.columns = [];
+    }
+    block.content.columns.push({ title: 'New Feature', text: 'Feature description goes here.', imageUrl: '' });
+    this.cdr.detectChanges();
+  }
+
+  removeColumn(block: any, colIdx: number) {
+    block.content.columns.splice(colIdx, 1);
+    this.cdr.detectChanges();
   }
 
   uploadBackgroundImage(event: any) {
