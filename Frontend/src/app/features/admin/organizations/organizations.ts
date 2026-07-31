@@ -277,7 +277,7 @@ export class OrganizationsComponent implements OnInit {
 
     from(menusToCreate).pipe(
       concatMap(menuDef => 
-        this.menuService.createMenu({
+        this.menuService.createMenu(org.id, {
           organizationId: org.id,
           title: menuDef.title,
           page: menuDef.page,

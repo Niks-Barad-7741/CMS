@@ -16,17 +16,18 @@ export interface Media {
   providedIn: 'root'
 })
 export class MediaService {
-  private baseUrl = 'https://localhost:7170/api/admin/organizations';
+  private baseUrl = 'https://localhost:7170/api/admin';
 
   constructor(private http: HttpClient) {}
 
   getMediaForOrg(orgId: string): Observable<Media[]> {
-    return this.http.get<any>(`${this.baseUrl}/${orgId}/media`).pipe(map(res => res.data));
+    return this.http.get<any>(`${this.baseUrl}/Media/organization/${orgId}`).pipe(map(res => res.data));
   }
 
-  uploadMedia(orgId: string, file: File): Observable<Media> {
+  uploadMedia(orgId: string, file: File): Observable<any> {
     const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<any>(`${this.baseUrl}/${orgId}/media`, formData).pipe(map(res => res.data));
+    formData.append('OrganizationId', orgId);
+    formData.append('File', file);
+    return this.http.post<any>(`${this.baseUrl}/Media/upload`, formData);
   }
 }

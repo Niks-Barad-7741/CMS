@@ -4,6 +4,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 // Trigger Angular build refresh
 import { FormsModule } from '@angular/forms';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PageService, PageContent } from '../../../core/services/page.service';
 import { OrganizationService, Organization } from '../../../core/services/organization.service';
@@ -24,6 +25,12 @@ interface MenuListItem {
   hasContent: boolean;
   status: string; // 'Published' | 'Draft' | 'Not Added'
   sortOrder: number;
+}
+
+export interface BlockConfig {
+  id: string;
+  type: 'hero-banner' | 'solutions-grid' | 'features-row' | 'cta-banner' | 'rich-text';
+  data: any;
 }
 
 const CORPORATE_WIREFRAME_HTML = `
@@ -53,16 +60,29 @@ export interface FieldConfig {
 
 export const MENU_FIELD_CONFIG: Record<string, FieldConfig[]> = {
   home: [
-    { key: 'homeHeroTitle', label: 'Hero Main Title / Headline', type: 'text', placeholder: 'e.g. Build Your Digital Empire' },
-    { key: 'homeCtaText', label: 'Primary CTA Button Text', type: 'text', placeholder: 'e.g. Get Started Now' },
-    { key: 'homeHeroSubtitle', label: 'Hero Tagline / Subtitle', type: 'textarea', placeholder: 'Hero subtext...', fullWidth: true },
-    { key: 'homeBackgroundImage', label: 'Background Image URL (or upload)', type: 'image', placeholder: 'https://...', fullWidth: true },
-    { key: 'homeFeature1Title', label: 'Feature 1 Title', type: 'text', placeholder: 'Title' },
-    { key: 'homeFeature1Desc', label: 'Feature 1 Description', type: 'textarea', placeholder: 'Description' },
-    { key: 'homeFeature2Title', label: 'Feature 2 Title', type: 'text', placeholder: 'Title' },
-    { key: 'homeFeature2Desc', label: 'Feature 2 Description', type: 'textarea', placeholder: 'Description' },
-    { key: 'homeFeature3Title', label: 'Feature 3 Title', type: 'text', placeholder: 'Title' },
-    { key: 'homeFeature3Desc', label: 'Feature 3 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'homeHeroTitle', label: 'Hero Main Title', type: 'text', placeholder: 'e.g. DELIVERED WITH PRECISION' },
+    { key: 'homeHeroSubtitle', label: 'Hero Subtitle', type: 'textarea', placeholder: 'Hero subtext...', fullWidth: true },
+    { key: 'homeBackgroundImage', label: 'Hero Background Image', type: 'image', placeholder: 'https://...', fullWidth: true },
+    { key: 'homeCtaText', label: 'Hero CTA Button Text', type: 'text', placeholder: 'e.g. Our Mission' },
+    { key: 'solutionsTitle', label: 'Solutions Section Title', type: 'text', placeholder: 'e.g. OUR SOLUTIONS', fullWidth: true },
+    { key: 'solution1Title', label: 'Solution 1 Title', type: 'text', placeholder: 'Title' },
+    { key: 'solution1Image', label: 'Solution 1 Image', type: 'image', placeholder: 'https://...' },
+    { key: 'solution2Title', label: 'Solution 2 Title', type: 'text', placeholder: 'Title' },
+    { key: 'solution2Image', label: 'Solution 2 Image', type: 'image', placeholder: 'https://...' },
+    { key: 'solution3Title', label: 'Solution 3 Title', type: 'text', placeholder: 'Title' },
+    { key: 'solution3Image', label: 'Solution 3 Image', type: 'image', placeholder: 'https://...' },
+    { key: 'solution4Title', label: 'Solution 4 Title', type: 'text', placeholder: 'Title' },
+    { key: 'solution4Image', label: 'Solution 4 Image', type: 'image', placeholder: 'https://...' },
+    { key: 'featuresTitle', label: 'Features Section Title', type: 'text', placeholder: 'e.g. WORKING WITH US', fullWidth: true },
+    { key: 'featuresSubtitle', label: 'Features Subtitle', type: 'textarea', placeholder: 'Subtitle...', fullWidth: true },
+    { key: 'feature1Icon', label: 'Feature 1 Icon (Emoji)', type: 'text', placeholder: 'e.g. ⏱' },
+    { key: 'feature1Desc', label: 'Feature 1 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'feature2Icon', label: 'Feature 2 Icon (Emoji)', type: 'text', placeholder: 'e.g. 🔧' },
+    { key: 'feature2Desc', label: 'Feature 2 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'feature3Icon', label: 'Feature 3 Icon (Emoji)', type: 'text', placeholder: 'e.g. ⚙️' },
+    { key: 'feature3Desc', label: 'Feature 3 Description', type: 'textarea', placeholder: 'Description' },
+    { key: 'ctaBannerTitle', label: 'CTA Banner Title', type: 'text', placeholder: 'Title', fullWidth: true },
+    { key: 'ctaBannerButtonText', label: 'CTA Banner Button Text', type: 'text', placeholder: 'Button text' },
   ],
   about: [
     { key: 'aboutTitle', label: 'Page Main Heading', type: 'text', placeholder: 'e.g. About Ayaan Corp' },
@@ -100,7 +120,7 @@ export const MENU_FIELD_CONFIG: Record<string, FieldConfig[]> = {
 @Component({
   selector: 'app-pages',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DragDropModule],
   templateUrl: './pages.html'
 })
 export class PagesComponent implements OnInit {
@@ -138,22 +158,30 @@ export class PagesComponent implements OnInit {
     phone: '+1 (555) 123-4567',
     address: '123 Innovation Way, Tech City',
 
-    // Home
-    homeHeroTitle: 'Build Your Digital Empire',
-    homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
+    // Home (Accurus Style)
+    homeHeroTitle: 'DELIVERED WITH PRECISION, BUILT FOR FLIGHT',
+    homeHeroSubtitle: 'A leading global technology partner providing complex integrated products and services for the commercial aircraft, defense and space industries.',
     homeBackgroundImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
-    stat1Value: '500+',
-    stat2Value: '100',
-    stat3Value: '50+',
-    stat4Value: '12+',
-    homeCtaText: 'Get Started Now',
-    homeSecondaryCtaText: 'Learn More',
-    homeFeature1Title: 'Lightning Fast',
-    homeFeature1Desc: 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.',
-    homeFeature2Title: 'Bank-Grade Security',
-    homeFeature2Desc: 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.',
-    homeFeature3Title: 'Limitless Scaling',
-    homeFeature3Desc: 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.',
+    homeCtaText: 'Our Mission',
+    solutionsTitle: 'OUR SOLUTIONS',
+    solution1Title: 'Machining',
+    solution1Image: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?q=80&w=400',
+    solution2Title: 'Sheet Metal Fabrication',
+    solution2Image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400',
+    solution3Title: 'Kits and Assemblies',
+    solution3Image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=400',
+    solution4Title: 'Processing',
+    solution4Image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?q=80&w=400',
+    featuresTitle: 'WORKING WITH US',
+    featuresSubtitle: 'We deliver high quality products to our customers on time and our strategy is designed to meet our customers needs.',
+    feature1Icon: '⏱',
+    feature1Desc: 'Ability to provide a quote in days, and produce a part in weeks, depending on raw material availability.',
+    feature2Icon: '🔧',
+    feature2Desc: 'Prototyping and engineering support to ensure producibility and optimize design for manufacturing.',
+    feature3Icon: '⚙️',
+    feature3Desc: 'Uniquely facilitized to scale from one-off production to high volume production based on automated cellular machining.',
+    ctaBannerTitle: 'READY TO GET STARTED?',
+    ctaBannerButtonText: 'Contact Us',
 
     // About
     aboutTitle: 'About Ayaan Corp',
@@ -187,6 +215,9 @@ export class PagesComponent implements OnInit {
   isOrgDropdownOpen = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  toastTitle: string = 'Saved Successfully!';
+  showLiveSiteLink: boolean = true;
+  blockToDeleteIndex: number | null = null;
 
   constructor(
     private pageService: PageService,
@@ -204,12 +235,8 @@ export class PagesComponent implements OnInit {
 
   ngOnInit() {
     if (this.role === 'Admin') {
-      forkJoin({
-        menus: this.menuService.getMenus().pipe(catchError(() => of([]))),
-        orgs: this.orgService.getOrganizations().pipe(catchError(() => of([])))
-      }).subscribe(results => {
-        this.processMenus(results.menus);
-        this.organizations = (results.orgs || []).filter((o: any) => o.isActive);
+      this.orgService.getOrganizations().pipe(catchError(() => of([]))).subscribe(orgs => {
+        this.organizations = (orgs || []).filter((o: any) => o.isActive);
         this.isInitializing = false;
         this.cdr.detectChanges();
 
@@ -217,17 +244,18 @@ export class PagesComponent implements OnInit {
           if (params['orgId'] && params['orgId'] !== this.selectedOrgId) {
             this.selectedOrgId = params['orgId'];
             this.onSelectionChange();
+          } else if (!this.selectedOrgId && this.organizations.length > 0) {
+            // Default to first org if none selected
+            this.selectedOrgId = this.organizations[0].id;
+            this.onSelectionChange();
           }
         });
       });
     } else {
-      this.menuService.getMenus().pipe(catchError(() => of([]))).subscribe(menus => {
-        this.processMenus(menus);
-        this.selectedOrgId = this.clientOrgId;
-        this.isInitializing = false;
-        this.cdr.detectChanges();
-        this.onSelectionChange();
-      });
+      this.selectedOrgId = this.clientOrgId;
+      this.isInitializing = false;
+      this.cdr.detectChanges();
+      this.onSelectionChange();
     }
   }
 
@@ -304,9 +332,14 @@ export class PagesComponent implements OnInit {
   loadOrgPages() {
     if (!this.selectedOrgId) return;
     this.isLoadingPages = true;
-    this.pageService.getPagesForOrg(this.selectedOrgId).subscribe({
-      next: (pages) => {
-        this.orgPages = pages || [];
+    
+    forkJoin({
+      menus: this.menuService.getMenus(this.selectedOrgId).pipe(catchError(() => of([]))),
+      pages: this.pageService.getPagesForOrg(this.selectedOrgId).pipe(catchError(() => of([])))
+    }).subscribe({
+      next: (results) => {
+        this.processMenus(results.menus);
+        this.orgPages = results.pages || [];
         this.buildMenuList();
         this.isLoadingPages = false;
         this.cdr.detectChanges();
@@ -479,6 +512,11 @@ export class PagesComponent implements OnInit {
             try {
               const parsed = JSON.parse(page.contentJson);
               this.clientData = { ...this.resetDefaultDemoData(), ...parsed };
+              
+              // Migrate old flat Home data to blocks format if not already present
+              if (this.getSelectedMenuType() === 'home' && (!this.clientData.blocks || !Array.isArray(this.clientData.blocks))) {
+                this.clientData.blocks = this.migrateHomeToBlocks(this.clientData);
+              }
             } catch (e) {
               console.error('Error parsing contentJson:', e);
               this.resetDefaultDemoData();
@@ -506,8 +544,206 @@ export class PagesComponent implements OnInit {
     });
   }
 
+  migrateHomeToBlocks(data: any): BlockConfig[] {
+    const blocks: BlockConfig[] = [];
+    
+    // 1. Hero
+    if (data.homeHeroTitle || data.homeBackgroundImage) {
+      blocks.push({
+        id: 'hero-' + Date.now(),
+        type: 'hero-banner',
+        data: {
+          title: data.homeHeroTitle || 'DELIVERED WITH PRECISION',
+          subtitle: data.homeHeroSubtitle || '',
+          bgImage: data.homeBackgroundImage || '',
+          ctaText: data.homeCtaText || 'Our Mission',
+          ctaLink: '#'
+        }
+      });
+    }
+
+    // 2. Solutions
+    if (data.solutionsTitle || data.solution1Title) {
+      blocks.push({
+        id: 'sol-' + Date.now(),
+        type: 'solutions-grid',
+        data: {
+          sectionTitle: data.solutionsTitle || 'OUR SOLUTIONS',
+          cards: [
+            { title: data.solution1Title, image: data.solution1Image, link: '#' },
+            { title: data.solution2Title, image: data.solution2Image, link: '#' },
+            { title: data.solution3Title, image: data.solution3Image, link: '#' },
+            { title: data.solution4Title, image: data.solution4Image, link: '#' }
+          ].filter(c => c.title || c.image)
+        }
+      });
+    }
+
+    // 3. Features
+    if (data.featuresTitle || data.feature1Desc) {
+      blocks.push({
+        id: 'feat-' + Date.now(),
+        type: 'features-row',
+        data: {
+          sectionTitle: data.featuresTitle || 'WORKING WITH US',
+          subtitle: data.featuresSubtitle || '',
+          items: [
+            { icon: data.feature1Icon, desc: data.feature1Desc },
+            { icon: data.feature2Icon, desc: data.feature2Desc },
+            { icon: data.feature3Icon, desc: data.feature3Desc }
+          ].filter(i => i.icon || i.desc)
+        }
+      });
+    }
+
+    // 4. CTA
+    if (data.ctaBannerTitle) {
+      blocks.push({
+        id: 'cta-' + Date.now(),
+        type: 'cta-banner',
+        data: {
+          title: data.ctaBannerTitle,
+          buttonText: data.ctaBannerButtonText || 'Contact Us',
+          buttonLink: '#'
+        }
+      });
+    }
+    
+    return blocks.length > 0 ? blocks : this.getDefaultHomeBlocks();
+  }
+
+  getDefaultHomeBlocks(): BlockConfig[] {
+    return [
+      {
+        id: 'blk-' + Math.random().toString(36).substr(2, 9),
+        type: 'hero-banner',
+        data: {
+          title: 'DELIVERED WITH PRECISION, BUILT FOR FLIGHT',
+          subtitle: 'A leading global technology partner providing complex integrated products and services.',
+          bgImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
+          ctaText: 'Our Mission',
+          ctaLink: '#'
+        }
+      },
+      {
+        id: 'blk-' + Math.random().toString(36).substr(2, 9),
+        type: 'solutions-grid',
+        data: {
+          sectionTitle: 'OUR SOLUTIONS',
+          cards: [
+            { title: 'Machining', image: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?q=80&w=400', link: '#' },
+            { title: 'Sheet Metal Fabrication', image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400', link: '#' }
+          ]
+        }
+      }
+    ];
+  }
+
+  // --- Block Builder Actions ---
+  dropBlock(event: CdkDragDrop<any[]>) {
+    moveItemInArray(this.clientData.blocks, event.previousIndex, event.currentIndex);
+    this.updateGeneratedHtml();
+  }
+
+  addBlock(type: string) {
+    if (!this.clientData.blocks) this.clientData.blocks = [];
+    
+    let defaultData: any = {};
+    if (type === 'hero-banner') {
+      defaultData = { title: 'New Hero Banner', subtitle: 'Subtitle text...', bgImage: '', ctaText: 'Click Here', ctaLink: '#' };
+    } else if (type === 'solutions-grid') {
+      defaultData = { sectionTitle: 'New Solutions Grid', cards: [{ title: 'Card 1', image: '', link: '#' }] };
+    } else if (type === 'features-row') {
+      defaultData = { sectionTitle: 'New Features', subtitle: 'Subtitle...', items: [{ icon: '⭐', desc: 'Feature 1' }] };
+    } else if (type === 'cta-banner') {
+      defaultData = { title: 'New CTA', buttonText: 'Contact Us', buttonLink: '#' };
+    } else if (type === 'rich-text') {
+      defaultData = { content: '<p>New rich text content...</p>' };
+    }
+
+    this.clientData.blocks.push({
+      id: 'blk-' + Math.random().toString(36).substr(2, 9),
+      type: type,
+      data: defaultData
+    });
+    this.updateGeneratedHtml();
+  }
+
+  removeBlock(index: number) {
+    this.blockToDeleteIndex = index;
+  }
+
+  confirmRemoveBlock() {
+    if (this.blockToDeleteIndex !== null) {
+      this.clientData.blocks.splice(this.blockToDeleteIndex, 1);
+      this.updateGeneratedHtml();
+      this.blockToDeleteIndex = null;
+      this.cdr.detectChanges();
+    }
+  }
+
+  cancelRemoveBlock() {
+    this.blockToDeleteIndex = null;
+    this.cdr.detectChanges();
+  }
+
+  addBlockItem(blockIndex: number, listType: 'cards' | 'items') {
+    const block = this.clientData.blocks[blockIndex];
+    if (!block.data[listType]) block.data[listType] = [];
+    
+    if (listType === 'cards') {
+      block.data.cards.push({ title: 'New Card', image: '', link: '#' });
+    } else if (listType === 'items') {
+      block.data.items.push({ icon: '⭐', desc: 'New Feature' });
+    }
+    this.updateGeneratedHtml();
+  }
+
+  removeBlockItem(blockIndex: number, listType: 'cards' | 'items', itemIndex: number) {
+    const block = this.clientData.blocks[blockIndex];
+    if (block.data[listType]) {
+      block.data[listType].splice(itemIndex, 1);
+      this.updateGeneratedHtml();
+    }
+  }
+
+  uploadBlockImage(event: any, blockIndex: number, listType?: 'cards', itemIndex?: number) {
+    const file = event.target.files[0];
+    if (file && this.selectedOrgId) {
+      this.isUploadingImage = true;
+      this.mediaService.uploadMedia(this.selectedOrgId, file).subscribe({
+        next: (res: any) => {
+          let url = '';
+          if (res && res.data && res.data.filePath) {
+            url = res.data.filePath;
+          } else if (res && res.filePath) {
+            url = res.filePath;
+          } else if (typeof res === 'string') {
+            url = res;
+          }
+
+          if (url) {
+            const block = this.clientData.blocks[blockIndex];
+            if (listType && itemIndex !== undefined) {
+              block.data[listType][itemIndex].image = url;
+            } else {
+              block.data.bgImage = url;
+            }
+          }
+          this.isUploadingImage = false;
+          this.updateGeneratedHtml();
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.isUploadingImage = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
   resetDefaultDemoData(): any {
-    const demoData = {
+    const demoData: any = {
       companyName: 'Ayaan Corp',
       tagline: 'Building Next-Gen Platform Solutions',
       description: 'Tailored solutions designed to elevate your brand and drive unparalleled growth.',
@@ -515,22 +751,30 @@ export class PagesComponent implements OnInit {
       phone: '+1 (555) 123-4567',
       address: '123 Innovation Way, Tech City',
 
-      // Home
-      homeHeroTitle: 'Build Your Digital Empire',
-      homeHeroSubtitle: 'Empower your business with our cutting-edge dynamic platform. Create, manage, and scale with speed and beautiful design.',
+      // Home (Accurus Style)
+      homeHeroTitle: 'DELIVERED WITH PRECISION, BUILT FOR FLIGHT',
+      homeHeroSubtitle: 'A leading global technology partner providing complex integrated products and services for the commercial aircraft, defense and space industries.',
       homeBackgroundImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
-      stat1Value: '500+',
-      stat2Value: '100',
-      stat3Value: '50+',
-      stat4Value: '12+',
-      homeCtaText: 'Get Started Now',
-      homeSecondaryCtaText: 'Learn More',
-      homeFeature1Title: 'Lightning Fast',
-      homeFeature1Desc: 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.',
-      homeFeature2Title: 'Bank-Grade Security',
-      homeFeature2Desc: 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.',
-      homeFeature3Title: 'Limitless Scaling',
-      homeFeature3Desc: 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.',
+      homeCtaText: 'Our Mission',
+      solutionsTitle: 'OUR SOLUTIONS',
+      solution1Title: 'Machining',
+      solution1Image: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?q=80&w=400',
+      solution2Title: 'Sheet Metal Fabrication',
+      solution2Image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400',
+      solution3Title: 'Kits and Assemblies',
+      solution3Image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=400',
+      solution4Title: 'Processing',
+      solution4Image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?q=80&w=400',
+      featuresTitle: 'WORKING WITH US',
+      featuresSubtitle: 'We deliver high quality products to our customers on time and our strategy is designed to meet our customers needs.',
+      feature1Icon: '⏱',
+      feature1Desc: 'Ability to provide a quote in days, and produce a part in weeks, depending on raw material availability.',
+      feature2Icon: '🔧',
+      feature2Desc: 'Prototyping and engineering support to ensure producibility and optimize design for manufacturing.',
+      feature3Icon: '⚙️',
+      feature3Desc: 'Uniquely facilitized to scale from one-off production to high volume production based on automated cellular machining.',
+      ctaBannerTitle: 'READY TO GET STARTED?',
+      ctaBannerButtonText: 'Contact Us',
 
       // About
       aboutTitle: 'About Ayaan Corp',
@@ -557,29 +801,64 @@ export class PagesComponent implements OnInit {
       contactSubtitle: "Have a question or ready to start a project? We'd love to hear from you."
     };
 
+    demoData.blocks = this.getDefaultHomeBlocks();
+
     this.clientData = { ...demoData };
     return demoData;
   }
 
-  uploadBackgroundImage(event: any) {
+  uploadImage(event: any, fieldKey: string) {
     const file = event.target.files[0];
+    const target = event.target;
+    
     if (file && this.selectedOrgId) {
       this.isUploadingImage = true;
       this.cdr.detectChanges();
       this.mediaService.uploadMedia(this.selectedOrgId, file).subscribe({
         next: (res: any) => {
-          const url = res?.data?.url || res?.url;
+          // Since we removed map() from the service, res is the FULL ApiResponse object
+          // It should look like: { success: true, statusCode: 200, data: { filePath: ... } }
+          
+          let url = '';
+          if (res && res.data && res.data.filePath) {
+            url = res.data.filePath;
+          } else if (res && res.filePath) {
+            url = res.filePath;
+          }
+
+          console.log('Upload response:', res, 'Extracted URL:', url);
           if (url) {
-            this.clientData.homeBackgroundImage = url;
+            this.clientData[fieldKey] = url;
             this.updateGeneratedHtml();
+            this.toastTitle = 'Image Uploaded!';
+            this.successMessage = 'Image uploaded to server. Remember to click "Save & Publish" to update the live site!';
+            this.showLiveSiteLink = false;
+          } else {
+            this.errorMessage = 'Upload succeeded but no URL was extracted.';
           }
           this.isUploadingImage = false;
+          target.value = '';
           this.cdr.detectChanges();
+          
+          if (this.successMessage || this.errorMessage) {
+            setTimeout(() => {
+              this.successMessage = null;
+              this.errorMessage = null;
+              this.cdr.detectChanges();
+            }, 4000);
+          }
         },
         error: (err) => {
           console.error('Image upload failed', err);
+          this.errorMessage = 'Image upload failed. Please try again.';
           this.isUploadingImage = false;
+          target.value = '';
           this.cdr.detectChanges();
+          
+          setTimeout(() => {
+            this.errorMessage = null;
+            this.cdr.detectChanges();
+          }, 4000);
         }
       });
     }
@@ -589,45 +868,102 @@ export class PagesComponent implements OnInit {
     const type = presetType || this.getSelectedMenuType();
     const company = this.clientData.companyName || 'Ayaan Corp';
 
+    // Helper to resolve relative /uploads/ paths to the backend server
+    const resolveImageUrl = (url: string) => url && url.startsWith('/uploads/') ? `https://localhost:7170${url}` : url;
+
     let html = '';
     switch (type) {
       case 'home': {
-        const title = this.clientData.homeHeroTitle || 'Build Your Digital Empire';
-        const subtitle = this.clientData.homeHeroSubtitle || 'Empower your business with our cutting-edge dynamic platform.';
-        const cta = this.clientData.homeCtaText || 'Get Started Now';
-        const secondaryCta = this.clientData.homeSecondaryCtaText || 'Learn More';
-
-        const f1Title = this.clientData.homeFeature1Title || 'Lightning Fast';
-        const f1Desc = this.clientData.homeFeature1Desc || 'Optimized for speed, our platform ensures your content loads instantly for users worldwide.';
-        const f2Title = this.clientData.homeFeature2Title || 'Bank-Grade Security';
-        const f2Desc = this.clientData.homeFeature2Desc || 'Rest easy knowing your data is protected by state-of-the-art encryption and security protocols.';
-        const f3Title = this.clientData.homeFeature3Title || 'Limitless Scaling';
-        const f3Desc = this.clientData.homeFeature3Desc || 'Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases.';
-
-        html = HOME_TEMPLATE
-          .replace(/Build Your Digital <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300">Empire<\/span>/g, title)
-          .replace(/Empower your business with our cutting-edge dynamic platform\. Create, manage, and scale with unparalleled speed and beautiful design\./g, subtitle)
-          .replace(/Get Started Now/g, cta)
-          .replace(/Learn More/g, secondaryCta)
-          .replace(/Lightning Fast/g, f1Title)
-          .replace(/Optimized for speed, our platform ensures your content loads instantly for users worldwide\./g, f1Desc)
-          .replace(/Bank-Grade Security/g, f2Title)
-          .replace(/Rest easy knowing your data is protected by state-of-the-art encryption and security protocols\./g, f2Desc)
-          .replace(/Limitless Scaling/g, f3Title)
-          .replace(/Our infrastructure grows with you, seamlessly handling traffic spikes and expanding databases\./g, f3Desc);
-
+        const blocks = this.clientData.blocks || [];
+        html = blocks.map((block: any) => {
+          switch (block.type) {
+            case 'hero-banner': {
+              const bUrl = resolveImageUrl(block.data.bgImage);
+              const bg = bUrl
+                ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
+                : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
+              return `
+                <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
+                  <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
+                  <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
+                    <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
+                    ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
+                  </div>
+                </div>
+              `;
+            }
+            case 'solutions-grid': {
+              const cardsHtml = (block.data.cards || []).map((card: any) => {
+                const img = resolveImageUrl(card.image);
+                const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
+                return `
+                  <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
+                    ${imgTag}
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
+                    </div>
+                  </a>
+                `;
+              }).join('');
+              return `
+                <section class="py-20 bg-white">
+                  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
+                  </div>
+                </section>
+              `;
+            }
+            case 'features-row': {
+              const featsHtml = (block.data.items || []).map((item: any) => `
+                <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
+                  <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
+                  <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
+                </div>
+              `).join('');
+              return `
+                <section class="py-20" style="background: #F8F9FA;">
+                  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                      ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
+                      ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
+                  </div>
+                </section>
+              `;
+            }
+            case 'cta-banner': {
+              return `
+                <section class="py-20" style="background: #002855;">
+                  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
+                    ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
+                  </div>
+                </section>
+              `;
+            }
+            default:
+              return '';
+          }
+        }).join('');
         if (!this.formData.title) this.formData.title = 'Home - ' + company;
         break;
       }
       case 'about': {
-        const pageTitle = this.clientData.aboutTitle || ('About ' + company);
-        const sub = this.clientData.aboutSubtitle || 'We are on a mission to transform how the world creates and interacts with digital content.';
-        const story1 = this.clientData.aboutStory1 || 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.';
-        const story2 = this.clientData.aboutStory2 || 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.';
-        const img = this.clientData.aboutImage || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop';
-        const p1 = this.clientData.aboutPoint1 || 'Innovation-driven approach';
-        const p2 = this.clientData.aboutPoint2 || 'Customer-centric design';
-        const p3 = this.clientData.aboutPoint3 || 'Commitment to excellence';
+        const getVal = (key: string, fallback: string) => this.clientData[key] !== undefined ? this.clientData[key] : fallback;
+
+        const pageTitle = getVal('aboutTitle', 'About ' + company);
+        const sub = getVal('aboutSubtitle', 'We are on a mission to transform how the world creates and interacts with digital content.');
+        const story1 = getVal('aboutStory1', 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.');
+        const story2 = getVal('aboutStory2', 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.');
+        const img = getVal('aboutImage', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop');
+        const p1 = getVal('aboutPoint1', 'Innovation-driven approach');
+        const p2 = getVal('aboutPoint2', 'Customer-centric design');
+        const p3 = getVal('aboutPoint3', 'Commitment to excellence');
 
         html = ABOUT_TEMPLATE
           .replace(/About Us/g, pageTitle)
@@ -773,6 +1109,8 @@ export class PagesComponent implements OnInit {
 
     const handleSuccess = () => {
       this.isCreating = false;
+      this.toastTitle = 'Saved Successfully!';
+      this.showLiveSiteLink = true;
       this.successMessage = this.formData.status === 'Draft' 
         ? 'Draft saved successfully!' 
         : 'Page saved & published to website successfully!';

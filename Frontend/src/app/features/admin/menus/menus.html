@@ -1,21 +1,47 @@
 <!-- ── Header ─────────────────────────────────────────── -->
-<div class="flex justify-between items-center mb-6 px-1">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-1 gap-4">
   <div>
-    <h2 class="text-2xl font-bold" style="color:var(--text-primary)">Shared Menus</h2>
+    <h2 class="text-2xl font-bold" style="color:var(--text-primary)">Menu Management</h2>
+    <p class="text-sm mt-1" style="color:var(--text-secondary)">Manage top-level navigation and sub-menus for your sites.</p>
+  </div>
+
+  <!-- Organization Selector (Admin Only) -->
+  <div *ngIf="role === 'Admin'" class="relative min-w-[240px]">
+    <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-secondary)">
+      Organization
+    </label>
+    <div class="relative">
+      <button (click)="isOrgDropdownOpen = !isOrgDropdownOpen"
+              class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl border dash-border bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm">
+        <span class="truncate pr-4">{{ getSelectedOrgName() || 'Select Organization...' }}</span>
+        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <!-- Dropdown Panel -->
+      <div *ngIf="isOrgDropdownOpen" 
+           class="absolute z-[100] w-full mt-2 rounded-xl border dash-border bg-white shadow-xl py-1 transform origin-top transition-all"
+           style="max-height: 280px; overflow-y: auto;">
+        <button *ngFor="let org of organizations"
+                (click)="selectOrg(org.id)"
+                class="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors flex items-center justify-between group"
+                [class.bg-primary]="selectedOrgId === org.id"
+                [class.bg-opacity-10]="selectedOrgId === org.id">
+          <span [class.font-semibold]="selectedOrgId === org.id"
+                [class.text-primary]="selectedOrgId === org.id"
+                style="color:var(--text-primary)">{{ org.name }}</span>
+          <svg *ngIf="selectedOrgId === org.id" class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- ── Menus Table ────────────────────────────────────── -->
 <div class="dash-card overflow-hidden">
-
-  <!-- Info banner -->
-  <div class="px-6 py-3 flex items-start gap-2 text-xs"
-       style="background:rgba(245,158,11,.08); border-bottom:1px solid rgba(245,158,11,.2); color:#D97706;">
-    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <span><strong>Note:</strong> These menus are shared across ALL organizations and appear in every site's navigation.</span>
-  </div>
 
   <div class="overflow-x-auto">
     <table class="w-full whitespace-nowrap text-left">
