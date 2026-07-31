@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { MenuItem } from '../../../core/services/menu.service';
@@ -22,6 +22,14 @@ export class PublicLayoutComponent implements OnInit {
   isLoading = true;
   currentYear = new Date().getFullYear();
 
+  // Navbar state
+  isMobileMenuOpen = false;
+  expandedMobileMenu: string | null = null;
+  activeDropdown: string | null = null;
+  showMoreDropdown = false;
+  isScrolled = false;
+  maxVisibleItems = 7;
+
   constructor(
     private pageService: PageService,
     private tenantService: TenantService,
@@ -31,6 +39,44 @@ export class PublicLayoutComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(() => this.initSite());
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    this.isScrolled = window.scrollY > 10;
+  }
+
+  get visibleMenus(): MenuItem[] {
+    return this.menus.slice(0, this.maxVisibleItems);
+  }
+
+  get overflowMenus(): MenuItem[] {
+    return this.menus.slice(this.maxVisibleItems);
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    if (!this.isMobileMenuOpen) {
+      this.expandedMobileMenu = null;
+    }
+  }
+
+  toggleMobileSubmenu(menuId: string) {
+    this.expandedMobileMenu = this.expandedMobileMenu === menuId ? null : menuId;
+  }
+
+  showDropdown(menuId: string) {
+    this.activeDropdown = menuId;
+  }
+
+  hideDropdown(menuId: string) {
+    if (this.activeDropdown === menuId) {
+      this.activeDropdown = null;
+    }
+  }
+
+  toggleMoreDropdown() {
+    this.showMoreDropdown = !this.showMoreDropdown;
   }
 
   private initSite() {

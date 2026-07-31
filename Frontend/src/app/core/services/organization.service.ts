@@ -8,6 +8,14 @@ export interface Organization {
   slug: string;
   isActive: boolean;
   createdAt: string;
+  logoUrl?: string;
+  footerDescription?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  socialTwitter?: string;
+  socialFacebook?: string;
+  socialInstagram?: string;
 }
 
 @Injectable({
@@ -44,5 +52,9 @@ export class OrganizationService {
 
   toggleStatus(id: string): Observable<any> {
     return this.http.put(`${this.baseUrl}/${id}/toggle-status`, {});
+  }
+
+  updateLogo(orgId: string, logoUrl: string): Observable<any> {
+    return this.http.put(`${this.baseUrl}/${orgId}/logo`, { logoUrl });
   }
 }

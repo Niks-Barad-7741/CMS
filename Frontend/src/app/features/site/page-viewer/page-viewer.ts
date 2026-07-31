@@ -86,13 +86,19 @@ export class PageViewerComponent implements OnInit {
   }
 
   private renderHtmlFromContentJson(page: any): string {
+    const title = (page.title || '').toLowerCase();
+    const slug = (this.pageSlug || '').toLowerCase();
+    let data: any = {};
+    
     if (page.contentJson) {
       try {
-        const data = typeof page.contentJson === 'string' ? JSON.parse(page.contentJson) : page.contentJson;
-        const title = (page.title || '').toLowerCase();
-        const slug = (this.pageSlug || '').toLowerCase();
+        data = typeof page.contentJson === 'string' ? JSON.parse(page.contentJson) : page.contentJson;
+      } catch (e) {
+        console.error('Error rendering HTML from content JSON:', e);
+      }
+    }
 
-      if (title.includes('home') || slug === 'home') {
+    if (title.includes('home') || slug === 'home') {
         // If there's no background image, omit the style tag entirely or set to transparent
         const bgStyle = data.homeBackgroundImage ? `style="background-image: url('${data.homeBackgroundImage}'); background-size: cover; background-position: center; background-repeat: no-repeat;"` : 'style="background-color: #0A0F1A;"';
 
@@ -325,10 +331,6 @@ export class PageViewerComponent implements OnInit {
           </div>
         `;
       }
-    } catch (e) {
-      console.error('Error rendering HTML from content JSON:', e);
-    }
-    }
     if (page.bodyHtml) return page.bodyHtml;
     return '';
   }

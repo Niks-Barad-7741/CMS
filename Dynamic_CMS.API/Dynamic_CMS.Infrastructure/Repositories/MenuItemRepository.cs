@@ -19,7 +19,7 @@ namespace Dynamic_CMS.Infrastructure.Repositories
 
         public async Task<IEnumerable<MenuItem>> GetAllAsync()
         {
-            return await _context.MenuItems.ToListAsync();
+            return await _context.MenuItems.Include(m => m.SubMenuItems).ToListAsync();
         }
 
         public async Task<MenuItem?> GetByIdAsync(Guid id)
