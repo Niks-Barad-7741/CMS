@@ -96,91 +96,144 @@
       </h3>
       <p class="text-gray-500 text-sm mt-0.5">Drag rows up and down to reorder the website navigation menu.</p>
     </div>
+    
+    <div class="flex items-center gap-3">
+      <select [(ngModel)]="filterMenuId" (change)="onFilterMenuChange()" class="rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border bg-gray-50 text-sm font-medium min-w-[150px] outline-none transition-all">
+        <option [ngValue]="null">All Menus</option>
+        <option *ngFor="let m of menus" [ngValue]="m.id">{{ m.title }}</option>
+      </select>
+      
+      <select *ngIf="filterMenuId && availableSubMenus.length > 0" [(ngModel)]="filterSubMenuId" class="rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border bg-gray-50 text-sm font-medium min-w-[150px] outline-none transition-all animate-fade-in">
+        <option [ngValue]="null">All Sub Menus</option>
+        <option *ngFor="let sub of availableSubMenus" [ngValue]="sub.id">{{ sub.title }}</option>
+      </select>
+    </div>
   </div>
 
   <div class="overflow-x-auto">
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
-          <th class="p-4 font-semibold w-12 text-center">≡</th>
-          <th class="p-4 font-semibold">Menu Name</th>
-          <th class="p-4 font-semibold">Status</th>
-          <th class="p-4 font-semibold text-center w-24">Sort Order</th>
-          <th class="p-4 font-semibold text-right w-32">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Loading State -->
-        <tr *ngIf="isLoadingPages">
-          <td colspan="5" class="p-12 text-center text-gray-500">
-            <div class="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mb-2"></div>
-            <p>Loading pages...</p>
-          </td>
-        </tr>
+    <div class="w-full text-left border-collapse min-w-[600px]">
+      <div class="flex bg-gray-50 border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider p-4 font-semibold">
+        <div class="w-12 text-center">≡</div>
+        <div class="flex-1">Menu Name</div>
+        <div class="w-32">Status</div>
+        <div class="w-24 text-center">Sort Order</div>
+        <div class="w-32 text-right">Actions</div>
+      </div>
+      
+      <!-- Loading State -->
+      <div *ngIf="isLoadingPages" class="p-12 text-center text-gray-500 w-full border-b border-gray-100">
+        <div class="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mb-2"></div>
+        <p>Loading pages...</p>
+      </div>
 
-        <!-- Empty State -->
-        <tr *ngIf="!isLoadingPages && menuListItems.length === 0">
-          <td colspan="5" class="p-8 text-center text-gray-500">No menus available.</td>
-        </tr>
-        
-        <!-- Interactive Rows -->
-        <ng-container *ngIf="!isLoadingPages">
-          <tr *ngFor="let item of menuListItems; let i = index" 
-            class="border-b border-gray-100 transition-colors"
-            [class.bg-indigo-50]="dragIndex === i"
-            [class.hover:bg-gray-50]="dragIndex !== i"
-            draggable="true"
-            (dragstart)="onDragStart(i)"
-            (dragover)="onDragOver($event, i)"
-            (drop)="onDrop(i)">
+      <!-- Empty State -->
+      <div *ngIf="!isLoadingPages && filteredMenuNodes.length === 0" class="p-8 text-center text-gray-500 w-full border-b border-gray-100">
+        No menus available.
+      </div>
+      
+      <!-- Interactive Rows -->
+      <div *ngIf="!isLoadingPages" cdkDropList (cdkDropListDropped)="dropMainMenu($event)">
+        <div *ngFor="let node of filteredMenuNodes" cdkDrag class="bg-white" [cdkDragDisabled]="!!filterMenuId">
+          <!-- Main Menu Row -->
+          <div class="flex items-center border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <!-- Drag Handle -->
+            <div class="w-12 p-4 text-center text-gray-400 cursor-move" cdkDragHandle>
+              <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+            </div>
+            
+            <!-- Menu Title -->
+            <div class="flex-1 p-4 font-medium text-gray-900 flex items-center cursor-pointer select-none" (click)="toggleMenu(node.item.menu.id, $event)">
+              <button *ngIf="node.subItems.length > 0" class="mr-2 p-1 rounded-lg hover:bg-gray-200 transition-colors focus:outline-none">
+                <svg class="w-4 h-4 transition-transform duration-200" [class.rotate-90]="expandedMenus[node.item.menu.id]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+              <div *ngIf="node.subItems.length === 0" class="w-6 mr-2"></div>
+              {{ node.item.menu.title }}
+              <span *ngIf="!node.item.hasContent" class="ml-2 text-xs text-gray-400 font-normal">(Template available)</span>
+            </div>
+            
+            <!-- Status Badge -->
+            <div class="w-32 p-4">
+              <span *ngIf="node.item.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Published
+              </span>
+              <span *ngIf="node.item.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                Draft
+              </span>
+              <span *ngIf="node.item.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Not Added
+              </span>
+            </div>
+            
+            <!-- Sort Order -->
+            <div class="w-24 p-4 text-center font-bold text-gray-700">
+              {{ node.item.hasContent ? node.item.sortOrder : '—' }}
+            </div>
+            
+            <!-- Actions -->
+            <div class="w-32 p-4 text-right">
+              <button *ngIf="node.item.hasContent" (click)="editPage(node.item.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                Edit
+              </button>
+              <button *ngIf="!node.item.hasContent" (click)="addPage(node.item.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Add
+              </button>
+            </div>
+          </div>
           
-          <!-- Drag Handle -->
-          <td class="p-4 text-center text-gray-400 cursor-move">
-            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-          </td>
-          
-          <!-- Menu Title -->
-          <td class="p-4 font-medium text-gray-900">
-            {{ item.menu.title }}
-            <span *ngIf="!item.hasContent" class="ml-2 text-xs text-gray-400 font-normal">(Template available)</span>
-          </td>
-          
-          <!-- Status Badge -->
-          <td class="p-4">
-            <span *ngIf="item.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-              Published
-            </span>
-            <span *ngIf="item.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-              Draft
-            </span>
-            <span *ngIf="item.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-              Not Added
-            </span>
-          </td>
-          
-          <!-- Sort Order -->
-          <td class="p-4 text-center font-bold text-gray-700">
-            {{ item.hasContent ? item.sortOrder : '—' }}
-          </td>
-          
-          <!-- Actions -->
-          <td class="p-4 text-right">
-            <button *ngIf="item.hasContent" (click)="editPage(item.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-              Edit
-            </button>
-            <button *ngIf="!item.hasContent" (click)="addPage(item.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-              Add
-            </button>
-          </td>
-        </tr>
-        </ng-container>
-      </tbody>
-    </table>
+          <!-- SubMenus List -->
+          <div *ngIf="node.subItems.length > 0 && expandedMenus[node.item.menu.id]" cdkDropList (cdkDropListDropped)="dropSubMenu($event, node)" class="bg-gray-50/30 animate-fade-in">
+            <div *ngFor="let sub of node.subItems" cdkDrag [cdkDragDisabled]="!!filterMenuId" class="flex items-center border-b border-gray-100 hover:bg-gray-50 transition-colors">
+              <!-- Indentation Spacer to push drag handle right -->
+              <div class="w-8"></div>
+              <div class="w-12 p-4 text-center text-gray-400 cursor-move" cdkDragHandle>
+                <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+              </div>
+              <div class="flex-1 p-4 pl-4 font-medium text-gray-900">
+                {{ sub.menu.title }}
+                <span *ngIf="!sub.hasContent" class="ml-2 text-xs text-gray-400 font-normal">(Template available)</span>
+              </div>
+              
+              <div class="w-32 p-4">
+                <span *ngIf="sub.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  Published
+                </span>
+                <span *ngIf="sub.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  Draft
+                </span>
+                <span *ngIf="sub.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  Not Added
+                </span>
+              </div>
+              
+              <div class="w-24 p-4 text-center font-bold text-gray-700">
+                {{ sub.hasContent ? sub.sortOrder : '—' }}
+              </div>
+              
+              <div class="w-32 p-4 text-right">
+                <button *ngIf="sub.hasContent" (click)="editPage(sub.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  Edit
+                </button>
+                <button *ngIf="!sub.hasContent" (click)="addPage(sub.menu.id)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

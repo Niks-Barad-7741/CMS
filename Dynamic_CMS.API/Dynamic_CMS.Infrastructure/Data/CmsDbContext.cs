@@ -76,8 +76,9 @@ namespace Dynamic_CMS.Infrastructure.Data
                 // Soft delete filter
                 entity.HasQueryFilter(e => !e.IsDeleted);
                 
-                // Unique constraint
-                entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique();
+                // Unique constraints
+                entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique().HasFilter("[MenuItemId] IS NOT NULL");
+                entity.HasIndex(p => new { p.OrganizationId, p.SubMenuItemId }).IsUnique().HasFilter("[SubMenuItemId] IS NOT NULL");
 
                 // Navigations
                 entity.HasOne(p => p.Organization)
@@ -88,6 +89,11 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.HasOne(p => p.MenuItem)
                     .WithMany(m => m.PageContents)
                     .HasForeignKey(p => p.MenuItemId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.SubMenuItem)
+                    .WithMany()
+                    .HasForeignKey(p => p.SubMenuItemId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

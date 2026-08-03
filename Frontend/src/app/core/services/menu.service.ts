@@ -45,6 +45,10 @@ export class MenuService {
     return this.http.put(`${this.adminUrl}/${id}`, data);
   }
 
+  updateSubMenu(id: string, data: any): Observable<any> {
+    return this.http.put(`https://localhost:7170/api/admin/submenus/${id}`, data);
+  }
+
   deleteMenu(id: string): Observable<any> {
     return this.http.delete(`${this.adminUrl}/${id}`);
   }
