@@ -16,6 +16,7 @@ namespace Dynamic_CMS.Application.Services
         private readonly IPageContentRepository _pageContentRepository;
         private readonly IOrganizationRepository _organizationRepository;
         private readonly IMenuItemRepository _menuItemRepository;
+        private readonly ISubMenuItemRepository _subMenuItemRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<PageContentService> _logger;
 
@@ -23,12 +24,14 @@ namespace Dynamic_CMS.Application.Services
             IPageContentRepository pageContentRepository,
             IOrganizationRepository organizationRepository,
             IMenuItemRepository menuItemRepository,
+            ISubMenuItemRepository subMenuItemRepository,
             IMapper mapper,
             ILogger<PageContentService> logger)
         {
             _pageContentRepository = pageContentRepository;
             _organizationRepository = organizationRepository;
             _menuItemRepository = menuItemRepository;
+            _subMenuItemRepository = subMenuItemRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -70,27 +73,41 @@ namespace Dynamic_CMS.Application.Services
         public async Task<PageContentDto> CreateAsync(CreatePageContentDto dto, string? userName, CancellationToken cancellationToken)
         {
             var orgId = dto.OrganizationId!.Value;
-            var menuId = dto.MenuItemId!.Value;
+
+            if (dto.MenuItemId == null && dto.SubMenuItemId == null)
+                throw new InvalidOperationException("Either MenuItemId or SubMenuItemId must be provided.");
 
             var org = await _organizationRepository.GetByIdAsync(orgId);
             if (org == null)
                 throw new InvalidOperationException("Organization does not exist.");
 
-            var menuItem = await _menuItemRepository.GetByIdAsync(menuId);
-            if (menuItem == null)
-                throw new InvalidOperationException("MenuItem does not exist.");
+            int targetOrder = dto.SortOrder;
 
-            var existing = await _pageContentRepository.GetByOrgAndMenuItemAsync(orgId, menuId, cancellationToken);
+            if (dto.MenuItemId != null)
+            {
+                var menuItem = await _menuItemRepository.GetByIdAsync(dto.MenuItemId.Value);
+                if (menuItem == null)
+                    throw new InvalidOperationException("MenuItem does not exist.");
+                if (targetOrder <= 0) targetOrder = menuItem.SortOrder > 0 ? menuItem.SortOrder : 1;
+            }
+            else if (dto.SubMenuItemId != null)
+            {
+                var subMenuItem = await _subMenuItemRepository.GetByIdAsync(dto.SubMenuItemId.Value);
+                if (subMenuItem == null)
+                    throw new InvalidOperationException("SubMenuItem does not exist.");
+                if (targetOrder <= 0) targetOrder = subMenuItem.SortOrder > 0 ? subMenuItem.SortOrder : 1;
+            }
+
+            var existing = await _pageContentRepository.GetByOrgAndMenuOrSubMenuAsync(orgId, dto.MenuItemId, dto.SubMenuItemId, cancellationToken);
             if (existing != null)
                 throw new InvalidOperationException("Page content for this organization and menu item already exists.");
-
-            var targetOrder = dto.SortOrder > 0 ? dto.SortOrder : (menuItem.SortOrder > 0 ? menuItem.SortOrder : 1);
 
             var pageContent = new PageContent
             {
                 Id = Guid.NewGuid(),
                 OrganizationId = orgId,
-                MenuItemId = menuId,
+                MenuItemId = dto.MenuItemId,
+                SubMenuItemId = dto.SubMenuItemId,
                 Title = dto.Title,
                 Status = string.IsNullOrWhiteSpace(dto.Status) ? "Published" : dto.Status,
                 SortOrder = targetOrder,
@@ -166,9 +183,9 @@ namespace Dynamic_CMS.Application.Services
             }
         }
 
-        public async Task<PageContentDto> SaveByOrgAndMenuItemAsync(Guid organizationId, Guid menuItemId, CreatePageContentDto dto, string? userName, CancellationToken cancellationToken)
+        public async Task<PageContentDto> SaveByOrgAndMenuItemAsync(Guid organizationId, Guid? menuItemId, Guid? subMenuItemId, CreatePageContentDto dto, string? userName, CancellationToken cancellationToken)
         {
-            var existing = await _pageContentRepository.GetByOrgAndMenuItemAsync(organizationId, menuItemId, cancellationToken);
+            var existing = await _pageContentRepository.GetByOrgAndMenuOrSubMenuAsync(organizationId, menuItemId, subMenuItemId, cancellationToken);
             if (existing != null)
             {
                 var updateDto = new UpdatePageContentDto
@@ -187,6 +204,7 @@ namespace Dynamic_CMS.Application.Services
             {
                 dto.OrganizationId = organizationId;
                 dto.MenuItemId = menuItemId;
+                dto.SubMenuItemId = subMenuItemId;
                 return await CreateAsync(dto, userName, cancellationToken);
             }
         }

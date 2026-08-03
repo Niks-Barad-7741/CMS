@@ -6,7 +6,8 @@ namespace Dynamic_CMS.Domain.Entities
     {
         public Guid Id { get; set; }
         public Guid OrganizationId { get; set; }
-        public Guid MenuItemId { get; set; }
+        public Guid? MenuItemId { get; set; }
+        public Guid? SubMenuItemId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Status { get; set; } = "Published"; // "Draft" or "Published"
         public int SortOrder { get; set; } = 1;
@@ -23,6 +24,7 @@ namespace Dynamic_CMS.Domain.Entities
 
         // Navigation properties
         public Organization Organization { get; set; } = null!;
-        public MenuItem MenuItem { get; set; } = null!;
+        public MenuItem? MenuItem { get; set; }
+        public SubMenuItem? SubMenuItem { get; set; }
     }
 }

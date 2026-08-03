@@ -11,8 +11,8 @@ namespace Dynamic_CMS.Application.Validators
             RuleFor(x => x.OrganizationId)
                 .NotEmpty().WithMessage("OrganizationId is required and cannot be empty.");
 
-            RuleFor(x => x.MenuItemId)
-                .NotEmpty().WithMessage("MenuItemId is required and cannot be empty.");
+            RuleFor(x => x).Must(x => (x.MenuItemId.HasValue && !x.SubMenuItemId.HasValue) || (!x.MenuItemId.HasValue && x.SubMenuItemId.HasValue))
+                .WithMessage("Either MenuItemId or SubMenuItemId must be provided, but not both.");
 
             RuleFor(x => x.Title)
                 .NotNull().WithMessage("Title is required.")

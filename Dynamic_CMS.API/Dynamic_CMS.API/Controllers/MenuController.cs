@@ -17,11 +17,13 @@ namespace Dynamic_CMS.API.Controllers
     {
         private readonly IMenuItemService _service;
         private readonly IOrganizationService _organizationService;
+        private readonly ISiteProvisioningService _siteProvisioningService;
 
-        public MenuController(IMenuItemService service, IOrganizationService organizationService)
+        public MenuController(IMenuItemService service, IOrganizationService organizationService, ISiteProvisioningService siteProvisioningService)
         {
             _service = service;
             _organizationService = organizationService;
+            _siteProvisioningService = siteProvisioningService;
         }
 
         // ADMIN/CLIENT: GET /api/admin/organizations/{organizationId}/menus
@@ -29,6 +31,7 @@ namespace Dynamic_CMS.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetByOrganization(Guid organizationId)
         {
+            await _siteProvisioningService.EnsureDefaultMenusAsync(organizationId);
             var menus = await _service.GetAllMenusAsync(organizationId);
             if (menus == null || !menus.Any())
             {

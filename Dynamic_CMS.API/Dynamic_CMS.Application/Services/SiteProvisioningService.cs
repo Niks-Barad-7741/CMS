@@ -91,7 +91,7 @@ namespace Dynamic_CMS.Application.Services
                 .Where(p => !p.IsDeleted && p.Status == "Published")
                 .Select(p =>
                 {
-                    allMenus.TryGetValue(p.MenuItemId, out var m);
+                    allMenus.TryGetValue(p.MenuItemId.GetValueOrDefault(), out var m);
                     var defaultOrder = m != null && m.SortOrder > 0 ? m.SortOrder : 999;
                     var finalOrder = p.SortOrder > 0 ? p.SortOrder : defaultOrder;
                     return new { PageContent = p, Order = finalOrder, Menu = m };

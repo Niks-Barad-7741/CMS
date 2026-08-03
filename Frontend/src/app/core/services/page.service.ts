@@ -7,7 +7,8 @@ import { MenuItem } from './menu.service';
 export interface PageContent {
   id: string;
   organizationId: string;
-  menuItemId: string;
+  menuItemId?: string;
+  subMenuItemId?: string;
   title: string;
   bodyHtml: string;
   status: string;
@@ -42,8 +43,8 @@ export class PageService {
     return this.http.get<PageContent[]>(`${this.baseUrl}/admin/content/${orgId}`);
   }
 
-  savePageContent(orgId: string, menuItemId: string, data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/admin/organizations/${orgId}/pages/${menuItemId}`, data);
+  savePageContent(orgId: string, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/admin/organizations/${orgId}/pages/upsert`, data);
   }
 
   // Visual Builder API

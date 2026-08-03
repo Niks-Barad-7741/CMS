@@ -8,7 +8,7 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 import { Router, ActivatedRoute } from '@angular/router';
 import { PageService, PageContent } from '../../../core/services/page.service';
 import { OrganizationService, Organization } from '../../../core/services/organization.service';
-import { MenuService, MenuItem } from '../../../core/services/menu.service';
+import { MenuService, MenuItem, SubMenuItem } from '../../../core/services/menu.service';
 import { MediaService } from '../../../core/services/media.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SITE_TEMPLATES, SiteTemplate } from '../../../core/constants/templates';
@@ -20,11 +20,17 @@ import {
 } from '../../../core/constants/template-data';
 
 interface MenuListItem {
-  menu: MenuItem;
+  menu: MenuItem | SubMenuItem;
+  isSubMenu?: boolean;
   page: PageContent | null;
   hasContent: boolean;
   status: string; // 'Published' | 'Draft' | 'Not Added'
   sortOrder: number;
+}
+
+interface MenuNode {
+  item: MenuListItem;
+  subItems: MenuListItem[];
 }
 
 export interface BlockConfig {
@@ -133,10 +139,14 @@ export class PagesComponent implements OnInit {
   selectedOrgId: string | null = null;
   selectedMenuId: string | null = null;
   
+  filterMenuId: string | null = null;
+  filterSubMenuId: string | null = null;
+  
+  expandedMenus: Record<string, boolean> = {};
+  
   pageContent: PageContent | null = null;
   orgPages: PageContent[] = [];
-  menuListItems: MenuListItem[] = [];
-  dragIndex: number | null = null;
+  menuNodes: MenuNode[] = [];
   
   templates: SiteTemplate[] = SITE_TEMPLATES;
   selectedTemplateId: string = 'blank';
@@ -146,6 +156,35 @@ export class PagesComponent implements OnInit {
   get currentFields(): FieldConfig[] {
     return MENU_FIELD_CONFIG[this.getSelectedMenuType()] || [];
   }
+  
+  get filteredMenuNodes(): MenuNode[] {
+    if (!this.filterMenuId) return this.menuNodes;
+    
+    const filteredNodes = this.menuNodes.filter(n => n.item.menu.id === this.filterMenuId);
+    if (!this.filterSubMenuId) return filteredNodes;
+    
+    return filteredNodes.map(n => ({
+      ...n,
+      subItems: n.subItems.filter(s => s.menu.id === this.filterSubMenuId)
+    }));
+  }
+
+  get availableSubMenus(): any[] {
+    if (!this.filterMenuId) return [];
+    const menu = this.menus.find(m => m.id === this.filterMenuId);
+    return menu?.subMenuItems || [];
+  }
+
+  onFilterMenuChange() {
+    this.filterSubMenuId = null;
+  }
+  
+  toggleMenu(menuId: string | undefined, event: Event) {
+    if (!menuId) return;
+    event.stopPropagation();
+    this.expandedMenus[menuId] = !this.expandedMenus[menuId];
+  }
+  
   formData: any = { title: '', status: 'Draft', sortOrder: 1 };
   
   // Clean Input Fields for Content Customization
@@ -244,9 +283,9 @@ export class PagesComponent implements OnInit {
           if (params['orgId'] && params['orgId'] !== this.selectedOrgId) {
             this.selectedOrgId = params['orgId'];
             this.onSelectionChange();
-          } else if (!this.selectedOrgId && this.organizations.length > 0) {
-            // Default to first org if none selected
-            this.selectedOrgId = this.organizations[0].id;
+          } else if (!this.selectedOrgId) {
+            // Keep selectedOrgId null to show the placeholder
+            this.selectedOrgId = null;
             this.onSelectionChange();
           }
         });
@@ -261,31 +300,7 @@ export class PagesComponent implements OnInit {
 
   processMenus(data: any) {
     const fetched = (data && Array.isArray(data)) ? data : [];
-    const defaults: MenuItem[] = [
-      { id: 'def-1', title: 'Home', page: 'home', isVisible: true, sortOrder: 1 },
-      { id: 'def-2', title: 'About Us', page: 'about-us', isVisible: true, sortOrder: 2 },
-      { id: 'def-3', title: 'Services', page: 'services', isVisible: true, sortOrder: 3 },
-      { id: 'def-4', title: 'Contact Us', page: 'contact-us', isVisible: true, sortOrder: 4 }
-    ];
-
-    const merged = [...defaults];
-    fetched.forEach(item => {
-      const pageSlug = (item.page || '').toLowerCase();
-      const idx = merged.findIndex(m => 
-        m.page.toLowerCase() === pageSlug || 
-        (pageSlug.includes('about') && m.page.includes('about')) ||
-        (pageSlug.includes('service') && m.page.includes('service')) ||
-        (pageSlug.includes('contact') && m.page.includes('contact')) ||
-        (pageSlug.includes('home') && m.page.includes('home'))
-      );
-      if (idx !== -1) {
-        merged[idx] = item;
-      } else {
-        merged.push(item);
-      }
-    });
-
-    this.menus = merged.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    this.menus = fetched.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
 
@@ -306,6 +321,8 @@ export class PagesComponent implements OnInit {
     this.errorMessage = null;
     this.successMessage = null;
     this.selectedMenuId = null; // Always reset selected menu when org changes
+    this.filterMenuId = null;
+    this.filterSubMenuId = null;
     this.pageContent = null;
     this.isOrgDropdownOpen = false;
     
@@ -313,7 +330,7 @@ export class PagesComponent implements OnInit {
       this.loadOrgPages();
     } else {
       this.orgPages = [];
-      this.menuListItems = [];
+      this.menuNodes = [];
       this.cdr.detectChanges();
     }
   }
@@ -355,19 +372,24 @@ export class PagesComponent implements OnInit {
 
   buildMenuList() {
     if (!this.menus || this.menus.length === 0) {
-      this.menuListItems = [];
+      this.menuNodes = [];
       return;
     }
 
-    const items: MenuListItem[] = this.menus.map(menu => {
+    const nodes: MenuNode[] = [];
+
+    const mainMenus = [...this.menus].sort((a, b) => {
+      const aOrder = a.sortOrder || 1;
+      const bOrder = b.sortOrder || 1;
+      return aOrder - bOrder;
+    });
+
+    mainMenus.forEach(menu => {
       const menuTitle = (menu.title || menu.page || '').toLowerCase();
       const page = this.orgPages.find(p => {
         if (!p) return false;
-        // 1. Direct menuItemId match (case-insensitive)
-        if (p.menuItemId && menu.id && p.menuItemId.toLowerCase() === menu.id.toLowerCase()) {
-          return true;
-        }
-        // 2. Fallback match by page title / template keyword
+        if (p.menuItemId && menu.id && p.menuItemId.toLowerCase() === menu.id.toLowerCase()) return true;
+        
         const pTitle = (p.title || '').toLowerCase();
         const pTemplate = (p.templateId || '').toLowerCase();
         if (menuTitle.includes('home') && (pTitle.includes('home') || pTemplate.includes('home'))) return true;
@@ -383,76 +405,89 @@ export class PagesComponent implements OnInit {
         status = page.status === 'Published' ? 'Published' : 'Draft';
       }
       
-      const sortOrder = (page && page.sortOrder && page.sortOrder > 0) 
-        ? page.sortOrder 
-        : (menu.sortOrder || 1);
+      const sortOrder = menu.sortOrder || 1;
 
-      return {
-        menu,
-        page,
-        hasContent,
-        status,
-        sortOrder
+      const node: MenuNode = {
+        item: {
+          menu,
+          isSubMenu: false,
+          page,
+          hasContent,
+          status,
+          sortOrder
+        },
+        subItems: []
       };
+
+      if (menu.subMenuItems && menu.subMenuItems.length > 0) {
+        const subMenus = [...menu.subMenuItems].sort((a, b) => (a.sortOrder || 1) - (b.sortOrder || 1));
+        subMenus.forEach(subMenu => {
+          const subPage = this.orgPages.find(p => {
+             if (!p) return false;
+             return p.subMenuItemId && subMenu.id && p.subMenuItemId.toLowerCase() === subMenu.id.toLowerCase();
+          }) || null;
+
+          const subHasContent = !!subPage;
+          let subStatus = 'Not Added';
+          if (subPage) {
+            subStatus = subPage.status === 'Published' ? 'Published' : 'Draft';
+          }
+          
+          const subSortOrder = subMenu.sortOrder || 1;
+
+          node.subItems.push({
+            menu: subMenu,
+            isSubMenu: true,
+            page: subPage,
+            hasContent: subHasContent,
+            status: subStatus,
+            sortOrder: subSortOrder
+          });
+        });
+      }
+      
+      nodes.push(node);
     });
 
-    // Sort items: Items with content first (sorted by their page sortOrder), then items without content (sorted by menu sortOrder)
-    this.menuListItems = items.sort((a, b) => {
-      if (a.hasContent && b.hasContent) {
-        return a.sortOrder - b.sortOrder;
-      }
-      if (a.hasContent && !b.hasContent) return -1;
-      if (!a.hasContent && b.hasContent) return 1;
-      return a.sortOrder - b.sortOrder;
-    });
+    this.menuNodes = nodes;
   }
 
   // --- Drag and Drop Sort Logic ---
-  onDragStart(index: number) {
-    this.dragIndex = index;
-  }
+  dropMainMenu(event: CdkDragDrop<MenuNode[]>) {
+    if (event.previousIndex === event.currentIndex) return;
 
-  onDragOver(event: DragEvent, index: number) {
-    event.preventDefault();
-  }
-
-  onDrop(dropIndex: number) {
-    if (this.dragIndex === null || this.dragIndex === dropIndex) {
-      this.dragIndex = null;
-      return;
-    }
-
-    const draggedItem = this.menuListItems[this.dragIndex];
+    moveItemInArray(this.menuNodes, event.previousIndex, event.currentIndex);
     
-    // Remove item from old position
-    this.menuListItems.splice(this.dragIndex, 1);
-    // Insert item at new position
-    this.menuListItems.splice(dropIndex, 0, draggedItem);
-
-    // Update sortOrder values based on new array indices (1-based)
     let currentOrder = 1;
-    let newSortOrderForDragged = 1;
-
-    this.menuListItems.forEach(item => {
-      item.sortOrder = currentOrder++;
-      if (item.page) {
-        item.page.sortOrder = item.sortOrder;
-      }
-      if (item === draggedItem) {
-        newSortOrderForDragged = item.sortOrder;
+    this.menuNodes.forEach(node => {
+      node.item.sortOrder = currentOrder++;
+      if (node.item.page) node.item.page.sortOrder = node.item.sortOrder;
+      
+      this.menuService.updateMenu(node.item.menu.id, { ...node.item.menu, sortOrder: node.item.sortOrder }).subscribe();
+      
+      if (node.item.page && node.item.page.id) {
+        this.pageService.updatePage(node.item.page.id, { ...node.item.page, sortOrder: node.item.sortOrder }).subscribe();
       }
     });
+    this.cdr.detectChanges();
+  }
 
-    if (draggedItem.page && draggedItem.page.id) {
-       this.pageService.updatePage(draggedItem.page.id, { 
-         ...draggedItem.page, 
-         sortOrder: newSortOrderForDragged 
-       }).subscribe({
-         error: err => console.error('Failed to update sort order', err)
-       });
-    }
+  dropSubMenu(event: CdkDragDrop<MenuListItem[]>, parentNode: MenuNode) {
+    if (event.previousIndex === event.currentIndex) return;
 
-    this.dragIndex = null;
+    moveItemInArray(parentNode.subItems, event.previousIndex, event.currentIndex);
+
+    let currentOrder = 1;
+    parentNode.subItems.forEach(sub => {
+      sub.sortOrder = currentOrder++;
+      if (sub.page) sub.page.sortOrder = sub.sortOrder;
+      
+      this.menuService.updateSubMenu(sub.menu.id, { ...sub.menu, sortOrder: sub.sortOrder }).subscribe();
+      
+      if (sub.page && sub.page.id) {
+        this.pageService.updatePage(sub.page.id, { ...sub.page, sortOrder: sub.sortOrder }).subscribe();
+      }
+    });
     this.cdr.detectChanges();
   }
 
@@ -485,15 +520,23 @@ export class PagesComponent implements OnInit {
 
   getMenuDefaultSortOrder(menuId: string | null): number {
     if (!menuId || !this.menus || this.menus.length === 0) return 1;
-    const idx = this.menus.findIndex(m => m.id === menuId);
-    return idx !== -1 ? idx + 1 : 1;
+    let idx = this.menus.findIndex(m => m.id === menuId);
+    if (idx !== -1) return this.menus[idx].sortOrder || 1;
+    
+    for (const menu of this.menus) {
+      if (menu.subMenuItems) {
+        idx = menu.subMenuItems.findIndex(s => s.id === menuId);
+        if (idx !== -1) return menu.subMenuItems[idx].sortOrder || 1;
+      }
+    }
+    return 1;
   }
 
   loadPageContent() {
     this.pageService.getPagesForOrg(this.selectedOrgId!).subscribe({
       next: (pages) => {
         const pageList = pages || [];
-        const page = pageList.find(p => p.menuItemId === this.selectedMenuId);
+        const page = pageList.find(p => p.menuItemId === this.selectedMenuId || p.subMenuItemId === this.selectedMenuId);
         const defaultOrder = this.getMenuDefaultSortOrder(this.selectedMenuId);
 
         if (page) {
@@ -1096,16 +1139,37 @@ export class PagesComponent implements OnInit {
       this.updateGeneratedHtml();
     }
 
-    const selectedMenu = this.menus.find(m => m.id === this.selectedMenuId);
-    const payload = {
+    let isSubMenu = false;
+    let selectedMenu = this.menus.find(m => m.id === this.selectedMenuId);
+    let selectedSubMenu = null;
+    
+    if (!selectedMenu) {
+      for (const menu of this.menus) {
+        if (menu.subMenuItems) {
+          const sub = menu.subMenuItems.find(s => s.id === this.selectedMenuId);
+          if (sub) {
+            isSubMenu = true;
+            selectedSubMenu = sub;
+            break;
+          }
+        }
+      }
+    }
+
+    const payload: any = {
       organizationId: this.selectedOrgId,
-      menuItemId: this.selectedMenuId,
       title: (this.formData.title || '').trim(),
       status: this.formData.status || 'Draft',
-      sortOrder: Number(this.formData.sortOrder || selectedMenu?.sortOrder || 1),
+      sortOrder: Number(this.formData.sortOrder || (isSubMenu ? selectedSubMenu?.sortOrder : selectedMenu?.sortOrder) || 1),
       templateId: this.selectedTemplateId || 'blank',
       contentJson: JSON.stringify(this.clientData)
     };
+
+    if (isSubMenu) {
+      payload.subMenuItemId = this.selectedMenuId;
+    } else {
+      payload.menuItemId = this.selectedMenuId;
+    }
 
     const handleSuccess = () => {
       this.isCreating = false;
@@ -1131,28 +1195,10 @@ export class PagesComponent implements OnInit {
       }, 4000);
     };
 
-    if (this.pageContent && this.pageContent.id) {
-      this.pageService.updatePage(this.pageContent.id, payload).subscribe({
-        next: () => handleSuccess(),
-        error: (err) => this.handleCreateOrUpdateError(err)
-      });
-    } else {
-      this.pageService.createPage(payload).subscribe({
-        next: () => handleSuccess(),
-        error: (err) => {
-          // If page already exists, fall back to savePageContent (upsert)
-          const errText = err.error?.message || err.message || '';
-          if (errText.includes('already exists')) {
-            this.pageService.savePageContent(this.selectedOrgId!, this.selectedMenuId!, payload).subscribe({
-              next: () => handleSuccess(),
-              error: (updateErr) => this.handleCreateOrUpdateError(updateErr)
-            });
-          } else {
-            this.handleCreateOrUpdateError(err);
-          }
-        }
-      });
-    }
+    this.pageService.savePageContent(this.selectedOrgId, payload).subscribe({
+      next: () => handleSuccess(),
+      error: (err) => this.handleCreateOrUpdateError(err)
+    });
   }
 
   dismissSuccess() {

@@ -34,11 +34,11 @@ namespace Dynamic_CMS.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
-        public async Task<PageContent?> GetByOrgAndMenuItemAsync(Guid organizationId, Guid menuItemId, CancellationToken cancellationToken)
+        public async Task<PageContent?> GetByOrgAndMenuOrSubMenuAsync(Guid organizationId, Guid? menuItemId, Guid? subMenuItemId, CancellationToken cancellationToken)
         {
             return await _context.PageContents
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.OrganizationId == organizationId && p.MenuItemId == menuItemId, cancellationToken);
+                .FirstOrDefaultAsync(p => p.OrganizationId == organizationId && p.MenuItemId == menuItemId && p.SubMenuItemId == subMenuItemId, cancellationToken);
         }
 
         public async Task<PageContent?> GetByOrgSlugAndMenuPageAsync(string orgSlug, string menuPage, CancellationToken cancellationToken)
