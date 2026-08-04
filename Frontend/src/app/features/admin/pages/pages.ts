@@ -650,22 +650,34 @@ export class PagesComponent implements OnInit {
               const parsed = JSON.parse(page.contentJson);
               this.clientData = { ...this.resetDefaultDemoData(), ...parsed };
               
+              if (!this.clientData.blocks || !Array.isArray(this.clientData.blocks)) {
+                this.clientData.blocks = [];
+              }
               // Migrate old flat Home data to blocks format if not already present
-              if (this.getSelectedMenuType() === 'home' && (!this.clientData.blocks || !Array.isArray(this.clientData.blocks))) {
+              if (this.getSelectedMenuType() === 'home' && this.clientData.blocks.length === 0) {
                 this.clientData.blocks = this.migrateHomeToBlocks(this.clientData);
               }
             } catch (e) {
               console.error('Error parsing contentJson:', e);
               this.resetDefaultDemoData();
+              this.clientData.blocks = [];
             }
           } else {
             this.resetDefaultDemoData();
+            this.clientData.blocks = [];
+            if (this.getSelectedMenuType() === 'home') {
+              this.clientData.blocks = this.migrateHomeToBlocks(this.clientData);
+            }
           }
           this.updateGeneratedHtml();
         } else {
           this.pageContent = null;
           this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
           this.resetDefaultDemoData();
+          this.clientData.blocks = [];
+          if (this.getSelectedMenuType() === 'home') {
+            this.clientData.blocks = this.migrateHomeToBlocks(this.clientData);
+          }
           this.updateGeneratedHtml();
         }
         this.cdr.detectChanges();
@@ -675,6 +687,10 @@ export class PagesComponent implements OnInit {
         const defaultOrder = this.getMenuDefaultSortOrder(this.selectedMenuId);
         this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
         this.resetDefaultDemoData();
+        this.clientData.blocks = [];
+        if (this.getSelectedMenuType() === 'home') {
+          this.clientData.blocks = this.migrateHomeToBlocks(this.clientData);
+        }
         this.updateGeneratedHtml();
         this.cdr.detectChanges();
       }
@@ -777,8 +793,23 @@ export class PagesComponent implements OnInit {
   }
 
   // --- Block Builder Actions ---
+  // --- Block Builder Actions ---
   dropBlock(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.clientData.blocks, event.previousIndex, event.currentIndex);
+    this.updateGeneratedHtml();
+  }
+
+  moveBlock(index: number, direction: 'up' | 'down') {
+    if (!this.clientData.blocks || !Array.isArray(this.clientData.blocks)) return;
+    if (direction === 'up' && index > 0) {
+      const temp = this.clientData.blocks[index];
+      this.clientData.blocks[index] = this.clientData.blocks[index - 1];
+      this.clientData.blocks[index - 1] = temp;
+    } else if (direction === 'down' && index < this.clientData.blocks.length - 1) {
+      const temp = this.clientData.blocks[index];
+      this.clientData.blocks[index] = this.clientData.blocks[index + 1];
+      this.clientData.blocks[index + 1] = temp;
+    }
     this.updateGeneratedHtml();
   }
 
@@ -794,8 +825,22 @@ export class PagesComponent implements OnInit {
       defaultData = { sectionTitle: 'New Features', subtitle: 'Subtitle...', items: [{ icon: '⭐', desc: 'Feature 1' }] };
     } else if (type === 'cta-banner') {
       defaultData = { title: 'New CTA', buttonText: 'Contact Us', buttonLink: '#' };
-    } else if (type === 'rich-text') {
-      defaultData = { content: '<p>New rich text content...</p>' };
+    } else if (type === 'heading') {
+      defaultData = { text: 'New Heading', level: 'H2', alignment: 'Center', size: 'Normal', color: '#002855' };
+    } else if (type === 'paragraph') {
+      defaultData = { text: 'This is a sample paragraph content.', alignment: 'Left', size: 'Normal', color: '#4b5563' };
+    } else if (type === 'gallery') {
+      defaultData = { images: [{ url: '', caption: '' }], columns: '3' };
+    } else if (type === 'image') {
+      defaultData = { url: '', alignment: 'Center', width: '400px', height: '', alt: '' };
+    } else if (type === 'divider') {
+      defaultData = { height: 'Medium', color: '#e5e7eb', borderStyle: 'solid' };
+    } else if (type === 'grid') {
+      defaultData = { columns: [{ title: 'Column 1', content: 'Description 1', image: '' }] };
+    } else if (type === 'testimonial') {
+      defaultData = { quote: 'We love this product!', author: 'John Doe', role: 'CEO', avatar: '' };
+    } else if (type === 'video') {
+      defaultData = { url: '', aspectRatio: '16:9' };
     }
 
     this.clientData.blocks.push({
@@ -824,7 +869,7 @@ export class PagesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  addBlockItem(blockIndex: number, listType: 'cards' | 'items') {
+  addBlockItem(blockIndex: number, listType: 'cards' | 'items' | 'images' | 'columns') {
     const block = this.clientData.blocks[blockIndex];
     if (!block.data[listType]) block.data[listType] = [];
     
@@ -832,11 +877,15 @@ export class PagesComponent implements OnInit {
       block.data.cards.push({ title: 'New Card', image: '', link: '#' });
     } else if (listType === 'items') {
       block.data.items.push({ icon: '⭐', desc: 'New Feature' });
+    } else if (listType === 'images') {
+      block.data.images.push({ url: '', caption: '' });
+    } else if (listType === 'columns') {
+      block.data.columns.push({ title: 'New Column', content: 'Description...', image: '' });
     }
     this.updateGeneratedHtml();
   }
 
-  removeBlockItem(blockIndex: number, listType: 'cards' | 'items', itemIndex: number) {
+  removeBlockItem(blockIndex: number, listType: 'cards' | 'items' | 'images' | 'columns', itemIndex: number) {
     const block = this.clientData.blocks[blockIndex];
     if (block.data[listType]) {
       block.data[listType].splice(itemIndex, 1);
@@ -844,7 +893,7 @@ export class PagesComponent implements OnInit {
     }
   }
 
-  uploadBlockImage(event: any, blockIndex: number, listType?: 'cards', itemIndex?: number) {
+  uploadBlockImage(event: any, blockIndex: number, listType?: 'cards' | 'images' | 'columns' | 'testimonial', itemIndex?: number) {
     const file = event.target.files[0];
     if (file && this.selectedOrgId) {
       this.isUploadingImage = true;
@@ -862,9 +911,21 @@ export class PagesComponent implements OnInit {
           if (url) {
             const block = this.clientData.blocks[blockIndex];
             if (listType && itemIndex !== undefined) {
-              block.data[listType][itemIndex].image = url;
+              if (listType === 'images') {
+                block.data.images[itemIndex].url = url;
+              } else if (listType === 'columns') {
+                block.data.columns[itemIndex].image = url;
+              } else if (listType === 'cards') {
+                block.data.cards[itemIndex].image = url;
+              }
+            } else if (listType === 'testimonial') {
+              block.data.avatar = url;
             } else {
-              block.data.bgImage = url;
+              if (block.type === 'image') {
+                block.data.url = url;
+              } else {
+                block.data.bgImage = url;
+              }
             }
           }
           this.isUploadingImage = false;
@@ -1009,88 +1070,254 @@ export class PagesComponent implements OnInit {
     const resolveImageUrl = (url: string) => url && url.startsWith('/uploads/') ? `https://localhost:7170${url}` : url;
 
     let html = '';
-    switch (type) {
-      case 'home': {
-        const blocks = this.clientData.blocks || [];
-        html = blocks.map((block: any) => {
-          switch (block.type) {
-            case 'hero-banner': {
-              const bUrl = resolveImageUrl(block.data.bgImage);
-              const bg = bUrl
-                ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
-                : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
-              return `
-                <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
-                  <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
-                  <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
-                    <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
-                    ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
-                  </div>
+
+    if (this.clientData.blocks && Array.isArray(this.clientData.blocks) && this.clientData.blocks.length > 0) {
+      html = this.clientData.blocks.map((block: any) => {
+        switch (block.type) {
+          case 'hero-banner':
+          case 'hero': {
+            const bUrl = resolveImageUrl(block.data.bgImage);
+            const bg = bUrl
+              ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
+              : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
+            return `
+              <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
+                <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
+                <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
+                  <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
+                  <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
+                  ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
                 </div>
-              `;
-            }
-            case 'solutions-grid': {
-              const cardsHtml = (block.data.cards || []).map((card: any) => {
-                const img = resolveImageUrl(card.image);
-                const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
-                return `
-                  <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
-                    ${imgTag}
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
-                    <div class="absolute bottom-0 left-0 right-0 p-6">
-                      <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
-                    </div>
-                  </a>
-                `;
-              }).join('');
-              return `
-                <section class="py-20 bg-white">
-                  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
-                  </div>
-                </section>
-              `;
-            }
-            case 'features-row': {
-              const featsHtml = (block.data.items || []).map((item: any) => `
-                <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
-                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
-                  <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
-                  <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
-                </div>
-              `).join('');
-              return `
-                <section class="py-20" style="background: #F8F9FA;">
-                  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-16">
-                      ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
-                      ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
-                  </div>
-                </section>
-              `;
-            }
-            case 'cta-banner': {
-              return `
-                <section class="py-20" style="background: #002855;">
-                  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
-                    ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
-                  </div>
-                </section>
-              `;
-            }
-            default:
-              return '';
+              </div>
+            `;
           }
-        }).join('');
-        if (!this.formData.title) this.formData.title = 'Home - ' + company;
-        break;
-      }
-      case 'about': {
+          case 'solutions-grid': {
+            const cardsHtml = (block.data.cards || []).map((card: any) => {
+              const img = resolveImageUrl(card.image);
+              const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
+              return `
+                <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
+                  ${imgTag}
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
+                  <div class="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
+                  </div>
+                </a>
+              `;
+            }).join('');
+            return `
+              <section class="py-20 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'features-row': {
+            const featsHtml = (block.data.items || []).map((item: any) => `
+              <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
+                <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
+                <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
+              </div>
+            `).join('');
+            return `
+              <section class="py-20" style="background: #F8F9FA;">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div class="text-center mb-16">
+                    ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
+                    ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'cta-banner':
+          case 'cta': {
+            return `
+              <section class="py-20" style="background: #002855;">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                  <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
+                  ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
+                </div>
+              </section>
+            `;
+          }
+          case 'heading': {
+            const align = (block.data.alignment || 'Center').toLowerCase();
+            const color = block.data.color || '#002855';
+            const level = (block.data.level || 'H2').toLowerCase();
+            let sizeClass = 'text-xl md:text-2xl lg:text-3xl';
+            if (block.data.size === 'Extra Large') sizeClass = 'text-5xl md:text-6xl lg:text-7xl';
+            else if (block.data.size === 'Large') sizeClass = 'text-3xl md:text-4xl lg:text-5xl';
+            else if (block.data.size === 'Small') sizeClass = 'text-lg md:text-xl';
+            
+            return `
+              <div class="py-4 text-${align}" style="color: ${color};">
+                <${level} class="font-extrabold tracking-tight ${sizeClass}">${block.data.text || ''}</${level}>
+              </div>
+            `;
+          }
+          case 'paragraph': {
+            const align = (block.data.alignment || 'Left').toLowerCase();
+            const color = block.data.color || '#4b5563';
+            let sizeClass = 'text-sm md:text-base';
+            if (block.data.size === 'Large') sizeClass = 'text-lg md:text-xl';
+            else if (block.data.size === 'Small') sizeClass = 'text-xs md:text-sm';
+            
+            return `
+              <div class="py-2 text-${align}" style="color: ${color};">
+                <p class="leading-relaxed ${sizeClass}">${block.data.text || ''}</p>
+              </div>
+            `;
+          }
+          case 'gallery': {
+            const cols = block.data.columns || 3;
+            const imagesHtml = (block.data.images || []).map((img: any) => {
+              const url = resolveImageUrl(img.url);
+              return `
+                <div class="group overflow-hidden rounded-lg shadow-sm border border-gray-150">
+                  <img src="${url || 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400'}" alt="${img.caption || ''}" class="w-full h-64 object-cover">
+                  ${img.caption ? `<div class="p-2 text-center text-xs text-gray-500 font-medium">${img.caption}</div>` : ''}
+                </div>
+              `;
+            }).join('');
+            return `
+              <section class="py-10 bg-white">
+                <div class="max-w-7xl mx-auto px-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-${cols} gap-4">${imagesHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'image': {
+            const align = (block.data.alignment || 'Center').toLowerCase();
+            const url = resolveImageUrl(block.data.url);
+            const w = block.data.width || 'auto';
+            const h = block.data.height || 'auto';
+            const flexAlign = align === 'left' ? 'start' : align === 'right' ? 'end' : 'center';
+            return `
+              <div class="py-6 flex justify-${flexAlign}">
+                <img src="${url || 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400'}" alt="${block.data.alt || ''}" style="width: ${w}; height: ${h};" class="rounded-lg shadow-sm object-cover max-w-full">
+              </div>
+            `;
+          }
+          case 'divider': {
+            const h = block.data.height === 'Large' ? '48px' : block.data.height === 'Small' ? '8px' : '24px';
+            const style = block.data.borderStyle || 'solid';
+            const color = block.data.color || '#e5e7eb';
+            return `
+              <div style="padding-top: ${h}; padding-bottom: ${h};">
+                ${style !== 'spacer' ? `<hr style="border-top: 1px ${style} ${color}; border-bottom: none; border-left: none; border-right: none;">` : ''}
+              </div>
+            `;
+          }
+          case 'grid': {
+            const cols = block.data.columns || [];
+            const colsHtml = cols.map((col: any) => {
+              const img = resolveImageUrl(col.image);
+              return `
+                <div class="flex-grow p-6 bg-white border border-gray-100 rounded-xl shadow-sm">
+                  ${img ? `<img src="${img}" class="w-full h-48 object-cover rounded-lg mb-4">` : ''}
+                  ${col.title ? `<h3 class="text-lg font-bold text-[#002855] mb-2">${col.title}</h3>` : ''}
+                  ${col.content ? `<p class="text-sm text-gray-600 leading-relaxed">${col.content}</p>` : ''}
+                </div>
+              `;
+            }).join('');
+            return `
+              <section class="py-10 bg-white">
+                <div class="max-w-7xl mx-auto px-4">
+                  <div class="grid grid-cols-1 md:grid-cols-${cols.length || 2} gap-6">${colsHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'testimonial': {
+            const avatar = resolveImageUrl(block.data.avatar);
+            return `
+              <section class="py-12 bg-gray-50">
+                <div class="max-w-4xl mx-auto px-4 text-center">
+                  <div class="text-4xl text-indigo-500 mb-4">“</div>
+                  <blockquote class="text-lg md:text-xl font-medium text-gray-800 italic mb-6">
+                    ${block.data.quote || ''}
+                  </blockquote>
+                  <div class="flex items-center justify-center gap-3">
+                    ${avatar ? `<img src="${avatar}" class="w-12 h-12 rounded-full object-cover">` : ''}
+                    <div class="text-left">
+                      <div class="font-bold text-gray-900">${block.data.author || ''}</div>
+                      <div class="text-xs text-gray-500">${block.data.role || ''}</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            `;
+          }
+          case 'video': {
+            const url = block.data.url || '';
+            const ratio = block.data.aspectRatio === '4:3' ? '4/3' : '16/9';
+            let embedUrl = url;
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+              if (!url.includes('embed')) {
+                const vid = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+                embedUrl = 'https://www.youtube.com/embed/' + vid;
+              }
+            } else if (url.includes('vimeo.com')) {
+              if (!url.includes('player.vimeo.com')) {
+                const vid = url.split('/').pop();
+                embedUrl = 'https://player.vimeo.com/video/' + vid;
+              }
+            }
+            return `
+              <div class="py-6 flex justify-center">
+                <div class="w-full max-w-4xl" style="aspect-ratio: ${ratio};">
+                  <iframe src="${embedUrl || 'about:blank'}" class="w-full h-full rounded-lg shadow-md border-0" allowfullscreen></iframe>
+                </div>
+              </div>
+            `;
+          }
+          default:
+            return '';
+        }
+      }).join('');
+      if (!this.formData.title) this.formData.title = type.charAt(0).toUpperCase() + type.slice(1) + ' - ' + company;
+    } else {
+      switch (type) {
+        case 'home': {
+          const bgStyle = this.clientData.homeBackgroundImage ? `style="background-image: url('${resolveImageUrl(this.clientData.homeBackgroundImage)}'); background-size: cover; background-position: center; background-repeat: no-repeat;"` : 'style="background-color: #0A0F1A;"';
+          html = `
+            <!-- HERO -->
+            <div class="relative w-full h-[600px] flex items-center justify-center overflow-hidden"
+                 ${bgStyle}>
+              
+              <!-- Overlay to ensure text readability -->
+              <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
+
+              <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <div class="max-w-3xl">
+                  <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-[#002855] uppercase tracking-tighter mb-6 leading-[1.1]">
+                    ${this.clientData.homeHeroTitle || this.clientData.companyName || 'Welcome'}
+                  </h1>
+                  <p class="text-xl sm:text-2xl text-[#0056B3] font-medium max-w-2xl leading-snug mb-10">
+                    ${this.clientData.homeHeroSubtitle || this.clientData.tagline || ''}
+                  </p>
+                  <div class="flex gap-4">
+                    <a href="/site/${this.getOrgSlug()}/about" class="px-8 py-4 bg-[#002855] hover:bg-[#0056B3] text-white font-bold text-sm uppercase tracking-widest rounded-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                      ${this.clientData.homeCtaText || 'Learn More'}
+                    </a>
+                    <a href="/site/${this.getOrgSlug()}/contact" class="px-8 py-4 bg-white hover:bg-gray-50 text-[#002855] font-bold text-sm uppercase tracking-widest rounded-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                      Contact Us
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          if (!this.formData.title) this.formData.title = 'Home - ' + company;
+          break;
+        }
+        case 'about': {
         const getVal = (key: string, fallback: string) => this.clientData[key] !== undefined ? this.clientData[key] : fallback;
 
         const pageTitle = getVal('aboutTitle', 'About ' + company);
@@ -1164,6 +1391,7 @@ export class PagesComponent implements OnInit {
         if (!this.formData.title) this.formData.title = 'New Page';
         break;
     }
+    }
 
     this.formData.bodyHtml = html;
     this.cdr.detectChanges();
@@ -1220,6 +1448,16 @@ export class PagesComponent implements OnInit {
     }
     const page = this.getSelectedPageSlug();
     return `/site/${slug}/${page}`;
+  }
+
+  saveDraft() {
+    this.formData.status = 'Draft';
+    this.saveAndPublishPage();
+  }
+
+  publishPage() {
+    this.formData.status = 'Published';
+    this.saveAndPublishPage();
   }
 
   saveAndPublishPage() {

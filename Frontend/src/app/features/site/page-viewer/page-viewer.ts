@@ -99,85 +99,219 @@ export class PageViewerComponent implements OnInit {
       return url && url.startsWith('/uploads/') ? `https://localhost:7170${url}` : url;
     };
 
-    if (title.includes('home') || slug.includes('home')) {
-        if (data.blocks && Array.isArray(data.blocks)) {
-          return data.blocks.map((block: any) => {
-            switch (block.type) {
-              case 'hero-banner': {
-                const bUrl = resolveImageUrl(block.data.bgImage);
-                const bg = bUrl
-                  ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
-                  : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
-                return `
-                  <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
-                    <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
-                    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
-                      <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
-                      <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
-                      ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
+    if (data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
+      return data.blocks.map((block: any) => {
+        switch (block.type) {
+          case 'hero-banner':
+          case 'hero': {
+            const bUrl = resolveImageUrl(block.data.bgImage);
+            const bg = bUrl
+              ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
+              : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
+            return `
+              <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
+                <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
+                <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
+                  <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
+                  <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
+                  ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
+                </div>
+              </div>
+            `;
+          }
+          case 'solutions-grid': {
+            const cardsHtml = (block.data.cards || []).map((card: any) => {
+              const img = resolveImageUrl(card.image);
+              const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
+              return `
+                <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
+                  ${imgTag}
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
+                  <div class="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
+                  </div>
+                </a>
+              `;
+            }).join('');
+            return `
+              <section class="py-20 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'features-row': {
+            const featsHtml = (block.data.items || []).map((item: any) => `
+              <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
+                <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
+                <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
+              </div>
+            `).join('');
+            return `
+              <section class="py-20" style="background: #F8F9FA;">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div class="text-center mb-16">
+                    ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
+                    ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'cta-banner':
+          case 'cta': {
+            return `
+              <section class="py-20" style="background: #002855;">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                  <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
+                  ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
+                </div>
+              </section>
+            `;
+          }
+          case 'heading': {
+            const align = (block.data.alignment || 'Center').toLowerCase();
+            const color = block.data.color || '#002855';
+            const level = (block.data.level || 'H2').toLowerCase();
+            let sizeClass = 'text-xl md:text-2xl lg:text-3xl';
+            if (block.data.size === 'Extra Large') sizeClass = 'text-5xl md:text-6xl lg:text-7xl';
+            else if (block.data.size === 'Large') sizeClass = 'text-3xl md:text-4xl lg:text-5xl';
+            else if (block.data.size === 'Small') sizeClass = 'text-lg md:text-xl';
+            
+            return `
+              <div class="py-4 text-${align}" style="color: ${color};">
+                <${level} class="font-extrabold tracking-tight ${sizeClass}">${block.data.text || ''}</${level}>
+              </div>
+            `;
+          }
+          case 'paragraph': {
+            const align = (block.data.alignment || 'Left').toLowerCase();
+            const color = block.data.color || '#4b5563';
+            let sizeClass = 'text-sm md:text-base';
+            if (block.data.size === 'Large') sizeClass = 'text-lg md:text-xl';
+            else if (block.data.size === 'Small') sizeClass = 'text-xs md:text-sm';
+            
+            return `
+              <div class="py-2 text-${align}" style="color: ${color};">
+                <p class="leading-relaxed ${sizeClass}">${block.data.text || ''}</p>
+              </div>
+            `;
+          }
+          case 'gallery': {
+            const cols = block.data.columns || 3;
+            const imagesHtml = (block.data.images || []).map((img: any) => {
+              const url = resolveImageUrl(img.url);
+              return `
+                <div class="group overflow-hidden rounded-lg shadow-sm border border-gray-150">
+                  <img src="${url || 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400'}" alt="${img.caption || ''}" class="w-full h-64 object-cover">
+                  ${img.caption ? `<div class="p-2 text-center text-xs text-gray-500 font-medium">${img.caption}</div>` : ''}
+                </div>
+              `;
+            }).join('');
+            return `
+              <section class="py-10 bg-white">
+                <div class="max-w-7xl mx-auto px-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-${cols} gap-4">${imagesHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'image': {
+            const align = (block.data.alignment || 'Center').toLowerCase();
+            const url = resolveImageUrl(block.data.url);
+            const w = block.data.width || 'auto';
+            const h = block.data.height || 'auto';
+            const flexAlign = align === 'left' ? 'start' : align === 'right' ? 'end' : 'center';
+            return `
+              <div class="py-6 flex justify-${flexAlign}">
+                <img src="${url || 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400'}" alt="${block.data.alt || ''}" style="width: ${w}; height: ${h};" class="rounded-lg shadow-sm object-cover max-w-full">
+              </div>
+            `;
+          }
+          case 'divider': {
+            const h = block.data.height === 'Large' ? '48px' : block.data.height === 'Small' ? '8px' : '24px';
+            const style = block.data.borderStyle || 'solid';
+            const color = block.data.color || '#e5e7eb';
+            return `
+              <div style="padding-top: ${h}; padding-bottom: ${h};">
+                ${style !== 'spacer' ? `<hr style="border-top: 1px ${style} ${color}; border-bottom: none; border-left: none; border-right: none;">` : ''}
+              </div>
+            `;
+          }
+          case 'grid': {
+            const cols = block.data.columns || [];
+            const colsHtml = cols.map((col: any) => {
+              const img = resolveImageUrl(col.image);
+              return `
+                <div class="flex-grow p-6 bg-white border border-gray-100 rounded-xl shadow-sm">
+                  ${img ? `<img src="${img}" class="w-full h-48 object-cover rounded-lg mb-4">` : ''}
+                  ${col.title ? `<h3 class="text-lg font-bold text-[#002855] mb-2">${col.title}</h3>` : ''}
+                  ${col.content ? `<p class="text-sm text-gray-600 leading-relaxed">${col.content}</p>` : ''}
+                </div>
+              `;
+            }).join('');
+            return `
+              <section class="py-10 bg-white">
+                <div class="max-w-7xl mx-auto px-4">
+                  <div class="grid grid-cols-1 md:grid-cols-${cols.length || 2} gap-6">${colsHtml}</div>
+                </div>
+              </section>
+            `;
+          }
+          case 'testimonial': {
+            const avatar = resolveImageUrl(block.data.avatar);
+            return `
+              <section class="py-12 bg-gray-50">
+                <div class="max-w-4xl mx-auto px-4 text-center">
+                  <div class="text-4xl text-indigo-500 mb-4">“</div>
+                  <blockquote class="text-lg md:text-xl font-medium text-gray-800 italic mb-6">
+                    ${block.data.quote || ''}
+                  </blockquote>
+                  <div class="flex items-center justify-center gap-3">
+                    ${avatar ? `<img src="${avatar}" class="w-12 h-12 rounded-full object-cover">` : ''}
+                    <div class="text-left">
+                      <div class="font-bold text-gray-900">${block.data.author || ''}</div>
+                      <div class="text-xs text-gray-500">${block.data.role || ''}</div>
                     </div>
                   </div>
-                `;
+                </div>
+              </section>
+            `;
+          }
+          case 'video': {
+            const url = block.data.url || '';
+            const ratio = block.data.aspectRatio === '4:3' ? '4/3' : '16/9';
+            let embedUrl = url;
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+              if (!url.includes('embed')) {
+                const vid = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+                embedUrl = 'https://www.youtube.com/embed/' + vid;
               }
-              case 'solutions-grid': {
-                const cardsHtml = (block.data.cards || []).map((card: any) => {
-                  const img = resolveImageUrl(card.image);
-                  const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
-                  return `
-                    <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
-                      ${imgTag}
-                      <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
-                      <div class="absolute bottom-0 left-0 right-0 p-6">
-                        <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
-                      </div>
-                    </a>
-                  `;
-                }).join('');
-                return `
-                  <section class="py-20 bg-white">
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                      ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
-                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
-                    </div>
-                  </section>
-                `;
+            } else if (url.includes('vimeo.com')) {
+              if (!url.includes('player.vimeo.com')) {
+                const vid = url.split('/').pop();
+                embedUrl = 'https://player.vimeo.com/video/' + vid;
               }
-              case 'features-row': {
-                const featsHtml = (block.data.items || []).map((item: any) => `
-                  <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
-                    <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
-                    <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
-                  </div>
-                `).join('');
-                return `
-                  <section class="py-20" style="background: #F8F9FA;">
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                      <div class="text-center mb-16">
-                        ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
-                        ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
-                      </div>
-                      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
-                    </div>
-                  </section>
-                `;
-              }
-              case 'cta-banner': {
-                return `
-                  <section class="py-20" style="background: #002855;">
-                    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                      <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
-                      ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
-                    </div>
-                  </section>
-                `;
-              }
-              default:
-                return '';
             }
-          }).join('');
+            return `
+              <div class="py-6 flex justify-center">
+                <div class="w-full max-w-4xl" style="aspect-ratio: ${ratio};">
+                  <iframe src="${embedUrl || 'about:blank'}" class="w-full h-full rounded-lg shadow-md border-0" allowfullscreen></iframe>
+                </div>
+              </div>
+            `;
+          }
+          default:
+            return '';
         }
+      }).join('');
+    }
 
+    if (title.includes('home') || slug.includes('home')) {
         // Fallback for old data without blocks
         const bgStyle = data.homeBackgroundImage ? `style="background-image: url('${resolveImageUrl(data.homeBackgroundImage)}'); background-size: cover; background-position: center; background-repeat: no-repeat;"` : 'style="background-color: #0A0F1A;"';
 
