@@ -1543,6 +1543,51 @@ export class PagesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  togglePageStatus(item: any) {
+    if (!item || !item.hasContent || !item.page || !this.selectedOrgId) return;
+
+    const page = item.page;
+    const newStatus = page.status === 'Published' ? 'Draft' : 'Published';
+
+    const payload: any = {
+      organizationId: this.selectedOrgId,
+      title: page.title,
+      status: newStatus,
+      sortOrder: page.sortOrder || 1,
+      templateId: page.templateId || 'blank',
+      contentJson: typeof page.contentJson === 'string' ? page.contentJson : JSON.stringify(page.contentJson || {}),
+      bodyHtml: page.bodyHtml || ''
+    };
+
+    if (page.subMenuItemId) {
+      payload.subMenuItemId = page.subMenuItemId;
+    } else {
+      payload.menuItemId = page.menuItemId;
+    }
+
+    this.pageService.savePageContent(this.selectedOrgId, payload).subscribe({
+      next: () => {
+        page.status = newStatus;
+        item.status = newStatus;
+        this.successMessage = `Page status updated to ${newStatus}!`;
+        this.loadOrgPages();
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.successMessage = null;
+          this.cdr.detectChanges();
+        }, 4000);
+      },
+      error: (err) => {
+        this.errorMessage = 'Failed to toggle page status.';
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.errorMessage = null;
+          this.cdr.detectChanges();
+        }, 4000);
+      }
+    });
+  }
+
   loadWireframe() {
     this.updateGeneratedHtml('wireframe');
   }

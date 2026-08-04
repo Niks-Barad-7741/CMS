@@ -115,7 +115,7 @@
       <div class="flex bg-gray-50 border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider p-4 font-semibold">
         <div class="w-12 text-center">≡</div>
         <div class="flex-1">Menu Name</div>
-        <div class="w-32">Status</div>
+        <div class="w-40">Status</div>
         <div class="w-24 text-center">Sort Order</div>
         <div class="w-32 text-right">Actions</div>
       </div>
@@ -154,16 +154,29 @@
             </div>
             
             <!-- Status Badge -->
-            <div class="w-32 p-4">
-              <span *ngIf="node.item.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Published
-              </span>
-              <span *ngIf="node.item.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                Draft
-              </span>
-              <span *ngIf="node.item.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+            <div class="w-40 p-4">
+              <div *ngIf="node.item.hasContent" class="flex items-center gap-3">
+                <button type="button" 
+                        (click)="togglePageStatus(node.item)"
+                        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm"
+                        [class.bg-emerald-500]="node.item.status === 'Published'"
+                        [class.bg-gray-250]="node.item.status !== 'Published'"
+                        [class.bg-gray-200]="node.item.status !== 'Published'"
+                        role="switch" 
+                        [attr.aria-checked]="node.item.status === 'Published'"
+                        title="Toggle page status">
+                  <span aria-hidden="true" 
+                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        [class.translate-x-5]="node.item.status === 'Published'"
+                        [class.translate-x-0]="node.item.status !== 'Published'"></span>
+                </button>
+                <span class="text-sm font-medium" 
+                      [class.text-emerald-700]="node.item.status === 'Published'"
+                      [class.text-gray-500]="node.item.status !== 'Published'">
+                  {{ node.item.status }}
+                </span>
+              </div>
+              <span *ngIf="!node.item.hasContent" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                 Not Added
               </span>
@@ -190,9 +203,7 @@
           <!-- SubMenus List -->
           <div *ngIf="node.subItems.length > 0 && expandedMenus[node.item.menu.id]" cdkDropList (cdkDropListDropped)="dropSubMenu($event, node)" class="bg-gray-50/30 animate-fade-in">
             <div *ngFor="let sub of node.subItems" cdkDrag [cdkDragDisabled]="!!filterMenuId" class="flex items-center border-b border-gray-100 hover:bg-gray-50 transition-colors">
-              <!-- Indentation Spacer to push drag handle right -->
-              <div class="w-8"></div>
-              <div class="w-12 p-4 text-center text-gray-400 cursor-move" cdkDragHandle>
+              <div class="w-12 ml-8 p-4 text-center text-gray-400 cursor-move" cdkDragHandle>
                 <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
               </div>
               <div class="flex-1 p-4 pl-4 font-medium text-gray-900">
@@ -200,16 +211,29 @@
                 <span *ngIf="!sub.hasContent" class="ml-2 text-xs text-gray-400 font-normal">(Template available)</span>
               </div>
               
-              <div class="w-32 p-4">
-                <span *ngIf="sub.status === 'Published'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                  Published
-                </span>
-                <span *ngIf="sub.status === 'Draft'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                  Draft
-                </span>
-                <span *ngIf="sub.status === 'Not Added'" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+              <div class="w-40 p-4">
+                <div *ngIf="sub.hasContent" class="flex items-center gap-3">
+                  <button type="button" 
+                          (click)="togglePageStatus(sub)"
+                          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm"
+                          [class.bg-emerald-500]="sub.status === 'Published'"
+                          [class.bg-gray-250]="sub.status !== 'Published'"
+                          [class.bg-gray-200]="sub.status !== 'Published'"
+                          role="switch" 
+                          [attr.aria-checked]="sub.status === 'Published'"
+                          title="Toggle page status">
+                    <span aria-hidden="true" 
+                          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                          [class.translate-x-5]="sub.status === 'Published'"
+                          [class.translate-x-0]="sub.status !== 'Published'"></span>
+                  </button>
+                  <span class="text-sm font-medium" 
+                        [class.text-emerald-700]="sub.status === 'Published'"
+                        [class.text-gray-500]="sub.status !== 'Published'">
+                    {{ sub.status }}
+                  </span>
+                </div>
+                <span *ngIf="!sub.hasContent" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                   <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                   Not Added
                 </span>
@@ -252,32 +276,7 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <!-- Status Badge -->
-      <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors shadow-sm"
-            [class.bg-emerald-50]="formData.status === 'Published'"
-            [class.text-emerald-700]="formData.status === 'Published'"
-            [class.border-emerald-200]="formData.status === 'Published'"
-            [class.bg-amber-50]="formData.status !== 'Published'"
-            [class.text-amber-700]="formData.status !== 'Published'"
-            [class.border-amber-200]="formData.status !== 'Published'">
-        <span class="w-2.5 h-2.5 rounded-full mr-1.5 animate-pulse"
-              [class.bg-emerald-500]="formData.status === 'Published'"
-              [class.bg-amber-500]="formData.status !== 'Published'"></span>
-        Status: {{ formData.status }}
-      </span>
 
-      <!-- Save Draft Button -->
-      <button type="button" (click)="saveDraft()" [disabled]="isCreating || !formData.title" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm">
-        Save Draft
-      </button>
-
-      <!-- Publish Button -->
-      <button type="button" (click)="publishPage()" [disabled]="isCreating || !formData.title" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
-        <svg *ngIf="isCreating" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Publish
-      </button>
-    </div>
   </div>
 
   <div class="max-w-4xl mx-auto space-y-8">
@@ -747,6 +746,14 @@
           </button>
           <button type="button" (click)="addBlock('video')" class="px-4 py-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 text-xs font-bold rounded-xl border border-cyan-200 transition-all shadow-sm">
             + Video Embed
+          </button>
+        </div>
+
+        <!-- Actions Footer -->
+        <div class="pt-6 border-t border-gray-200 flex justify-end">
+          <button type="button" (click)="saveAndPublishPage()" [disabled]="isCreating || !formData.title" class="inline-flex items-center px-8 py-3.5 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all">
+            <svg *ngIf="isCreating" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Save Page
           </button>
         </div>
       </div>
