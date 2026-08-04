@@ -138,15 +138,13 @@ export class PagesComponent implements OnInit {
   
   selectedOrgId: string | null = null;
   selectedMenuId: string | null = null;
-  
   filterMenuId: string | null = null;
   filterSubMenuId: string | null = null;
-  
-  expandedMenus: Record<string, boolean> = {};
-  
   pageContent: PageContent | null = null;
   orgPages: PageContent[] = [];
+  menuListItems: MenuListItem[] = [];
   menuNodes: MenuNode[] = [];
+  dragIndex: number = -1;
   
   templates: SiteTemplate[] = SITE_TEMPLATES;
   selectedTemplateId: string = 'blank';
@@ -155,34 +153,6 @@ export class PagesComponent implements OnInit {
 
   get currentFields(): FieldConfig[] {
     return MENU_FIELD_CONFIG[this.getSelectedMenuType()] || [];
-  }
-  
-  get filteredMenuNodes(): MenuNode[] {
-    if (!this.filterMenuId) return this.menuNodes;
-    
-    const filteredNodes = this.menuNodes.filter(n => n.item.menu.id === this.filterMenuId);
-    if (!this.filterSubMenuId) return filteredNodes;
-    
-    return filteredNodes.map(n => ({
-      ...n,
-      subItems: n.subItems.filter(s => s.menu.id === this.filterSubMenuId)
-    }));
-  }
-
-  get availableSubMenus(): any[] {
-    if (!this.filterMenuId) return [];
-    const menu = this.menus.find(m => m.id === this.filterMenuId);
-    return menu?.subMenuItems || [];
-  }
-
-  onFilterMenuChange() {
-    this.filterSubMenuId = null;
-  }
-  
-  toggleMenu(menuId: string | undefined, event: Event) {
-    if (!menuId) return;
-    event.stopPropagation();
-    this.expandedMenus[menuId] = !this.expandedMenus[menuId];
   }
   
   formData: any = { title: '', status: 'Draft', sortOrder: 1 };
@@ -372,11 +342,11 @@ export class PagesComponent implements OnInit {
 
   buildMenuList() {
     if (!this.menus || this.menus.length === 0) {
-      this.menuNodes = [];
+      this.menuListItems = [];
       return;
     }
 
-    const nodes: MenuNode[] = [];
+    const items: MenuListItem[] = [];
 
     const mainMenus = [...this.menus].sort((a, b) => {
       const aOrder = a.sortOrder || 1;
@@ -407,17 +377,14 @@ export class PagesComponent implements OnInit {
       
       const sortOrder = menu.sortOrder || 1;
 
-      const node: MenuNode = {
-        item: {
-          menu,
-          isSubMenu: false,
-          page,
-          hasContent,
-          status,
-          sortOrder
-        },
-        subItems: []
-      };
+      items.push({
+        menu,
+        isSubMenu: false,
+        page,
+        hasContent,
+        status,
+        sortOrder
+      });
 
       if (menu.subMenuItems && menu.subMenuItems.length > 0) {
         const subMenus = [...menu.subMenuItems].sort((a, b) => (a.sortOrder || 1) - (b.sortOrder || 1));
@@ -435,7 +402,7 @@ export class PagesComponent implements OnInit {
           
           const subSortOrder = subMenu.sortOrder || 1;
 
-          node.subItems.push({
+          items.push({
             menu: subMenu,
             isSubMenu: true,
             page: subPage,
@@ -445,49 +412,176 @@ export class PagesComponent implements OnInit {
           });
         });
       }
-      
-      nodes.push(node);
     });
 
-    this.menuNodes = nodes;
+    // Dynamically re-index only created pages (1, 2, 3...) so unadded templates do not cause numbering gaps
+    let activeCounter = 1;
+    items.forEach(item => {
+      if (item.hasContent) {
+        item.sortOrder = activeCounter++;
+      } else {
+        item.sortOrder = 0; // Will render cleanly as '-' in the UI
+      }
+    });
+
+    this.menuListItems = items;
+    this.buildMenuNodes();
   }
 
-  // --- Drag and Drop Sort Logic ---
-  dropMainMenu(event: CdkDragDrop<MenuNode[]>) {
-    if (event.previousIndex === event.currentIndex) return;
+  buildMenuNodes() {
+    this.menuNodes = [];
+    if (!this.menus || this.menus.length === 0) {
+      return;
+    }
+    
+    const mainItems = this.menuListItems.filter(item => !item.isSubMenu);
+    
+    for (const main of mainItems) {
+      const subItems = this.menuListItems.filter(item => 
+        item.isSubMenu && 
+        (main.menu as any).subMenuItems?.find((s: any) => s.id === item.menu.id)
+      );
+      this.menuNodes.push({
+        item: main,
+        subItems: subItems
+      });
+    }
+  }
 
+  get availableSubMenus(): SubMenuItem[] {
+    if (!this.filterMenuId) return [];
+    const menu = this.menus.find(m => m.id === this.filterMenuId);
+    return menu?.subMenuItems || [];
+  }
+
+  onFilterMenuChange() {
+    this.filterSubMenuId = null;
+  }
+
+  get filteredMenuNodes(): MenuNode[] {
+    if (!this.menuNodes) return [];
+    
+    if (this.filterMenuId) {
+      const filtered = this.menuNodes.filter(node => node.item.menu.id === this.filterMenuId);
+      if (this.filterSubMenuId) {
+        return filtered.map(node => ({
+          ...node,
+          subItems: node.subItems.filter(sub => sub.menu.id === this.filterSubMenuId)
+        }));
+      }
+      return filtered;
+    }
+    return this.menuNodes;
+  }
+
+  expandedMenus: { [key: string]: boolean } = {};
+  
+  toggleMenu(menuId: string, event: Event) {
+    event.stopPropagation();
+    this.expandedMenus[menuId] = !this.expandedMenus[menuId];
+  }
+
+  dropMainMenu(event: CdkDragDrop<any[]>) {
+    if (this.filterMenuId) return;
     moveItemInArray(this.menuNodes, event.previousIndex, event.currentIndex);
     
-    let currentOrder = 1;
+    let order = 1;
     this.menuNodes.forEach(node => {
-      node.item.sortOrder = currentOrder++;
-      if (node.item.page) node.item.page.sortOrder = node.item.sortOrder;
-      
-      this.menuService.updateMenu(node.item.menu.id, { ...node.item.menu, sortOrder: node.item.sortOrder }).subscribe();
-      
-      if (node.item.page && node.item.page.id) {
+      node.item.sortOrder = order++;
+      if (node.item.menu.id) {
+        this.menuService.updateMenu(node.item.menu.id, { ...node.item.menu, sortOrder: node.item.sortOrder }).subscribe();
+      }
+      if (node.item.page?.id && node.item.hasContent) {
         this.pageService.updatePage(node.item.page.id, { ...node.item.page, sortOrder: node.item.sortOrder }).subscribe();
       }
     });
-    this.cdr.detectChanges();
   }
 
-  dropSubMenu(event: CdkDragDrop<MenuListItem[]>, parentNode: MenuNode) {
-    if (event.previousIndex === event.currentIndex) return;
-
-    moveItemInArray(parentNode.subItems, event.previousIndex, event.currentIndex);
-
-    let currentOrder = 1;
-    parentNode.subItems.forEach(sub => {
-      sub.sortOrder = currentOrder++;
-      if (sub.page) sub.page.sortOrder = sub.sortOrder;
-      
-      this.menuService.updateSubMenu(sub.menu.id, { ...sub.menu, sortOrder: sub.sortOrder }).subscribe();
-      
-      if (sub.page && sub.page.id) {
+  dropSubMenu(event: CdkDragDrop<any[]>, node: MenuNode) {
+    if (this.filterMenuId) return;
+    moveItemInArray(node.subItems, event.previousIndex, event.currentIndex);
+    
+    let order = 1;
+    node.subItems.forEach(sub => {
+      sub.sortOrder = order++;
+      if (sub.menu.id) {
+        this.menuService.updateSubMenu(sub.menu.id, { ...sub.menu as SubMenuItem, sortOrder: sub.sortOrder }).subscribe();
+      }
+      if (sub.page?.id && sub.hasContent) {
         this.pageService.updatePage(sub.page.id, { ...sub.page, sortOrder: sub.sortOrder }).subscribe();
       }
     });
+  }
+
+  // --- Drag and Drop Sort Logic ---
+  onDragStart(index: number) {
+    this.dragIndex = index;
+  }
+
+  onDragOver(event: DragEvent, index: number) {
+    event.preventDefault();
+  }
+
+  onDrop(dropIndex: number) {
+    if (this.dragIndex === -1 || this.dragIndex === dropIndex) {
+      this.dragIndex = -1;
+      return;
+    }
+
+    const draggedItem = this.menuListItems[this.dragIndex];
+    // Remove from old position
+    this.menuListItems.splice(this.dragIndex, 1);
+    // Insert at new position
+    this.menuListItems.splice(dropIndex, 0, draggedItem);
+    this.dragIndex = -1;
+
+    let currentOrder = 1;
+    let newSortOrderForDragged = 1;
+    
+    this.menuListItems.forEach(item => {
+      if (item.hasContent) {
+        item.sortOrder = currentOrder++;
+        if (item.page) {
+          item.page.sortOrder = item.sortOrder;
+        }
+      } else {
+        item.sortOrder = 0; // Do not consume an integer in the sequence for unadded templates
+      }
+      
+      if (item === draggedItem) {
+        newSortOrderForDragged = item.sortOrder;
+      }
+    });
+
+    // Save updated sort order to the backend without any integer gaps!
+    if (draggedItem.page && draggedItem.page.id && draggedItem.hasContent) {
+      this.pageService.updatePage(draggedItem.page.id, { 
+        ...draggedItem.page, 
+        sortOrder: newSortOrderForDragged 
+      }).subscribe({
+        error: err => console.error('Failed to update page sort order', err)
+      });
+      
+      // Also sync Menu Order so the public live website's navigation bar mirrors this sequence
+      if (draggedItem.menu && draggedItem.menu.id) {
+        if (draggedItem.isSubMenu) {
+          this.menuService.updateSubMenu(draggedItem.menu.id, {
+            ...draggedItem.menu,
+            sortOrder: newSortOrderForDragged
+          }).subscribe({
+            error: err => console.error('Failed to update submenu sort order', err)
+          });
+        } else {
+          this.menuService.updateMenu(draggedItem.menu.id, {
+            ...draggedItem.menu,
+            sortOrder: newSortOrderForDragged
+          }).subscribe({
+            error: err => console.error('Failed to update menu sort order', err)
+          });
+        }
+      }
+    }
+    
     this.cdr.detectChanges();
   }
 
