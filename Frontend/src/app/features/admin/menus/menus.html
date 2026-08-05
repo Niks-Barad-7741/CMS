@@ -12,7 +12,7 @@
     </label>
     <div class="relative">
       <button (click)="isOrgDropdownOpen = !isOrgDropdownOpen"
-              class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl border dash-border bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm">
+              class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl border dash-border bg-[color:var(--bg-card)] hover:bg-[color:var(--bg-base)] focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm">
         <span class="truncate pr-4">{{ getSelectedOrgName() || 'Select Organization...' }}</span>
         <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -21,7 +21,7 @@
 
       <!-- Dropdown Panel -->
       <div *ngIf="isOrgDropdownOpen" 
-           class="absolute z-[100] w-full mt-2 rounded-xl border dash-border bg-white shadow-xl py-1 transform origin-top transition-all"
+           class="absolute z-[100] w-full mt-2 rounded-xl border dash-border bg-[color:var(--bg-card)] shadow-xl py-1 transform origin-top transition-all"
            style="max-height: 280px; overflow-y: auto;">
         <button *ngFor="let org of organizations"
                 (click)="selectOrg(org.id)"
@@ -135,7 +135,7 @@
                 </div>
 
                 <!-- Existing Sub-Menu Items -->
-                <div *ngFor="let sub of subMenus[menu.id]" class="flex items-center gap-3 py-2.5 px-4 rounded-xl mb-1 hover:bg-white/80 transition-colors" style="border: 1px solid transparent;">
+                <div *ngFor="let sub of subMenus[menu.id]" class="flex items-center gap-3 py-2.5 px-4 rounded-xl mb-1 hover:bg-[color:var(--bg-card)]/80 transition-colors" style="border: 1px solid transparent;">
                   <ng-container *ngIf="editingSubMenuId !== sub.id">
                     <span class="text-xs font-mono w-8 text-center" style="color:var(--text-muted)">{{ sub.sortOrder }}</span>
                     <span class="text-sm font-semibold flex-1" style="color:var(--text-primary)">{{ sub.title }}</span>

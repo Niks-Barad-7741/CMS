@@ -1,15 +1,15 @@
 <div class="flex justify-between items-center mb-6">
-  <h2 class="text-2xl font-bold text-gray-800">Users</h2>
+  <h2 class="text-2xl font-bold text-[color:var(--text-primary)]">Users</h2>
   <button (click)="openCreateForm()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
     + New User
   </button>
 </div>
 
 <!-- Users Table -->
-<div class="bg-white rounded shadow overflow-x-auto" *ngIf="!showForm">
+<div class="bg-[color:var(--bg-card)] rounded shadow overflow-x-auto" *ngIf="!showForm">
   <table class="w-full whitespace-nowrap">
     <thead>
-      <tr class="bg-gray-50 border-b text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <tr class="bg-[color:var(--bg-base)] border-b text-left text-xs font-semibold text-[color:var(--text-muted)] uppercase tracking-wider">
         <th class="px-6 py-4">Name</th>
         <th class="px-6 py-4">Email</th>
         <th class="px-6 py-4">Role</th>
@@ -19,13 +19,13 @@
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
-      <tr *ngFor="let user of users" class="hover:bg-gray-50">
-        <td class="px-6 py-4 font-medium text-gray-900">{{ user.name }}</td>
-        <td class="px-6 py-4 text-gray-500">{{ user.email }}</td>
+      <tr *ngFor="let user of users" class="hover:bg-[color:var(--bg-base)]">
+        <td class="px-6 py-4 font-medium text-[color:var(--text-primary)]">{{ user.name }}</td>
+        <td class="px-6 py-4 text-[color:var(--text-muted)]">{{ user.email }}</td>
         <td class="px-6 py-4">
-          <span class="px-2 py-1 text-xs rounded border border-gray-300 bg-gray-50">{{ user.role }}</span>
+          <span class="px-2 py-1 text-xs rounded border border-[color:var(--border-card)] bg-[color:var(--bg-base)]">{{ user.role }}</span>
         </td>
-        <td class="px-6 py-4 text-gray-500 text-sm">{{ getOrgName(user.organizationId) }}</td>
+        <td class="px-6 py-4 text-[color:var(--text-muted)] text-sm">{{ getOrgName(user.organizationId) }}</td>
         <td class="px-6 py-4">
           <span class="px-2 py-1 text-xs rounded-full" 
                 [ngClass]="user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
@@ -37,42 +37,42 @@
         </td>
       </tr>
       <tr *ngIf="users.length === 0">
-        <td colspan="6" class="px-6 py-8 text-center text-gray-500">No users found.</td>
+        <td colspan="6" class="px-6 py-8 text-center text-[color:var(--text-muted)]">No users found.</td>
       </tr>
     </tbody>
   </table>
 </div>
 
 <!-- Create / Edit Form -->
-<div class="bg-white rounded shadow p-6 max-w-2xl" *ngIf="showForm">
+<div class="bg-[color:var(--bg-card)] rounded shadow p-6 max-w-2xl" *ngIf="showForm">
   <h3 class="text-lg font-bold mb-4">{{ editingId ? 'Edit' : 'Create' }} User</h3>
   <form (ngSubmit)="save()" class="space-y-4">
     
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)]">Full Name</label>
         <input type="text" name="name" [(ngModel)]="formData.name" required
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+               class="mt-1 block w-full rounded-md border-[color:var(--border-card)] shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Email Address</label>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)]">Email Address</label>
         <input type="email" name="email" [(ngModel)]="formData.email" required
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+               class="mt-1 block w-full rounded-md border-[color:var(--border-card)] shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700">
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)]">
           Password <span class="text-gray-400 font-normal text-xs" *ngIf="editingId">(Leave blank to keep current)</span>
         </label>
         <input type="password" name="password" [(ngModel)]="formData.password" [required]="!editingId"
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+               class="mt-1 block w-full rounded-md border-[color:var(--border-card)] shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">Role</label>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)]">Role</label>
         <select name="role" [(ngModel)]="formData.role" required
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                class="mt-1 block w-full rounded-md border-[color:var(--border-card)] shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
           <option value="Admin">Admin (Access Everything)</option>
           <option value="Client">Client (Tenant Limited)</option>
         </select>
@@ -80,9 +80,9 @@
     </div>
     
     <div *ngIf="formData.role === 'Client'">
-      <label class="block text-sm font-medium text-gray-700">Assign to Organization</label>
+      <label class="block text-sm font-medium text-[color:var(--text-secondary)]">Assign to Organization</label>
       <select name="organizationId" [(ngModel)]="formData.organizationId" [required]="formData.role === 'Client'"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+              class="mt-1 block w-full rounded-md border-[color:var(--border-card)] shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
         <option [ngValue]="null">-- Select an Organization --</option>
         <option *ngFor="let org of organizations" [ngValue]="org.id">{{ org.name }}</option>
       </select>
@@ -90,12 +90,12 @@
 
     <div class="flex items-center pt-2">
       <input type="checkbox" name="isActive" [(ngModel)]="formData.isActive" id="isActive"
-             class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-      <label for="isActive" class="ml-2 block text-sm text-gray-900">Active Account</label>
+             class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[color:var(--border-card)] rounded">
+      <label for="isActive" class="ml-2 block text-sm text-[color:var(--text-primary)]">Active Account</label>
     </div>
 
     <div class="flex justify-end space-x-3 pt-4">
-      <button type="button" (click)="closeForm()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200">Cancel</button>
+      <button type="button" (click)="closeForm()" class="bg-[color:var(--bg-base)] border border-[color:var(--border-card)] text-[color:var(--text-secondary)] px-4 py-2 rounded hover:bg-gray-200">Cancel</button>
       <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">Save User</button>
     </div>
   </form>

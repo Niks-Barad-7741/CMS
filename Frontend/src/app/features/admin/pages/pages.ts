@@ -35,7 +35,7 @@ interface MenuNode {
 
 export interface BlockConfig {
   id: string;
-  type: 'hero-banner' | 'solutions-grid' | 'features-row' | 'cta-banner' | 'rich-text';
+  type: string;
   data: any;
 }
 
@@ -600,7 +600,7 @@ export class PagesComponent implements OnInit {
     this.pageContent = null;
     const defaultOrder = this.getMenuDefaultSortOrder(menuId);
     this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
-    this.resetDefaultDemoData();
+    this.clientData = { blocks: [] };
     this.updateGeneratedHtml();
     this.cdr.detectChanges();
   }
@@ -656,16 +656,16 @@ export class PagesComponent implements OnInit {
               }
             } catch (e) {
               console.error('Error parsing contentJson:', e);
-              this.resetDefaultDemoData();
+              this.clientData = { blocks: [] };
             }
           } else {
-            this.resetDefaultDemoData();
+            this.clientData = { blocks: [] };
           }
           this.updateGeneratedHtml();
         } else {
           this.pageContent = null;
           this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
-          this.resetDefaultDemoData();
+          this.clientData = { blocks: [] };
           this.updateGeneratedHtml();
         }
         this.cdr.detectChanges();
@@ -674,7 +674,7 @@ export class PagesComponent implements OnInit {
         this.pageContent = null;
         const defaultOrder = this.getMenuDefaultSortOrder(this.selectedMenuId);
         this.formData = { title: '', status: 'Draft', sortOrder: defaultOrder, bodyHtml: '' };
-        this.resetDefaultDemoData();
+        this.clientData = { blocks: [] };
         this.updateGeneratedHtml();
         this.cdr.detectChanges();
       }
@@ -688,7 +688,7 @@ export class PagesComponent implements OnInit {
     if (data.homeHeroTitle || data.homeBackgroundImage) {
       blocks.push({
         id: 'hero-' + Date.now(),
-        type: 'hero-banner',
+        type: 'hero',
         data: {
           title: data.homeHeroTitle || 'DELIVERED WITH PRECISION',
           subtitle: data.homeHeroSubtitle || '',
@@ -703,7 +703,7 @@ export class PagesComponent implements OnInit {
     if (data.solutionsTitle || data.solution1Title) {
       blocks.push({
         id: 'sol-' + Date.now(),
-        type: 'solutions-grid',
+        type: 'services',
         data: {
           sectionTitle: data.solutionsTitle || 'OUR SOLUTIONS',
           cards: [
@@ -720,7 +720,7 @@ export class PagesComponent implements OnInit {
     if (data.featuresTitle || data.feature1Desc) {
       blocks.push({
         id: 'feat-' + Date.now(),
-        type: 'features-row',
+        type: 'about',
         data: {
           sectionTitle: data.featuresTitle || 'WORKING WITH US',
           subtitle: data.featuresSubtitle || '',
@@ -737,7 +737,7 @@ export class PagesComponent implements OnInit {
     if (data.ctaBannerTitle) {
       blocks.push({
         id: 'cta-' + Date.now(),
-        type: 'cta-banner',
+        type: 'cta',
         data: {
           title: data.ctaBannerTitle,
           buttonText: data.ctaBannerButtonText || 'Contact Us',
@@ -750,30 +750,7 @@ export class PagesComponent implements OnInit {
   }
 
   getDefaultHomeBlocks(): BlockConfig[] {
-    return [
-      {
-        id: 'blk-' + Math.random().toString(36).substr(2, 9),
-        type: 'hero-banner',
-        data: {
-          title: 'DELIVERED WITH PRECISION, BUILT FOR FLIGHT',
-          subtitle: 'A leading global technology partner providing complex integrated products and services.',
-          bgImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
-          ctaText: 'Our Mission',
-          ctaLink: '#'
-        }
-      },
-      {
-        id: 'blk-' + Math.random().toString(36).substr(2, 9),
-        type: 'solutions-grid',
-        data: {
-          sectionTitle: 'OUR SOLUTIONS',
-          cards: [
-            { title: 'Machining', image: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?q=80&w=400', link: '#' },
-            { title: 'Sheet Metal Fabrication', image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ede4c21?q=80&w=400', link: '#' }
-          ]
-        }
-      }
-    ];
+    return [];
   }
 
   // --- Block Builder Actions ---
@@ -786,16 +763,21 @@ export class PagesComponent implements OnInit {
     if (!this.clientData.blocks) this.clientData.blocks = [];
     
     let defaultData: any = {};
-    if (type === 'hero-banner') {
-      defaultData = { title: 'New Hero Banner', subtitle: 'Subtitle text...', bgImage: '', ctaText: 'Click Here', ctaLink: '#' };
-    } else if (type === 'solutions-grid') {
-      defaultData = { sectionTitle: 'New Solutions Grid', cards: [{ title: 'Card 1', image: '', link: '#' }] };
-    } else if (type === 'features-row') {
-      defaultData = { sectionTitle: 'New Features', subtitle: 'Subtitle...', items: [{ icon: '⭐', desc: 'Feature 1' }] };
-    } else if (type === 'cta-banner') {
-      defaultData = { title: 'New CTA', buttonText: 'Contact Us', buttonLink: '#' };
-    } else if (type === 'rich-text') {
-      defaultData = { content: '<p>New rich text content...</p>' };
+    switch (type) {
+      case 'heading': defaultData = { level: 'h2', align: 'left', size: 'text-3xl', text: 'New Heading', color: '' }; break;
+      case 'paragraph': defaultData = { text: 'Type your paragraph here...', align: 'left', size: 'text-base', color: '' }; break;
+      case 'gallery': defaultData = { images: [], columns: 3 }; break;
+      case 'image': defaultData = { url: '', align: 'center', width: '', height: '', alt: '' }; break;
+      case 'hero': defaultData = { title: 'Hero Title', subtitle: 'Hero Subtitle', bgImage: '', ctaText: 'Click Here', ctaLink: '#' }; break;
+      case 'cta': defaultData = { text: 'Action Button', link: '#', align: 'center', style: 'primary' }; break;
+      case 'divider': defaultData = { size: 'medium' }; break;
+      case 'grid': defaultData = { columns: 2, content: [] }; break;
+      case 'testimonial': defaultData = { quote: 'This is an amazing product!', author: 'John Doe', title: 'CEO' }; break;
+      case 'video': defaultData = { url: '', aspectRatio: '16:9' }; break;
+      case 'about': defaultData = { title: 'About Us', subtitle: 'Who we are', story: 'Our company was founded with a mission...', image: '' }; break;
+      case 'services': defaultData = { title: 'Our Services', subtitle: 'What we offer', service1Title: 'Web Design', service1Desc: 'Awesome design', service2Title: 'Development', service2Desc: 'Solid code', service3Title: 'Marketing', service3Desc: 'Great reach' }; break;
+      case 'contact': defaultData = { title: 'Contact Us', subtitle: 'Get in touch', email: 'hello@company.com', phone: '+1 555 0000', address: '123 Main St' }; break;
+
     }
 
     this.clientData.blocks.push({
@@ -803,11 +785,26 @@ export class PagesComponent implements OnInit {
       type: type,
       data: defaultData
     });
-    this.updateGeneratedHtml();
   }
 
   removeBlock(index: number) {
     this.blockToDeleteIndex = index;
+  }
+
+  moveBlockUp(index: number) {
+    if (index > 0) {
+      const block = this.clientData.blocks[index];
+      this.clientData.blocks.splice(index, 1);
+      this.clientData.blocks.splice(index - 1, 0, block);
+    }
+  }
+
+  moveBlockDown(index: number) {
+    if (index < this.clientData.blocks.length - 1) {
+      const block = this.clientData.blocks[index];
+      this.clientData.blocks.splice(index, 1);
+      this.clientData.blocks.splice(index + 1, 0, block);
+    }
   }
 
   confirmRemoveBlock() {
@@ -823,6 +820,9 @@ export class PagesComponent implements OnInit {
     this.blockToDeleteIndex = null;
     this.cdr.detectChanges();
   }
+
+
+
 
   addBlockItem(blockIndex: number, listType: 'cards' | 'items') {
     const block = this.clientData.blocks[blockIndex];
@@ -1002,169 +1002,170 @@ export class PagesComponent implements OnInit {
   }
 
   updateGeneratedHtml(presetType?: 'home' | 'about' | 'services' | 'contact' | 'wireframe') {
-    const type = presetType || this.getSelectedMenuType();
-    const company = this.clientData.companyName || 'Ayaan Corp';
-
-    // Helper to resolve relative /uploads/ paths to the backend server
+    const blocks = this.clientData.blocks || [];
     const resolveImageUrl = (url: string) => url && url.startsWith('/uploads/') ? `https://localhost:7170${url}` : url;
 
-    let html = '';
-    switch (type) {
-      case 'home': {
-        const blocks = this.clientData.blocks || [];
-        html = blocks.map((block: any) => {
-          switch (block.type) {
-            case 'hero-banner': {
-              const bUrl = resolveImageUrl(block.data.bgImage);
-              const bg = bUrl
-                ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
-                : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
-              return `
-                <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
-                  <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
-                  <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
-                    <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
-                    ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
+    let html = blocks.map((block: any) => {
+      switch (block.type) {
+        case 'heading': {
+          const Tag = block.data.level || 'h2';
+          const align = block.data.align || 'left';
+          const size = block.data.size || 'text-3xl';
+          let style = block.data.color ? `color: ${block.data.color};` : '';
+          return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-${align}"><${Tag} class="${size} font-bold" style="${style}">${block.data.text || ''}</${Tag}></div>`;
+        }
+        case 'paragraph': {
+          const align = block.data.align || 'left';
+          const size = block.data.size || 'text-base';
+          let style = block.data.color ? `color: ${block.data.color};` : '';
+          return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-${align}"><p class="${size} text-gray-700 dark:text-gray-300" style="${style}">${block.data.text || ''}</p></div>`;
+        }
+        case 'hero': {
+          const bUrl = resolveImageUrl(block.data.bgImage);
+          const bg = bUrl
+            ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
+            : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
+          return `
+            <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
+              <div class="absolute inset-0 bg-black/50"></div>
+              <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
+                <p class="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
+                ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-gray-900 text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
+              </div>
+            </div>
+          `;
+        }
+        case 'image': {
+          const url = resolveImageUrl(block.data.url);
+          const align = block.data.align || 'center';
+          const w = block.data.width || '100%';
+          const h = block.data.height || 'auto';
+          let flexAlign = align === 'left' ? 'justify-start' : (align === 'right' ? 'justify-end' : 'justify-center');
+          return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex ${flexAlign}">
+                    <img src="${url}" alt="${block.data.alt || ''}" style="width: ${w}; height: ${h}; object-fit: cover;" class="rounded-lg shadow-md" />
+                  </div>`;
+        }
+        case 'cta': {
+          const align = block.data.align || 'center';
+          const style = block.data.style === 'secondary' 
+            ? 'border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white' 
+            : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg';
+          let flexAlign = align === 'left' ? 'justify-start' : (align === 'right' ? 'justify-end' : 'justify-center');
+          return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex ${flexAlign}">
+                    <a href="${block.data.link || '#'}" class="inline-block px-8 py-4 rounded-xl font-bold transition-all ${style}">${block.data.text || 'Click Here'}</a>
+                  </div>`;
+        }
+        case 'divider': {
+          const sizeMap: any = { small: 'my-4', medium: 'my-12', large: 'my-24' };
+          const margin = sizeMap[block.data.size] || 'my-12';
+          return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><hr class="border-gray-200 dark:border-gray-800 ${margin}"></div>`;
+        }
+        case 'gallery': {
+           return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-500">[Gallery Placeholder]</div>`;
+        }
+        case 'grid': {
+           return `<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-500">[Grid Placeholder]</div>`;
+        }
+        case 'testimonial': {
+           return `
+             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+               <svg class="w-12 h-12 mx-auto text-indigo-200 mb-6" fill="currentColor" viewBox="0 0 32 32"><path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z"></path></svg>
+               <p class="text-2xl font-medium text-gray-900 dark:text-gray-100 italic mb-8">"${block.data.quote || ''}"</p>
+               <footer class="font-bold text-gray-900 dark:text-white">${block.data.author || ''} <span class="text-gray-500 font-normal ml-2">${block.data.title || ''}</span></footer>
+             </div>
+           `;
+        }
+        
+        case 'about': {
+          const img = resolveImageUrl(block.data.image) || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000';
+          return `
+            <section class="py-20 bg-white dark:bg-gray-900">
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4">${block.data.title || 'About Us'}</h2>
+                    <h3 class="text-xl text-indigo-600 mb-6 font-medium">${block.data.subtitle || ''}</h3>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed">${block.data.story || ''}</p>
+                  </div>
+                  <div class="rounded-2xl overflow-hidden shadow-xl">
+                    <img src="${img}" alt="About Us" class="w-full h-full object-cover aspect-video">
                   </div>
                 </div>
-              `;
-            }
-            case 'solutions-grid': {
-              const cardsHtml = (block.data.cards || []).map((card: any) => {
-                const img = resolveImageUrl(card.image);
-                const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
-                return `
-                  <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
-                    ${imgTag}
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
-                    <div class="absolute bottom-0 left-0 right-0 p-6">
-                      <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
-                    </div>
-                  </a>
-                `;
-              }).join('');
-              return `
-                <section class="py-20 bg-white">
-                  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
+              </div>
+            </section>
+          `;
+        }
+        case 'services': {
+          return `
+            <section class="py-20 bg-gray-50 dark:bg-gray-800">
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4">${block.data.title || 'Our Services'}</h2>
+                <p class="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-16">${block.data.subtitle || ''}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">${block.data.service1Title || ''}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">${block.data.service1Desc || ''}</p>
                   </div>
-                </section>
-              `;
-            }
-            case 'features-row': {
-              const featsHtml = (block.data.items || []).map((item: any) => `
-                <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
-                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
-                  <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
-                  <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
+                  <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">${block.data.service2Title || ''}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">${block.data.service2Desc || ''}</p>
+                  </div>
+                  <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">${block.data.service3Title || ''}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">${block.data.service3Desc || ''}</p>
+                  </div>
                 </div>
-              `).join('');
-              return `
-                <section class="py-20" style="background: #F8F9FA;">
-                  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-16">
-                      ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
-                      ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
+              </div>
+            </section>
+          `;
+        }
+        case 'contact': {
+          return `
+            <section class="py-20 bg-white dark:bg-gray-900">
+              <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4">${block.data.title || 'Contact Us'}</h2>
+                <p class="text-gray-500 dark:text-gray-400 mb-12">${block.data.subtitle || ''}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                  <div class="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 mx-auto rounded-full flex items-center justify-center mb-4">📧</div>
+                    <h4 class="font-bold text-gray-900 dark:text-white mb-1">Email</h4>
+                    <p class="text-gray-500 text-sm">${block.data.email || ''}</p>
                   </div>
-                </section>
-              `;
-            }
-            case 'cta-banner': {
-              return `
-                <section class="py-20" style="background: #002855;">
-                  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
-                    ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
+                  <div class="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 mx-auto rounded-full flex items-center justify-center mb-4">📞</div>
+                    <h4 class="font-bold text-gray-900 dark:text-white mb-1">Phone</h4>
+                    <p class="text-gray-500 text-sm">${block.data.phone || ''}</p>
                   </div>
-                </section>
-              `;
-            }
-            default:
-              return '';
-          }
-        }).join('');
-        if (!this.formData.title) this.formData.title = 'Home - ' + company;
-        break;
+                  <div class="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 mx-auto rounded-full flex items-center justify-center mb-4">📍</div>
+                    <h4 class="font-bold text-gray-900 dark:text-white mb-1">Address</h4>
+                    <p class="text-gray-500 text-sm">${block.data.address || ''}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          `;
+        }
+case 'video': {
+           const url = block.data.url;
+           let embedUrl = url;
+           if (url && url.includes('youtube.com/watch?v=')) {
+              embedUrl = url.replace('watch?v=', 'embed/');
+           }
+           const aspectClass = block.data.aspectRatio === '4:3' ? 'aspect-[4/3]' : 'aspect-video';
+           return `<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                     <div class="w-full ${aspectClass} rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
+                       ${embedUrl ? `<iframe src="${embedUrl}" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No Video URL</div>'}
+                     </div>
+                   </div>`;
+        }
+        default:
+          return '';
       }
-      case 'about': {
-        const getVal = (key: string, fallback: string) => this.clientData[key] !== undefined ? this.clientData[key] : fallback;
-
-        const pageTitle = getVal('aboutTitle', 'About ' + company);
-        const sub = getVal('aboutSubtitle', 'We are on a mission to transform how the world creates and interacts with digital content.');
-        const story1 = getVal('aboutStory1', 'Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers.');
-        const story2 = getVal('aboutStory2', 'We set out to bridge that gap. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility.');
-        const img = getVal('aboutImage', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop');
-        const p1 = getVal('aboutPoint1', 'Innovation-driven approach');
-        const p2 = getVal('aboutPoint2', 'Customer-centric design');
-        const p3 = getVal('aboutPoint3', 'Commitment to excellence');
-
-        html = ABOUT_TEMPLATE
-          .replace(/About Us/g, pageTitle)
-          .replace(/We are on a mission to transform how the world creates and interacts with digital content\./g, sub)
-          .replace(/Founded in 2026, we recognized a fundamental flaw in how digital platforms were built: they were either too complex for regular users or too limiting for developers\./g, story1)
-          .replace(/We set out to bridge that gap\. Today, our platform empowers thousands of businesses to craft stunning digital experiences without compromising on power or flexibility\./g, story2)
-          .replace(/https:\/\/images\.unsplash\.com\/photo-1522071820081-009f0129c71c\?q=80&w=2850&auto=format&fit=crop/g, img)
-          .replace(/Innovation-driven approach/g, p1)
-          .replace(/Customer-centric design/g, p2)
-          .replace(/Commitment to excellence/g, p3);
-
-        if (!this.formData.title) this.formData.title = 'About ' + company;
-        break;
-      }
-      case 'services': {
-        const title = this.clientData.servicesTitle || 'Our Services';
-        const sub = this.clientData.servicesSubtitle || 'Tailored solutions designed to elevate your brand and drive unparalleled growth.';
-        const s1Title = this.clientData.service1Title || 'Web Development';
-        const s1Desc = this.clientData.service1Desc || 'Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences.';
-        const s2Title = this.clientData.service2Title || 'App Design';
-        const s2Desc = this.clientData.service2Desc || 'Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI/UX principles.';
-        const s3Title = this.clientData.service3Title || 'Digital Marketing';
-        const s3Desc = this.clientData.service3Desc || 'Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers.';
-
-        html = SERVICES_TEMPLATE
-          .replace(/Our Services/g, title)
-          .replace(/Tailored solutions designed to elevate your brand and drive unparalleled growth\./g, sub)
-          .replace(/Web Development/g, s1Title)
-          .replace(/Crafting responsive, high-performance websites with modern frameworks that captivate audiences and deliver seamless user experiences\./g, s1Desc)
-          .replace(/App Design/g, s2Title)
-          .replace(/Designing intuitive and gorgeous mobile applications that users love, focusing on human-centric UI\/UX principles\./g, s2Desc)
-          .replace(/Digital Marketing/g, s3Title)
-          .replace(/Data-driven marketing strategies that skyrocket your online presence and convert visitors into loyal customers\./g, s3Desc);
-
-        if (!this.formData.title) this.formData.title = 'Services';
-        break;
-      }
-      case 'contact': {
-        const title = this.clientData.contactTitle || 'Get in Touch';
-        const sub = this.clientData.contactSubtitle || "Have a question or ready to start a project? We'd love to hear from you.";
-        const phone = this.clientData.phone || '+1 (555) 123-4567';
-        const email = this.clientData.email || 'hello@ayaan.com';
-        const address = this.clientData.address || '123 Innovation Way, Tech City';
-
-        html = CONTACT_TEMPLATE
-          .replace(/Get in Touch/g, title)
-          .replace(/Have a question or ready to start a project\? We'd love to hear from you\./g, sub)
-          .replace(/\+1 \(555\) 123-4567/g, phone)
-          .replace(/hello@dynamiccms\.com/g, email)
-          .replace(/123 Innovation Way, Tech City/g, address);
-
-        if (!this.formData.title) this.formData.title = 'Contact Us';
-        break;
-      }
-      case 'wireframe':
-        html = CORPORATE_WIREFRAME_HTML;
-        if (!this.formData.title) this.formData.title = 'Corporate Page';
-        break;
-      default:
-        html = HOME_TEMPLATE.replace(/Build Your Digital Empire/g, company);
-        if (!this.formData.title) this.formData.title = 'New Page';
-        break;
-    }
-
+    }).join('');
+    
+    if (!this.formData.title) this.formData.title = 'New Page';
     this.formData.bodyHtml = html;
     this.cdr.detectChanges();
   }
@@ -1222,7 +1223,7 @@ export class PagesComponent implements OnInit {
     return `/site/${slug}/${page}`;
   }
 
-  saveAndPublishPage() {
+  saveAndPublishPage(statusOverride?: string) {
     if (!this.selectedOrgId || !this.selectedMenuId || !this.formData.title) return;
 
     this.isCreating = true;

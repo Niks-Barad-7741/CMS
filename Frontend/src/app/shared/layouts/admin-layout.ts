@@ -146,6 +146,20 @@ interface NavItem {
 
           <!-- Right actions -->
           <div class="flex items-center gap-3">
+            
+            <!-- Theme Toggle -->
+            <button (click)="toggleTheme()" class="p-2 rounded-lg transition-colors"
+                    title="Toggle Theme"
+                    style="color:var(--text-muted);"
+                    onmouseenter="this.style.color='var(--text-primary)'; this.style.background='var(--bg-base)'"
+                    onmouseleave="this.style.color='var(--text-muted)'; this.style.background=''">
+              <svg *ngIf="!isDarkMode()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+              <svg *ngIf="isDarkMode()" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </button>
 
 
             <!-- Role badge -->
@@ -193,6 +207,7 @@ export class AdminLayoutComponent implements OnInit {
   currentPageTitle = 'Admin Dashboard';
 
   sidebarCollapsed = signal(false);
+  isDarkMode = signal(false);
 
   readonly mainNav: NavItem[] = [
     {
@@ -265,6 +280,12 @@ export class AdminLayoutComponent implements OnInit {
     // Restore sidebar state
     if (isPlatformBrowser(this.platformId)) {
       this.sidebarCollapsed.set(localStorage.getItem('cms_sidebar_collapsed') === 'true');
+      
+      const theme = localStorage.getItem('cms_theme');
+      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        this.isDarkMode.set(true);
+        document.documentElement.classList.add('dark');
+      }
     }
   }
 
@@ -279,5 +300,19 @@ export class AdminLayoutComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     window.location.href = '/login';
+  }
+
+  toggleTheme(): void {
+    const next = !this.isDarkMode();
+    this.isDarkMode.set(next);
+    if (isPlatformBrowser(this.platformId)) {
+      if (next) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('cms_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('cms_theme', 'light');
+      }
+    }
   }
 }
