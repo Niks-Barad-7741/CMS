@@ -1,59 +1,125 @@
-<div *ngIf="isLoading" class="min-h-screen bg-slate-50 flex items-center justify-center">
+<div *ngIf="isLoading" class="min-h-screen bg-white flex items-center justify-center">
   <div class="flex flex-col items-center gap-4">
-    <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-    <div class="text-indigo-600 font-medium tracking-widest uppercase text-sm animate-pulse">Loading Experience</div>
+    <div class="w-16 h-16 border-4 border-blue-100 border-t-[#0056B3] rounded-full animate-spin"></div>
+    <div class="text-[#0A192F] font-medium tracking-widest uppercase text-sm animate-pulse">Loading</div>
   </div>
 </div>
 
-<div *ngIf="!isLoading && isNotFound" class="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+<div *ngIf="!isLoading && isNotFound" class="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
   <div class="text-8xl mb-8 animate-bounce">🌌</div>
-  <h1 class="text-5xl font-black text-slate-900 mb-4 tracking-tight">Space Not Found</h1>
-  <p class="text-xl text-slate-500 max-w-lg font-light leading-relaxed">
-    The organization space you are looking for has drifted into the void or does not exist.
-  </p>
-  <a href="/login" class="mt-10 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105 hover:shadow-indigo-300">Return to Command Center</a>
+  <h1 class="text-5xl font-black text-[#0A192F] mb-4 tracking-tight">Space Not Found</h1>
+  <p class="text-xl text-gray-500 max-w-lg font-light leading-relaxed">
+     The organization space you are looking for does not exist.
+  </p>  
+  <a href="/login" class="mt-10 bg-[#0056B3] hover:bg-[#004494] text-white px-8 py-4 rounded-lg font-bold shadow-lg transition-all hover:scale-105">Return Home</a>
 </div>
 
-<div *ngIf="!isLoading && !isNotFound && orgProfile" class="min-h-screen bg-slate-50 flex flex-col font-sans">
+<div *ngIf="!isLoading && !isNotFound && orgProfile" class="min-h-screen bg-white flex flex-col font-sans">
   
-  <!-- Main Navigation -->
-  <nav class="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-gray-800 to-slate-900 border-b border-slate-700 shadow-sm">
+  <!-- ═══ NAVBAR ═══ -->
+  <nav class="sticky top-0 z-50 bg-white transition-shadow duration-300"
+       [class.shadow-lg]="isScrolled"
+       style="border-bottom: 1px solid #e5e7eb;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-20">
-        <!-- Logo Area -->
-        <div class="flex-shrink-0 flex items-center gap-3 group cursor-pointer" [routerLink]="getPageLink('home')">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white border-2 border-slate-500 font-black text-xl bg-slate-600 group-hover:bg-slate-500 transition-colors duration-300">
-            {{ (orgProfile?.name || 'V').charAt(0).toUpperCase() }}
-          </div>
-          <div class="flex flex-col leading-tight">
-            <span class="text-white font-bold text-xl tracking-tight group-hover:text-slate-300 transition-colors duration-300">
-              {{ orgProfile.name }}
-            </span>
-            <span class="text-slate-300 text-xs font-semibold tracking-wider">TECHNOLOGY</span>
-          </div>
+        
+        <!-- Logo -->
+        <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" [routerLink]="getPageLink('home')">
+          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-auto object-contain">
+          <span *ngIf="!orgProfile?.logoUrl" class="text-[#0A192F] font-bold text-2xl tracking-tight">
+            {{ orgProfile.name }}
+          </span>
         </div>
 
         <!-- Desktop Navigation -->
-        <div class="hidden md:block" *ngIf="menus && menus.length > 0">
-          <div class="ml-10 flex items-center space-x-2">
-            <a *ngFor="let menu of menus"
-               [routerLink]="getPageLink(menu.page)"
-               routerLinkActive="bg-slate-700 text-white font-semibold"
-               [routerLinkActiveOptions]="{ exact: menu.page === 'home' }"
-               class="text-gray-300 hover:text-white hover:bg-slate-700/50 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ease-out flex items-center gap-1">
-               {{ menu.title }}
-            </a>
+        <div class="hidden lg:flex items-center space-x-1">
+          <ng-container *ngFor="let menu of visibleMenus">
+            <div class="relative" 
+                 (mouseenter)="showDropdown(menu.id)" 
+                 (mouseleave)="hideDropdown(menu.id)">
+              <a [routerLink]="getPageLink(menu.page)"
+                 routerLinkActive="text-[#0056B3] font-bold"
+                 [routerLinkActiveOptions]="{ exact: menu.page === 'home' }"
+                 class="text-[#0A192F] hover:text-[#0056B3] px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1 relative group">
+                {{ menu.title }}
+                <svg *ngIf="menu.subMenuItems?.length" class="w-3.5 h-3.5 ml-0.5 transition-transform" [class.rotate-180]="activeDropdown === menu.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+                <span class="absolute bottom-0 left-4 right-4 h-0.5 bg-[#0056B3] scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+              </a>
+
+              <!-- Dropdown for Sub-menus -->
+              <div *ngIf="menu.subMenuItems?.length && activeDropdown === menu.id"
+                   class="absolute top-full left-0 mt-0 w-56 bg-white rounded-b-xl shadow-xl border border-gray-100 py-2 z-50"
+                   style="animation: fadeDown 0.2s ease-out;">
+                <a *ngFor="let sub of menu.subMenuItems"
+                   [routerLink]="getPageLink(sub.page)"
+                   class="block px-5 py-3 text-sm text-[#0A192F] hover:bg-blue-50 hover:text-[#0056B3] transition-colors font-medium">
+                  {{ sub.title }}
+                </a>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- More Dropdown -->
+          <div *ngIf="overflowMenus.length > 0" class="relative">
+            <button (click)="toggleMoreDropdown()" 
+                    class="text-[#0A192F] hover:text-[#0056B3] px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1">
+              More
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div *ngIf="showMoreDropdown"
+                 class="absolute top-full right-0 mt-0 w-56 bg-white rounded-b-xl shadow-xl border border-gray-100 py-2 z-50">
+              <a *ngFor="let menu of overflowMenus"
+                 [routerLink]="getPageLink(menu.page)"
+                 (click)="showMoreDropdown = false"
+                 class="block px-5 py-3 text-sm text-[#0A192F] hover:bg-blue-50 hover:text-[#0056B3] transition-colors font-medium">
+                {{ menu.title }}
+              </a>
+            </div>
           </div>
         </div>
 
-        <!-- Mobile Menu Button (Placeholder for aesthetics) -->
-        <div class="md:hidden flex items-center">
-          <button class="text-gray-300 hover:text-white p-2 focus:outline-none">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
+        <!-- Mobile Menu Button -->
+        <button (click)="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <svg *ngIf="!isMobileMenuOpen" class="h-6 w-6 text-[#0A192F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg *ngIf="isMobileMenuOpen" class="h-6 w-6 text-[#0A192F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div *ngIf="isMobileMenuOpen" class="lg:hidden fixed inset-0 top-20 bg-white z-40 overflow-y-auto" style="animation: slideDown 0.3s ease-out;">
+      <div class="px-4 py-6 space-y-1">
+        <ng-container *ngFor="let menu of menus">
+          <div>
+            <div class="flex items-center justify-between">
+              <a [routerLink]="getPageLink(menu.page)" (click)="isMobileMenuOpen = false"
+                 class="flex-1 block px-4 py-3 text-base font-semibold text-[#0A192F] hover:text-[#0056B3] hover:bg-blue-50 rounded-lg transition-colors">
+                {{ menu.title }}
+              </a>
+              <button *ngIf="menu.subMenuItems?.length" (click)="toggleMobileSubmenu(menu.id)" class="p-3 rounded-lg hover:bg-gray-100">
+                <svg class="w-4 h-4 transition-transform" [class.rotate-180]="expandedMobileMenu === menu.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+            </div>
+            <!-- Mobile Sub-menus -->
+            <div *ngIf="menu.subMenuItems?.length && expandedMobileMenu === menu.id" class="ml-6 mt-1 space-y-1 border-l-2 border-blue-100 pl-4">
+              <a *ngFor="let sub of menu.subMenuItems"
+                 [routerLink]="getPageLink(sub.page)" (click)="isMobileMenuOpen = false"
+                 class="block py-2.5 px-3 text-sm text-gray-600 hover:text-[#0056B3] hover:bg-blue-50 rounded-lg transition-colors">
+                {{ sub.title }}
+              </a>
+            </div>
+          </div>
+        </ng-container>
       </div>
     </div>
   </nav>
@@ -63,37 +129,33 @@
     <router-outlet></router-outlet>
   </main>
 
-  <!-- Dark Footer -->
-  <footer class="bg-gradient-to-r from-slate-900 via-gray-800 to-slate-900 text-gray-300 relative border-t-4 border-slate-600">
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="bg-[#0A192F] text-gray-300 relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
         
-        <!-- Brand & Info Column -->
+        <!-- Brand Column -->
         <div class="space-y-6">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white border-2 border-slate-500 font-black text-xl bg-slate-600">
-              {{ (orgProfile?.name || 'V').charAt(0).toUpperCase() }}
-            </div>
-            <div class="flex flex-col leading-tight">
-              <span class="text-white font-bold text-xl tracking-tight">{{ orgProfile?.name }}</span>
-            </div>
+            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-10 w-auto object-contain brightness-0 invert">
+            <span *ngIf="!orgProfile?.logoUrl" class="text-white font-bold text-xl tracking-tight">{{ orgProfile?.name }}</span>
           </div>
           <p class="text-gray-400 text-sm leading-relaxed">
             {{ orgProfile?.footerDescription || 'Empowering clients with custom content, modern tools, and robust platform solutions.' }}
           </p>
           <!-- Social Icons -->
           <div class="flex items-center gap-4 pt-2" *ngIf="orgProfile?.socialTwitter || orgProfile?.socialFacebook || orgProfile?.socialInstagram">
-            <a *ngIf="orgProfile.socialTwitter" [href]="getSocialUrl('twitter', orgProfile.socialTwitter)" target="_blank" rel="noopener" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-indigo-600 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300">
+            <a *ngIf="orgProfile.socialTwitter" [href]="getSocialUrl('twitter', orgProfile.socialTwitter)" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-[#0056B3] text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300">
               <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
               </svg>
             </a>
-            <a *ngIf="orgProfile.socialFacebook" [href]="getSocialUrl('facebook', orgProfile.socialFacebook)" target="_blank" rel="noopener" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-indigo-600 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300">
+            <a *ngIf="orgProfile.socialFacebook" [href]="getSocialUrl('facebook', orgProfile.socialFacebook)" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-[#0056B3] text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300">
               <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
               </svg>
             </a>
-            <a *ngIf="orgProfile.socialInstagram" [href]="getSocialUrl('instagram', orgProfile.socialInstagram)" target="_blank" rel="noopener" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-indigo-600 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300">
+            <a *ngIf="orgProfile.socialInstagram" [href]="getSocialUrl('instagram', orgProfile.socialInstagram)" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-[#0056B3] text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300">
               <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
               </svg>
@@ -101,13 +163,13 @@
           </div>
         </div>
 
-        <!-- Navigation Column -->
+        <!-- Quick Links Column -->
         <div class="space-y-6" *ngIf="menus && menus.length > 0">
           <h4 class="text-sm font-bold text-white uppercase tracking-wider">Quick Links</h4>
           <ul class="space-y-3 text-sm">
             <li *ngFor="let menu of menus">
-              <a [routerLink]="getPageLink(menu.page)" class="text-gray-400 hover:text-slate-400 transition-colors flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+              <a [routerLink]="getPageLink(menu.page)" class="text-gray-400 hover:text-[#0056B3] transition-colors flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#0056B3]/40"></span>
                 {{ menu.title }}
               </a>
             </li>
@@ -119,15 +181,22 @@
           <h4 class="text-sm font-bold text-white uppercase tracking-wider">Contact Info</h4>
           <ul class="space-y-4 text-sm text-gray-400">
             <li *ngIf="orgProfile?.address" class="flex items-start gap-3">
-              <div class="text-slate-400 mt-0.5">📍</div>
+              <svg class="w-5 h-5 text-[#0056B3] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
               <span>{{ orgProfile.address }}</span>
             </li>
             <li *ngIf="orgProfile?.contactEmail" class="flex items-center gap-3">
-              <div class="text-slate-400">✉️</div>
+              <svg class="w-5 h-5 text-[#0056B3] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
               <span>{{ orgProfile.contactEmail }}</span>
             </li>
             <li *ngIf="orgProfile?.contactPhone" class="flex items-center gap-3">
-              <div class="text-slate-400">📞</div>
+              <svg class="w-5 h-5 text-[#0056B3] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
               <span>{{ orgProfile.contactPhone }}</span>
             </li>
           </ul>
@@ -138,8 +207,8 @@
           <h4 class="text-sm font-bold text-white uppercase tracking-wider">Newsletter</h4>
           <p class="text-sm text-gray-400">Subscribe for the latest updates.</p>
           <div class="relative">
-            <input type="email" placeholder="Email Address" class="w-full pl-4 pr-24 py-3 bg-gray-800 border border-gray-700 rounded-md text-sm text-white outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500">
-            <button class="absolute right-1 top-1 bottom-1 px-4 bg-slate-600 hover:bg-slate-500 text-white font-medium text-xs rounded transition-colors">
+            <input type="email" placeholder="Email Address" class="w-full pl-4 pr-24 py-3 bg-white/5 border border-white/10 rounded-lg text-sm text-white outline-none focus:border-[#0056B3] focus:ring-1 focus:ring-[#0056B3] placeholder-gray-500">
+            <button class="absolute right-1 top-1 bottom-1 px-4 bg-[#0056B3] hover:bg-[#004494] text-white font-medium text-xs rounded-md transition-colors">
               Subscribe
             </button>
           </div>
@@ -149,16 +218,27 @@
     </div>
 
     <!-- Bottom Bar -->
-    <div class="border-t border-gray-800 bg-slate-950 py-6">
+    <div class="border-t border-white/10 py-6" style="background: rgba(0,0,0,0.15);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500">
         <div>
           &copy; {{ currentYear }} <strong class="text-gray-300">{{ orgProfile?.name }}</strong>. All rights reserved.
         </div>
         <div class="flex items-center space-x-6">
-          <a href="#" class="hover:text-slate-400 transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-slate-400 transition-colors">Terms & Conditions</a>
+          <a href="#" class="hover:text-[#0056B3] transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-[#0056B3] transition-colors">Terms & Conditions</a>
         </div>
       </div>
     </div>
   </footer>
 </div>
+
+<style>
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

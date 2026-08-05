@@ -39,12 +39,47 @@ namespace Dynamic_CMS.Infrastructure.Data
             }
 
             var siteProvisioning = scope.ServiceProvider.GetRequiredService<ISiteProvisioningService>();
-            await siteProvisioning.EnsureDefaultMenusAsync();
-
             var activeOrganizations = context.Organizations.Where(o => o.IsActive).ToList();
             foreach (var org in activeOrganizations)
             {
+                await siteProvisioning.EnsureDefaultMenusAsync(org.Id);
                 await siteProvisioning.EnsureDefaultPagesForOrganizationAsync(org.Id, org.Slug, org.Name);
+
+                // Migrate legacy PageContents (pages linked to old global menus) to the newly created org-specific menus
+                var orgMenus = context.MenuItems.Where(m => m.OrganizationId == org.Id).ToList();
+                var legacyPageContents = context.PageContents
+                    .Include(p => p.MenuItem)
+                    .Where(p => p.OrganizationId == org.Id && p.MenuItem.OrganizationId == null)
+                    .ToList();
+
+                foreach (var legacyPage in legacyPageContents)
+                {
+                    var oldMenu = legacyPage.MenuItem;
+                    if (oldMenu != null)
+                    {
+                        var newMenu = orgMenus.FirstOrDefault(m => m.Page == oldMenu.Page || m.Title.ToLower() == oldMenu.Title.ToLower());
+                        if (newMenu != null)
+                        {
+                            // Check if a PageContent already exists for the new Menu
+                            bool alreadyExists = context.PageContents.Any(p => p.OrganizationId == org.Id && p.MenuItemId == newMenu.Id);
+                            if (alreadyExists)
+                            {
+                                // If the user already saved a new page content for this menu, just delete the legacy one
+                                context.PageContents.Remove(legacyPage);
+                            }
+                            else
+                            {
+                                // Otherwise, migrate it
+                                legacyPage.MenuItemId = newMenu.Id;
+                            }
+                        }
+                    }
+                }
+
+                if (legacyPageContents.Any())
+                {
+                    await context.SaveChangesAsync();
+                }
             }
         }
     }

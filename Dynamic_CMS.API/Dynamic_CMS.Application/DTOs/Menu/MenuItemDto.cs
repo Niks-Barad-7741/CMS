@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Dynamic_CMS.Application.DTOs.SubMenu;
 
 namespace Dynamic_CMS.Application.DTOs.Menu
 {
@@ -13,5 +15,6 @@ namespace Dynamic_CMS.Application.DTOs.Menu
         public string CreatedBy { get; set; } = string.Empty;
         public DateTime? ModifiedAt { get; set; }
         public string? ModifiedBy { get; set; }
+        public List<SubMenuItemDto> SubMenuItems { get; set; } = new();
     }
 }

@@ -17,9 +17,12 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<MenuItem>> GetAllAsync()
+        public async Task<IEnumerable<MenuItem>> GetAllAsync(Guid organizationId)
         {
-            return await _context.MenuItems.ToListAsync();
+            return await _context.MenuItems
+                .Include(m => m.SubMenuItems)
+                .Where(m => m.OrganizationId == organizationId)
+                .ToListAsync();
         }
 
         public async Task<MenuItem?> GetByIdAsync(Guid id)
@@ -27,20 +30,22 @@ namespace Dynamic_CMS.Infrastructure.Repositories
             return await _context.MenuItems.FindAsync(id);
         }
 
-        public async Task<MenuItem?> GetByPageAsync(string page)
+        public async Task<MenuItem?> GetByPageAsync(Guid organizationId, string page)
         {
             return await _context.MenuItems
-                .FirstOrDefaultAsync(m => m.Page == page);
+                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Page == page);
         }
 
-        public async Task<MenuItem?> GetBySortOrderAsync(int sortOrder)
+        public async Task<MenuItem?> GetBySortOrderAsync(Guid organizationId, int sortOrder)
         {
-            return await _context.MenuItems.FirstOrDefaultAsync(m => m.SortOrder == sortOrder);
+            return await _context.MenuItems
+                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.SortOrder == sortOrder);
         }
 
-        public async Task<MenuItem?> GetByTitleAsync(string title)
+        public async Task<MenuItem?> GetByTitleAsync(Guid organizationId, string title)
         {
-            return await _context.MenuItems.FirstOrDefaultAsync(m => m.Title.ToLower() == title.ToLower());
+            return await _context.MenuItems
+                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Title.ToLower() == title.ToLower());
         }
 
 

@@ -108,6 +108,29 @@ namespace Dynamic_CMS.Application.Services
             return _mapper.Map<OrganizationDto>(organization);
         }
 
+        public async Task<OrganizationDto> UpdateLogoAsync(Guid id, UpdateLogoDto dto, string? userName = null)
+        {
+            var organization = await _repository.GetByIdAsync(id);
+            if (organization == null)
+            {
+                throw new KeyNotFoundException($"Organization with ID {id} not found.");
+            }
+
+            if (!organization.IsActive)
+            {
+                throw new InvalidOperationException("This organization has been deleted. You cannot update it.");
+            }
+
+            organization.LogoUrl = dto.LogoUrl;
+            organization.ModifiedDate = DateTime.UtcNow;
+            organization.ModifiedBy = userName;
+
+            _repository.Update(organization);
+            await _repository.SaveChangesAsync();
+
+            return _mapper.Map<OrganizationDto>(organization);
+        }
+
         public async Task<bool> DeleteAsync(Guid id, string? userName = null)
         {
             var organization = await _repository.GetByIdAsync(id);

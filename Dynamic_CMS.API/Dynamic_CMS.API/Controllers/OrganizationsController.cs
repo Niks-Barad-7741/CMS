@@ -103,6 +103,29 @@ namespace Dynamic_CMS.API.Controllers
             }
         }
 
+        [HttpPut("{id}/logo")]
+        public async Task<IActionResult> UpdateLogo(Guid id, [FromBody] UpdateLogoDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
+            }
+
+            try
+            {
+                var organization = await _organizationService.UpdateLogoAsync(id, dto, GetCurrentUserName());
+                return Ok(ApiResponse.SuccessResponse("Logo updated successfully."));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(ApiResponse.FailureResponse("Resource not found.", 404));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse.FailureResponse(ex.Message, 400));
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

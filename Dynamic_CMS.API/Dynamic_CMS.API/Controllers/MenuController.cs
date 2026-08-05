@@ -17,24 +17,27 @@ namespace Dynamic_CMS.API.Controllers
     {
         private readonly IMenuItemService _service;
         private readonly IOrganizationService _organizationService;
+        private readonly ISiteProvisioningService _siteProvisioningService;
 
-        public MenuController(IMenuItemService service, IOrganizationService organizationService)
+        public MenuController(IMenuItemService service, IOrganizationService organizationService, ISiteProvisioningService siteProvisioningService)
         {
             _service = service;
             _organizationService = organizationService;
+            _siteProvisioningService = siteProvisioningService;
         }
 
-        // PUBLIC: GET /api/menus
-        [HttpGet("menus")]
-        [Authorize(Roles = "Admin")]
-        //[AllowAnonymous]
-        public async Task<IActionResult> GetAllPublic()
+        // ADMIN/CLIENT: GET /api/admin/organizations/{organizationId}/menus
+        [HttpGet("admin/organizations/{organizationId:guid}/menus")]
+        [Authorize]
+        public async Task<IActionResult> GetByOrganization(Guid organizationId)
         {
-            var menus = await _service.GetAllMenusAsync();
+            await _siteProvisioningService.EnsureDefaultMenusAsync(organizationId);
+            var menus = await _service.GetAllMenusAsync(organizationId);
             if (menus == null || !menus.Any())
             {
-                var failResponse = ApiResponse.FailureResponse("No records found.", 404);
-                return StatusCode(failResponse.StatusCode, failResponse);
+                // Return empty list instead of 404 to be consistent
+                var emptyResponse = ApiResponse<IEnumerable<MenuItemDto>>.SuccessResponse(new List<MenuItemDto>(), "No records found.");
+                return StatusCode(emptyResponse.StatusCode, emptyResponse);
             }
 
             var response = ApiResponse<IEnumerable<MenuItemDto>>.SuccessResponse(menus, "Operation successful");
@@ -50,13 +53,13 @@ namespace Dynamic_CMS.API.Controllers
                 return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
 
             // Validate unique page name
-            var exists = await _service.MenuExistsAsync(dto.Page);
+            var exists = await _service.MenuExistsAsync(dto.OrganizationId, dto.Page);
             if (exists)
                 return Conflict(ApiResponse.FailureResponse("A menu item with this page name already exists.", 409));
 
             try
             {
-                var created = await _service.CreateMenuAsync(dto);
+                var created = await _service.CreateMenuAsync(dto, dto.OrganizationId);
                 var response = ApiResponse<MenuItemDto>.Create(ResponseStatus.MenuCreatedSuccessfully, created);
                 return StatusCode(response.StatusCode, response);
             }

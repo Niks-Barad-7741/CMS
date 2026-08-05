@@ -14,6 +14,7 @@ namespace Dynamic_CMS.Infrastructure.Data
         public DbSet<MenuItem> MenuItems { get; set; } = null!;
         public DbSet<PageContent> PageContents { get; set; } = null!;
         public DbSet<Media> Media { get; set; } = null!;
+        public DbSet<SubMenuItem> SubMenuItems { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,6 +56,12 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Page).IsRequired().HasMaxLength(100);
                 
+                // Navigations
+                entity.HasOne(m => m.Organization)
+                    .WithMany(o => o.MenuItems)
+                    .HasForeignKey(m => m.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
                 // Soft delete filter
                 entity.HasQueryFilter(e => !e.IsDeleted);
             });
@@ -69,8 +76,9 @@ namespace Dynamic_CMS.Infrastructure.Data
                 // Soft delete filter
                 entity.HasQueryFilter(e => !e.IsDeleted);
                 
-                // Unique constraint
-                entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique();
+                // Unique constraints
+                entity.HasIndex(p => new { p.OrganizationId, p.MenuItemId }).IsUnique().HasFilter("[MenuItemId] IS NOT NULL");
+                entity.HasIndex(p => new { p.OrganizationId, p.SubMenuItemId }).IsUnique().HasFilter("[SubMenuItemId] IS NOT NULL");
 
                 // Navigations
                 entity.HasOne(p => p.Organization)
@@ -81,6 +89,11 @@ namespace Dynamic_CMS.Infrastructure.Data
                 entity.HasOne(p => p.MenuItem)
                     .WithMany(m => m.PageContents)
                     .HasForeignKey(p => p.MenuItemId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.SubMenuItem)
+                    .WithMany()
+                    .HasForeignKey(p => p.SubMenuItemId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -102,6 +115,30 @@ namespace Dynamic_CMS.Infrastructure.Data
                     .WithMany()
                     .HasForeignKey(m => m.UploadedByUserId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SubMenuItem>(entity =>
+            {
+                entity.ToTable("SubMenuItems");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Page).IsRequired().HasMaxLength(100);
+
+                // Soft delete filter
+                entity.HasQueryFilter(e => !e.IsDeleted);
+
+                // Foreign key to MenuItem
+                entity.HasOne(s => s.MenuItem)
+                    .WithMany(m => m.SubMenuItems)
+                    .HasForeignKey(s => s.MenuItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(s => s.Organization)
+                    .WithMany(o => o.SubMenuItems)
+                    .HasForeignKey(s => s.OrganizationId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(s => s.MenuItemId);
             });
         }
     }

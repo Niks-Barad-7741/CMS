@@ -22,10 +22,13 @@ namespace Dynamic_CMS.Domain.Entities
         public string? SocialTwitter { get; set; }
         public string? SocialFacebook { get; set; }
         public string? SocialInstagram { get; set; }
+        public string? LogoUrl { get; set; }
 
         // Navigation properties
         public ICollection<User> Users { get; set; } = new List<User>();
         public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();
         public ICollection<Media> Media { get; set; } = new List<Media>();
+        public ICollection<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
+        public ICollection<SubMenuItem> SubMenuItems { get; set; } = new List<SubMenuItem>();
     }
 }

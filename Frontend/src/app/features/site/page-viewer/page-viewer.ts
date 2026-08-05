@@ -22,6 +22,7 @@ export class PageViewerComponent implements OnInit {
 
   isLoading = true;
   hasError = false;
+  isHomePage = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -35,6 +36,7 @@ export class PageViewerComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.pageSlug = params.get('pageSlug') || 'home';
       this.orgSlug = resolveOrgSlug(this.route, this.tenantService.getTenantSlug()) || 'site';
+      this.isHomePage = this.pageSlug.toLowerCase() === 'home';
       this.loadContent();
     });
   }
@@ -47,7 +49,7 @@ export class PageViewerComponent implements OnInit {
     this.pageService.getPublicPage(this.orgSlug, this.pageSlug).subscribe({
       next: (res: any) => {
         const page = res?.data || res;
-        if (page && (page.bodyHtml || page.contentJson)) {
+        if (page && page.contentJson) {
           this.pageContent = page;
           let cleanedHtml = this.renderHtmlFromContentJson(page);
 
@@ -68,41 +70,145 @@ export class PageViewerComponent implements OnInit {
           this.hasError = false;
           this.cdr.detectChanges();
         } else {
-          this.pageContent = null;
-          this.safeBodyHtml = null;
-          this.isLoading = false;
-          this.hasError = true;
-          this.cdr.detectChanges();
+          this.loadStaticContent();
         }
       },
-      error: () => {
-        this.pageContent = null;
-        this.safeBodyHtml = null;
-        this.isLoading = false;
-        this.hasError = true;
-        this.cdr.detectChanges();
+      error: (err) => {
+        console.error('Failed to load dynamic page content:', err);
+        this.loadStaticContent();
       }
     });
   }
 
   private renderHtmlFromContentJson(page: any): string {
-    if (!page.contentJson && page.bodyHtml) {
-      return page.bodyHtml;
+    const title = (page.title || '').toLowerCase();
+    const slug = (this.pageSlug || '').toLowerCase();
+    let data: any = {};
+    
+    if (page.contentJson) {
+      try {
+        data = typeof page.contentJson === 'string' ? JSON.parse(page.contentJson) : page.contentJson;
+      } catch (e) {
+        console.error('Error rendering HTML from content JSON:', e);
+      }
     }
 
-    try {
-      const data = page.contentJson 
-        ? (typeof page.contentJson === 'string' ? JSON.parse(page.contentJson) : page.contentJson)
-        : null;
+    // Helper to resolve relative /uploads/ paths to the backend server
+    const resolveImageUrl = (url: any) => {
+      if (typeof url !== 'string') return '';
+      return url && url.startsWith('/uploads/') ? `https://localhost:7170${url}` : url;
+    };
 
-      // Fallback: If page has no contentJson configuration, generate a default fallback layout based on pageSlug/title
-      if (!data || (!data.sections && !data.companyName)) {
-        return this.renderDefaultFallbackPage(page);
-      }
+    if (title.includes('home') || slug.includes('home')) {
+        if (data.blocks && Array.isArray(data.blocks)) {
+          return data.blocks.map((block: any) => {
+            switch (block.type) {
+              case 'hero-banner': {
+                const bUrl = resolveImageUrl(block.data.bgImage);
+                const bg = bUrl
+                  ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
+                  : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
+                return `
+                  <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
+                    <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
+                    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
+                      <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
+                      <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
+                      ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
+                    </div>
+                  </div>
+                `;
+              }
+              case 'solutions-grid': {
+                const cardsHtml = (block.data.cards || []).map((card: any) => {
+                  const img = resolveImageUrl(card.image);
+                  const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
+                  return `
+                    <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
+                      ${imgTag}
+                      <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
+                      <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
+                      </div>
+                    </a>
+                  `;
+                }).join('');
+                return `
+                  <section class="py-20 bg-white">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
+                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
+                    </div>
+                  </section>
+                `;
+              }
+              case 'features-row': {
+                const featsHtml = (block.data.items || []).map((item: any) => `
+                  <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
+                    <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
+                    <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
+                  </div>
+                `).join('');
+                return `
+                  <section class="py-20" style="background: #F8F9FA;">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div class="text-center mb-16">
+                        ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
+                        ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
+                      </div>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
+                    </div>
+                  </section>
+                `;
+              }
+              case 'cta-banner': {
+                return `
+                  <section class="py-20" style="background: #002855;">
+                    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                      <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
+                      ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
+                    </div>
+                  </section>
+                `;
+              }
+              default:
+                return '';
+            }
+          }).join('');
+        }
 
-      // If it is the legacy key-value template configuration, map to legacy template renderer
-      if (!data.sections || !Array.isArray(data.sections)) {
-        return this.renderLegacyTemplate(page, data);
+        // Fallback for old data without blocks
+        const bgStyle = data.homeBackgroundImage ? `style="background-image: url('${resolveImageUrl(data.homeBackgroundImage)}'); background-size: cover; background-position: center; background-repeat: no-repeat;"` : 'style="background-color: #0A0F1A;"';
+
+        return `
+          <!-- HERO -->
+          <div class="relative w-full h-[600px] flex items-center justify-center overflow-hidden"
+               ${bgStyle}>
+            
+            <!-- Overlay to ensure text readability -->
+            <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
+
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+              <div class="max-w-3xl">
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-[#002855] uppercase tracking-tighter mb-6 leading-[1.1]">
+                  ${data.homeHeroTitle || data.companyName || 'Welcome'}
+                </h1>
+                <p class="text-xl sm:text-2xl text-[#0056B3] font-medium max-w-2xl leading-snug mb-10">
+                  ${data.homeHeroSubtitle || data.tagline || ''}
+                </p>
+                <div class="flex gap-4">
+                  <a href="/site/${slug}/about" class="px-8 py-4 bg-[#002855] hover:bg-[#0056B3] text-white font-bold text-sm uppercase tracking-widest rounded-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                    ${data.homeCtaText || 'Learn More'}
+                  </a>
+                  <a href="/site/${slug}/contact" class="px-8 py-4 bg-white hover:bg-gray-50 text-[#002855] font-bold text-sm uppercase tracking-widest rounded-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                    Contact Us
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
       }
 
       // Render the new dynamic Section & Block layout
@@ -316,133 +422,8 @@ export class PageViewerComponent implements OnInit {
           </div>
         `;
       }
-      
-      return html;
-    } catch (e) {
-      console.error('Error rendering dynamic page content:', e);
-      return `<p class="p-8 text-center text-red-500">Error rendering page content.</p>`;
-    }
-  }
-
-  private renderDefaultFallbackPage(page: any): string {
-    const title = page.title || 'Welcome';
-    return `
-      <div class="w-full py-24 bg-slate-50 text-slate-800 text-center">
-        <div class="max-w-4xl mx-auto px-4">
-          <h1 class="text-5xl font-black mb-6 tracking-tight text-slate-900">${title}</h1>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
-            This page content has been initialized. You can edit this page dynamically from the admin panel to add headers, text paragraphs, customize colors, and create galleries.
-          </p>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderLegacyTemplate(page: any, data: any): string {
-    const title = (page.title || '').toLowerCase();
-    const slug = (this.pageSlug || '').toLowerCase();
-
-    if (title.includes('home') || slug === 'home') {
-      const bgStyle = data.homeBackgroundImage ? `style="background-image: url('${data.homeBackgroundImage}'); background-size: cover; background-position: center; background-repeat: no-repeat;"` : 'style="background-color: #0A0F1A;"';
-      return `
-        <div class="relative w-full min-h-[600px] flex flex-col justify-center -mt-[1px] mb-12 pt-20 pb-20" ${bgStyle}>
-          <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
-          <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div class="max-w-3xl">
-              <h4 class="text-cyan-700 font-bold text-sm tracking-widest uppercase mb-4">
-                ${data.homeSubtitle || 'WELCOME TO ' + (data.companyName || 'OUR PLATFORM').toUpperCase()}
-              </h4>
-              <h1 class="text-5xl md:text-[3.5rem] font-black text-[#111827] mb-6 leading-[1.1] tracking-tight">
-                ${data.homeHeroTitle || 'How Velvix Technology fulfills American Dreams?'}
-              </h1>
-              <p class="text-lg text-gray-700 mb-10 leading-relaxed font-medium max-w-2xl">
-                ${data.homeHeroSubtitle || data.tagline || 'By practicing the time-tested formula and our very own service techniques.'}
-              </p>
-              <div class="flex flex-col sm:flex-row items-center gap-4">
-                <a href="#" class="w-full sm:w-auto px-8 py-3.5 bg-[#0891b2] hover:bg-[#06b6d4] text-white rounded font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30">
-                  ${data.homeCtaText || 'Book A Consultation'}
-                </a>
-                <a href="#" class="w-full sm:w-auto px-8 py-3.5 bg-[#0f172a] hover:bg-[#1e293b] text-white rounded font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-slate-900/30">
-                  ${data.homeSecondaryCtaText || 'Explore Services'}
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    if (title.includes('about') || slug.includes('about')) {
-      return `
-        <div class="max-w-6xl mx-auto pt-8">
-          <div class="text-center mb-20 relative">
-            <h1 class="text-5xl sm:text-6xl font-black text-slate-900 mb-6 tracking-tight">${data.aboutTitle || 'Our Story'}</h1>
-            <p class="text-2xl text-slate-500 max-w-3xl mx-auto font-light leading-relaxed">${data.aboutSubtitle || 'Discover the passion and purpose driving our mission forward.'}</p>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center mb-20">
-            <img src="${data.aboutImage || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop'}" alt="About" class="w-full rounded-3xl shadow-2xl object-cover h-[500px]">
-            <div class="space-y-8">
-              <p class="text-xl text-slate-800 font-medium mb-6">${data.aboutStory1 || 'We started with a simple idea.'}</p>
-              <p>${data.aboutStory2 || 'Over the years, our team has grown.'}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    if (title.includes('service') || slug.includes('service')) {
-      return `
-        <div class="pt-8">
-          <div class="text-center mb-20 max-w-3xl mx-auto">
-            <h1 class="text-5xl sm:text-6xl font-black text-slate-900 mb-6 tracking-tight">${data.servicesTitle || 'Our Services'}</h1>
-            <p class="text-xl text-slate-500 font-light leading-relaxed">${data.servicesSubtitle || 'Discover how we can help elevate your organization.'}</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="group bg-white rounded-[2rem] p-10 shadow-md border border-slate-100">
-              <h3 class="text-2xl font-bold mb-4">${data.service1Title || 'Web Development'}</h3>
-              <p class="text-slate-500 font-light mb-8">${data.service1Desc || 'Crafting responsive, high-performance websites.'}</p>
-            </div>
-            <div class="group bg-white rounded-[2rem] p-10 shadow-md border border-slate-100">
-              <h3 class="text-2xl font-bold mb-4">${data.service2Title || 'App Design'}</h3>
-              <p class="text-slate-500 font-light mb-8">${data.service2Desc || 'Designing intuitive mobile applications.'}</p>
-            </div>
-            <div class="group bg-white rounded-[2rem] p-10 shadow-md border border-slate-100">
-              <h3 class="text-2xl font-bold mb-4">${data.service3Title || 'Digital Marketing'}</h3>
-              <p class="text-slate-500 font-light mb-8">${data.service3Desc || 'Data-driven marketing strategies.'}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    if (title.includes('contact') || slug.includes('contact')) {
-      return `
-        <div class="bg-white rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden">
-          <div class="grid grid-cols-1 lg:grid-cols-5">
-            <div class="lg:col-span-2 bg-[#0A0F1A] text-white p-12">
-              <h2 class="text-4xl font-black mb-4">${data.contactTitle || "Let's Talk"}</h2>
-              <p class="text-indigo-200 mb-12">${data.contactSubtitle || 'We would love to hear from you.'}</p>
-              <div class="space-y-8">
-                <div>📍 ${data.address || 'Office Address'}</div>
-                <div>✉️ ${data.email || 'hello@company.com'}</div>
-                <div>📞 ${data.phone || '+1 (555) 123-4567'}</div>
-              </div>
-            </div>
-            <div class="lg:col-span-3 p-12">
-              <h3 class="text-2xl font-bold mb-8">Send a Message</h3>
-              <form class="space-y-6">
-                <input type="text" placeholder="Your Name" class="w-full p-4 bg-slate-50 border rounded-2xl">
-                <input type="email" placeholder="Your Email" class="w-full p-4 bg-slate-50 border rounded-2xl">
-                <textarea placeholder="Message" rows="5" class="w-full p-4 bg-slate-50 border rounded-2xl"></textarea>
-                <button type="button" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl">Send</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    return page.bodyHtml || '';
+    if (page.bodyHtml) return page.bodyHtml;
+    return '';
   }
 
   private loadStaticContent() {

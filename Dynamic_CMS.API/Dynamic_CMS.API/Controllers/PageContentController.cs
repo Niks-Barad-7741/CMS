@@ -73,25 +73,15 @@ namespace Dynamic_CMS.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        // ADMIN/CLIENT: PUT /api/admin/organizations/{organizationId}/pages/{menuItemId}
-        [HttpPut("api/admin/organizations/{organizationId:guid}/pages/{menuItemId:guid}")]
+        // ADMIN/CLIENT: PUT /api/admin/organizations/{organizationId}/pages/upsert
+        [HttpPut("api/admin/organizations/{organizationId:guid}/pages/upsert")]
         [Authorize]
-        public async Task<IActionResult> SaveByOrgAndMenuItem(Guid organizationId, Guid menuItemId, [FromBody] CreatePageContentDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> SaveByOrgAndMenuItem(Guid organizationId, [FromBody] CreatePageContentDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse.FailureResponse("Validation failed.", 400));
 
-            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            if (role != "Admin")
-            {
-                var userOrgId = User.FindFirst("OrganizationId")?.Value;
-                if (string.IsNullOrEmpty(userOrgId) || !Guid.TryParse(userOrgId, out var parsedOrgId) || parsedOrgId != organizationId)
-                {
-                    return Forbid();
-                }
-            }
-
-            var result = await _service.SaveByOrgAndMenuItemAsync(organizationId, menuItemId, dto, GetCurrentUserName(), cancellationToken);
+            var result = await _service.SaveByOrgAndMenuItemAsync(organizationId, dto.MenuItemId, dto.SubMenuItemId, dto, GetCurrentUserName(), cancellationToken);
             var response = ApiResponse<PageContentDto>.SuccessResponse(result, "Saved successfully.");
             return StatusCode(200, response);
         }

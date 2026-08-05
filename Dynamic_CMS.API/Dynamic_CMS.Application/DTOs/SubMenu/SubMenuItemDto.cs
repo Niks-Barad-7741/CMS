@@ -1,0 +1,18 @@
+using System;
+
+namespace Dynamic_CMS.Application.DTOs.SubMenu
+{
+    public class SubMenuItemDto
+    {
+        public Guid Id { get; set; }
+        public Guid MenuItemId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Page { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+        public bool IsVisible { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
+        public DateTime? ModifiedAt { get; set; }
+        public string? ModifiedBy { get; set; }
+    }
+}

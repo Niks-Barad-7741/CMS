@@ -17,7 +17,11 @@ namespace Dynamic_CMS.Domain.Entities
         public DateTime? ModifiedAt { get; set; }
         public string? ModifiedBy { get; set; }
 
+        public Guid? OrganizationId { get; set; }
+        public Organization? Organization { get; set; }
+
         // Navigation property
         public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();
+        public ICollection<SubMenuItem> SubMenuItems { get; set; } = new List<SubMenuItem>();
     }
 }

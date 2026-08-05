@@ -1,7 +1,7 @@
 <div class="p-8">
   <div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Client Dashboard</h1>
-    <p class="text-gray-500 mt-2">Select a client below to quickly manage their website pages and content.</p>
+    <h1 class="text-3xl font-extrabold text-[color:var(--text-primary)] tracking-tight">Client Dashboard</h1>
+    <p class="text-[color:var(--text-muted)] mt-2">Select a client below to quickly manage their website pages and content.</p>
   </div>
 
   <div *ngIf="loading" class="flex justify-center items-center py-20">
@@ -11,45 +11,53 @@
     </svg>
   </div>
 
-  <div *ngIf="!loading && organizations.length === 0" class="bg-white p-12 rounded-2xl border-2 border-dashed border-gray-200 text-center">
-    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-2xl">
+  <div *ngIf="!loading && organizations.length === 0" class="bg-[color:var(--bg-card)] p-12 rounded-2xl border-2 border-dashed border-[color:var(--border-card)] text-center">
+    <div class="w-16 h-16 bg-[color:var(--bg-base)] border border-[color:var(--border-card)] rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-2xl">
       🏢
     </div>
-    <h3 class="text-lg font-bold text-gray-900 mb-1">No Clients Found</h3>
-    <p class="text-sm text-gray-500">Go to Organizations to add your first client.</p>
+    <h3 class="text-lg font-bold text-[color:var(--text-primary)] mb-1">No Clients Found</h3>
+    <p class="text-sm text-[color:var(--text-muted)]">Go to Organizations to add your first client.</p>
   </div>
 
   <div *ngIf="!loading && organizations.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     <div *ngFor="let org of organizations" 
-      class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 overflow-hidden flex flex-col group">
+      class="bg-[color:var(--bg-card)] rounded-2xl border border-[color:var(--border-card)] shadow-sm hover:shadow-lg hover:border-indigo-500/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col group">
       
-      <!-- Card Header -->
-      <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex-1">
-        <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xl uppercase shadow-inner">
+      <!-- Card Body (Unified) -->
+      <div class="p-6 flex-1 flex flex-col">
+        <div class="flex items-start justify-between mb-5">
+          <!-- Avatar -->
+          <div class="w-14 h-14 rounded-2xl bg-indigo-100 border border-indigo-200 text-indigo-600 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-400 flex items-center justify-center font-extrabold text-2xl uppercase shadow-sm">
             {{ org.name.charAt(0) }}
           </div>
-          <span [class]="org.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'" 
-            class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border">
+          <!-- Status Badge -->
+          <span [class]="org.isActive ? 'bg-emerald-100 text-emerald-600 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/60' : 'bg-rose-100 text-rose-600 border-rose-200 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-800/60'" 
+            class="px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-sm">
             {{ org.isActive ? 'Active' : 'Inactive' }}
           </span>
         </div>
         
-        <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1" [title]="org.name">{{ org.name }}</h3>
-        <p class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block">{{ org.slug }}</p>
+        <h3 class="text-xl font-bold text-[color:var(--text-primary)] mb-2 line-clamp-1" [title]="org.name">{{ org.name }}</h3>
+        <div class="mt-auto">
+          <p class="text-xs text-[color:var(--text-muted)] font-mono bg-transparent border border-[color:var(--border-card)] px-2.5 py-1.5 rounded-lg inline-block">{{ org.slug }}</p>
+        </div>
       </div>
 
-      <!-- Card Action -->
+      <!-- Card Action (Footer) -->
       <button (click)="org.isActive ? managePages(org.id) : null" 
         [disabled]="!org.isActive"
-        class="w-full p-4 flex items-center justify-center gap-2 text-sm font-bold transition-colors"
+        class="w-full p-4 flex items-center justify-center gap-2 text-[15px] font-bold transition-all border-t border-[color:var(--border-card)]"
         [class.text-indigo-600]="org.isActive"
-        [class.bg-white]="org.isActive"
+        [class.dark:text-indigo-400]="org.isActive"
+        [class.bg-[color:var(--bg-base)]]="true"
         [class.hover:bg-indigo-50]="org.isActive"
-        [class.group-hover:text-indigo-700]="org.isActive"
+        [class.dark:hover:bg-indigo-900/20]="org.isActive"
+        [class.hover:text-indigo-700]="org.isActive"
+        [class.dark:hover:text-indigo-300]="org.isActive"
         [class.text-gray-400]="!org.isActive"
-        [class.bg-gray-50]="!org.isActive"
-        [class.cursor-not-allowed]="!org.isActive">
+        [class.dark:text-gray-500]="!org.isActive"
+        [class.cursor-not-allowed]="!org.isActive"
+        [class.opacity-60]="!org.isActive">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         Manage Pages &amp; Content
       </button>

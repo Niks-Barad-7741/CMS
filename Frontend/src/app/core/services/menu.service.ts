@@ -3,12 +3,22 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+export interface SubMenuItem {
+  id: string;
+  menuItemId: string;
+  title: string;
+  page: string;
+  sortOrder: number;
+  isVisible: boolean;
+}
+
 export interface MenuItem {
   id: string;
   title: string;
   page: string;
   sortOrder: number;
   isVisible: boolean;
+  subMenuItems?: SubMenuItem[];
 }
 
 @Injectable({
@@ -20,16 +30,23 @@ export class MenuService {
 
   constructor(private http: HttpClient) {}
 
-  getMenus(): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(this.publicUrl);
+  getMenus(orgId: string): Observable<MenuItem[]> {
+    return this.http.get<any>(`https://localhost:7170/api/admin/organizations/${orgId}/menus`).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
-  createMenu(data: any): Observable<MenuItem> {
+  createMenu(orgId: string, data: any): Observable<MenuItem> {
+    data.organizationId = orgId;
     return this.http.post<MenuItem>(this.adminUrl, data);
   }
 
   updateMenu(id: string, data: any): Observable<any> {
     return this.http.put(`${this.adminUrl}/${id}`, data);
+  }
+
+  updateSubMenu(id: string, data: any): Observable<any> {
+    return this.http.put(`https://localhost:7170/api/admin/submenus/${id}`, data);
   }
 
   deleteMenu(id: string): Observable<any> {

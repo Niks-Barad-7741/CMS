@@ -1,8 +1,8 @@
 using Dynamic_CMS.Application.DTOs;
 using Dynamic_CMS.Application.DTOs.Menu;
+using Dynamic_CMS.Application.DTOs.SubMenu;
 using Dynamic_CMS.Application.DTOs.PageContent;
 using Dynamic_CMS.Application.Interfaces;
-using Dynamic_CMS.Application.Services;
 using Dynamic_CMS.Domain.Entities;
 using Dynamic_CMS.Domain.Repositories;
 
@@ -24,16 +24,17 @@ namespace Dynamic_CMS.Application.Services
             _pageContentRepository = pageContentRepository;
         }
 
-        public async Task EnsureDefaultMenusAsync()
+        public async Task EnsureDefaultMenusAsync(Guid organizationId)
         {
             foreach (var menu in DefaultSitePages.Menus)
             {
-                var existing = await _menuItemRepository.GetByPageAsync(menu.Page);
+                var existing = await _menuItemRepository.GetByPageAsync(organizationId, menu.Page);
                 if (existing != null) continue;
 
                 await _menuItemRepository.AddAsync(new MenuItem
                 {
                     Id = Guid.NewGuid(),
+                    OrganizationId = organizationId,
                     Title = menu.Title,
                     Page = menu.Page,
                     SortOrder = menu.SortOrder,
@@ -46,7 +47,7 @@ namespace Dynamic_CMS.Application.Services
 
         public async Task EnsureDefaultPagesForOrganizationAsync(Guid organizationId, string orgSlug, string orgName)
         {
-            await EnsureDefaultMenusAsync();
+            await EnsureDefaultMenusAsync(organizationId);
             // No default pages inserted into PageContents table automatically.
             // PageContent table remains empty until explicitly saved by admin/user.
         }
@@ -81,16 +82,16 @@ namespace Dynamic_CMS.Application.Services
             if (organization == null || !organization.IsActive)
                 return Enumerable.Empty<MenuItemDto>();
 
-            await EnsureDefaultMenusAsync();
+            await EnsureDefaultMenusAsync(organization.Id);
 
             var orgPageContents = await _pageContentRepository.GetAllByOrganizationIdAsync(organization.Id, CancellationToken.None);
-            var allMenus = (await _menuItemRepository.GetAllAsync()).ToDictionary(m => m.Id);
+            var allMenus = (await _menuItemRepository.GetAllAsync(organization.Id)).ToDictionary(m => m.Id);
 
             var activePageContents = orgPageContents
                 .Where(p => !p.IsDeleted && p.Status == "Published")
                 .Select(p =>
                 {
-                    allMenus.TryGetValue(p.MenuItemId, out var m);
+                    allMenus.TryGetValue(p.MenuItemId.GetValueOrDefault(), out var m);
                     var defaultOrder = m != null && m.SortOrder > 0 ? m.SortOrder : 999;
                     var finalOrder = p.SortOrder > 0 ? p.SortOrder : defaultOrder;
                     return new { PageContent = p, Order = finalOrder, Menu = m };
@@ -102,13 +103,30 @@ namespace Dynamic_CMS.Application.Services
             var result = new List<MenuItemDto>();
             foreach (var item in activePageContents)
             {
+                var subMenus = item.Menu!.SubMenuItems?
+                    .Where(s => !s.IsDeleted && s.IsVisible)
+                    .Select(s => new SubMenuItemDto
+                    {
+                        Id = s.Id,
+                        MenuItemId = s.MenuItemId,
+                        Title = s.Title,
+                        Page = s.Page,
+                        SortOrder = s.SortOrder,
+                        IsVisible = s.IsVisible,
+                        CreatedAt = s.CreatedAt,
+                        CreatedBy = s.CreatedBy,
+                        ModifiedAt = s.ModifiedAt,
+                        ModifiedBy = s.ModifiedBy
+                    }).OrderBy(s => s.SortOrder).ToList() ?? new List<SubMenuItemDto>();
+
                 result.Add(new MenuItemDto
                 {
-                    Id = item.Menu!.Id,
+                    Id = item.Menu.Id,
                     Title = item.Menu.Title,
                     Page = item.Menu.Page,
                     SortOrder = item.Order,
-                    IsVisible = item.Menu.IsVisible
+                    IsVisible = item.Menu.IsVisible,
+                    SubMenuItems = subMenus
                 });
             }
             return result;

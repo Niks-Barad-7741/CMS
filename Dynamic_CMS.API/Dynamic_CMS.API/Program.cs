@@ -81,6 +81,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseStaticFiles();
 
 app.UseMiddleware<Dynamic_CMS.API.Middlewares.ExceptionHandlingMiddleware>();
 
