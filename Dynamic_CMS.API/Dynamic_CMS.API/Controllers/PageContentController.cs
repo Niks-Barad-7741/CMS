@@ -58,6 +58,16 @@ namespace Dynamic_CMS.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetAllByOrganization(Guid organizationId, CancellationToken cancellationToken)
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (role != "Admin")
+            {
+                var userOrgId = User.FindFirst("OrganizationId")?.Value;
+                if (string.IsNullOrEmpty(userOrgId) || !Guid.TryParse(userOrgId, out var parsedOrgId) || parsedOrgId != organizationId)
+                {
+                    return Forbid();
+                }
+            }
+
             var contents = await _service.GetAllByOrganizationAsync(organizationId, cancellationToken);
             var response = ApiResponse<IEnumerable<PageContentDto>>.SuccessResponse(contents ?? new List<PageContentDto>(), "Operation successful");
             return StatusCode(response.StatusCode, response);

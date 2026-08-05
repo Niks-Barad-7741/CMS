@@ -593,6 +593,36 @@ export class PagesComponent implements OnInit {
     this.loadPageContent();
   }
 
+  togglePageStatus(item: MenuListItem) {
+    if (!item.page || !item.page.id) return;
+    
+    const newStatus = item.status === 'Published' ? 'Draft' : 'Published';
+    
+    const payload = {
+      title: item.page.title,
+      status: newStatus,
+      sortOrder: item.page.sortOrder || item.sortOrder,
+      templateId: item.page.templateId,
+      contentJson: item.page.contentJson
+    };
+    
+    this.pageService.updatePage(item.page.id, payload).subscribe({
+      next: () => {
+        item.status = newStatus;
+        if (item.page) {
+          item.page.status = newStatus;
+        }
+        this.successMessage = `Page "${item.menu.title}" status updated to ${newStatus}`;
+        this.loadOrgPages(); // Refresh the list to reflect status
+        setTimeout(() => this.dismissSuccess(), 3000);
+      },
+      error: (err) => {
+        this.errorMessage = 'Failed to toggle page status';
+        console.error(err);
+      }
+    });
+  }
+
   addPage(menuId: string) {
     this.selectedMenuId = menuId;
     this.errorMessage = null;
