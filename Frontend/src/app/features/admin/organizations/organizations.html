@@ -61,7 +61,7 @@
             <!-- Toggle Slider Switch -->
             <label class="relative inline-flex items-center cursor-pointer select-none">
               <input type="checkbox" [checked]="org.isActive" (change)="toggleOrgStatus(org)" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[color:var(--bg-card)] after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
               <span class="ml-2 text-xs font-bold w-12 text-left" [style.color]="org.isActive ? '#10B981' : '#F43F5E'">
                 {{ org.isActive ? 'Active' : 'Inactive' }}
               </span>
@@ -100,7 +100,7 @@
         </h3>
         <p class="text-xs text-indigo-100/90 mt-1">Configure your organization settings and contact info</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+      <div class="w-10 h-10 rounded-xl bg-[color:var(--bg-card)]/10 flex items-center justify-center backdrop-blur-md">
         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
         </svg>
