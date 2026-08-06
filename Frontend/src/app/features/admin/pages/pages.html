@@ -275,6 +275,11 @@
                       class="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-600 disabled:opacity-40 transition-colors">
                 ▼
               </button>
+              <button type="button" (click)="duplicateSection(secIdx)" 
+                      class="px-2.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors font-bold text-xs flex items-center gap-1"
+                      title="Duplicate Section">
+                🖨️ Duplicate
+              </button>
               <button type="button" (click)="deleteSection(secIdx)" 
                       class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors ml-2 font-bold text-sm">
                 Delete Section
@@ -289,21 +294,66 @@
               <select [(ngModel)]="section.style.backgroundType" 
                       class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
                 <option value="color">Solid Color</option>
+                <option value="gradient">Gradient</option>
                 <option value="image">Background Image</option>
+                <option value="video">Background Video</option>
               </select>
             </div>
             
-            <div *ngIf="section.style.backgroundType !== 'image'">
+            <!-- Solid Color Controls -->
+            <div *ngIf="section.style.backgroundType === 'color'">
               <label class="block text-xs font-bold text-gray-700 mb-2">Solid Color</label>
               <input type="color" [(ngModel)]="section.style.backgroundColor" 
                      class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
             </div>
-            
-            <div *ngIf="section.style.backgroundType === 'image'" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <!-- Gradient Controls -->
+            <div *ngIf="section.style.backgroundType === 'gradient'" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label class="block text-xs font-bold text-gray-700 mb-2">Image URL</label>
-                <input type="text" [(ngModel)]="section.style.backgroundImageUrl" placeholder="https://..."
+                <label class="block text-xs font-bold text-gray-700 mb-2">Start Color</label>
+                <input type="color" [(ngModel)]="section.style.gradientColor1" 
+                       class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">End Color</label>
+                <input type="color" [(ngModel)]="section.style.gradientColor2" 
+                       class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Angle (0–360°)</label>
+                <input type="number" min="0" max="360" [(ngModel)]="section.style.gradientAngle"
                        class="w-full p-2 text-sm rounded-lg border border-gray-200 bg-white">
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">Preset Gradients</label>
+                <div class="flex gap-2">
+                  <button type="button" (click)="applyGradientSwatch(section, '#4f46e5', '#9333ea', 135)" 
+                          class="w-8 h-8 rounded-lg border border-gray-200 shadow-sm"
+                          style="background: linear-gradient(135deg, #4f46e5, #9333ea);"></button>
+                  <button type="button" (click)="applyGradientSwatch(section, '#ff7e5f', '#feb47b', 135)" 
+                          class="w-8 h-8 rounded-lg border border-gray-200 shadow-sm"
+                          style="background: linear-gradient(135deg, #ff7e5f, #feb47b);"></button>
+                  <button type="button" (click)="applyGradientSwatch(section, '#11998e', '#38ef7d', 135)" 
+                          class="w-8 h-8 rounded-lg border border-gray-200 shadow-sm"
+                          style="background: linear-gradient(135deg, #11998e, #38ef7d);"></button>
+                  <button type="button" (click)="applyGradientSwatch(section, '#0f2027', '#203a43', 135)" 
+                          class="w-8 h-8 rounded-lg border border-gray-200 shadow-sm"
+                          style="background: linear-gradient(135deg, #0f2027, #203a43);"></button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Image Controls -->
+            <div *ngIf="section.style.backgroundType === 'image'" class="md:col-span-3 grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-gray-700 mb-2">Image URL / File Path</label>
+                <input type="text" [(ngModel)]="section.style.backgroundImageUrl" placeholder="https://..."
+                       class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Overlay Color</label>
+                <input type="color" [(ngModel)]="section.style.overlayColor" 
+                       class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
               </div>
               <div>
                 <label class="block text-xs font-bold text-gray-700 mb-2">Overlay Opacity ({{ section.style.overlayOpacity || 0 }}%)</label>
@@ -311,29 +361,109 @@
                        class="w-full h-10 cursor-pointer">
               </div>
               <div>
-                <label class="block text-xs font-bold text-gray-700 mb-2">Size/Position</label>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Display Size</label>
                 <select [(ngModel)]="section.style.backgroundSize" 
                         class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
-                  <option value="cover">Cover (Fits Screen)</option>
-                  <option value="contain">Contain (Letterboxed)</option>
-                  <option value="repeat">Repeat (Pattern)</option>
+                  <option value="cover">Cover (Fit Screen)</option>
+                  <option value="contain">Contain (Fit Aspect)</option>
+                  <option value="center">Center (Real Size)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Parallax / Fixed</label>
+                <select [(ngModel)]="section.style.backgroundAttachment"
+                        class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                  <option value="scroll">Default Scroll</option>
+                  <option value="fixed">Fixed Background</option>
                 </select>
               </div>
             </div>
 
+            <!-- Video Controls -->
+            <div *ngIf="section.style.backgroundType === 'video'" class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-gray-700 mb-2">Video MP4 URL</label>
+                <input type="text" [(ngModel)]="section.style.videoUrl" placeholder="/uploads/video.mp4"
+                       class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Overlay Opacity ({{ section.style.overlayOpacity || 0 }}%)</label>
+                <input type="range" min="0" max="100" [(ngModel)]="section.style.overlayOpacity"
+                       class="w-full h-10 cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-2">Autoplay/Mute</label>
+                <div class="flex gap-4 mt-2">
+                  <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="section.style.videoAutoplay"> Autoplay
+                  </label>
+                  <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="section.style.videoMuted"> Mute
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Color -->
             <div>
               <label class="block text-xs font-bold text-gray-700 mb-2">Text Color</label>
               <input type="color" [(ngModel)]="section.style.textColor" 
                      class="w-full h-10 p-1 rounded-lg border border-gray-200 cursor-pointer">
             </div>
+
+            <!-- Top Padding -->
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-2">Vertical Spacing (Padding)</label>
-              <select [(ngModel)]="section.style.paddingY" 
+              <label class="block text-xs font-bold text-gray-700 mb-2">Top Padding</label>
+              <select [(ngModel)]="section.style.paddingTop" 
                       class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
-                <option value="py-8">Small (py-8)</option>
-                <option value="py-16">Medium (py-16)</option>
-                <option value="py-24">Large (py-24)</option>
+                <option value="pt-0">None (0)</option>
+                <option value="pt-4">Small (pt-4)</option>
+                <option value="pt-16">Medium (pt-16)</option>
+                <option value="pt-24">Large (pt-24)</option>
+                <option value="pt-32">X-Large (pt-32)</option>
               </select>
+            </div>
+
+            <!-- Bottom Padding -->
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-2">Bottom Padding</label>
+              <select [(ngModel)]="section.style.paddingBottom" 
+                      class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                <option value="pb-0">None (0)</option>
+                <option value="pb-4">Small (pb-4)</option>
+                <option value="pb-16">Medium (pb-16)</option>
+                <option value="pb-24">Large (pb-24)</option>
+                <option value="pb-32">X-Large (pb-32)</option>
+              </select>
+            </div>
+
+            <!-- Container Width -->
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-2">Container Width</label>
+              <select [(ngModel)]="section.style.containerWidth" 
+                      class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                <option value="boxed">Boxed (Contained)</option>
+                <option value="full">Full Width</option>
+              </select>
+            </div>
+
+            <!-- Min Height -->
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-2">Min Height</label>
+              <select [(ngModel)]="section.style.minHeightType" 
+                      class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
+                <option value="auto">Auto</option>
+                <option value="50vh">Half Screen (50vh)</option>
+                <option value="100vh">Full Screen (100vh)</option>
+                <option value="custom">Custom (px)</option>
+              </select>
+            </div>
+
+            <!-- Custom height field when custom min height is selected -->
+            <div *ngIf="section.style.minHeightType === 'custom'">
+              <label class="block text-xs font-bold text-gray-700 mb-2">Custom Min Height (px)</label>
+              <input type="number" [(ngModel)]="section.style.minHeightValue" placeholder="500"
+                     class="w-full p-2 text-sm rounded-lg border border-gray-200 bg-white">
             </div>
           </div>
 
@@ -416,13 +546,22 @@
                 <!-- PARAGRAPH BLOCK -->
                 <div *ngSwitchCase="'paragraph'" class="space-y-3">
                   <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Paragraph Text</label>
-                    <textarea [(ngModel)]="block.content.text" rows="3" 
-                              class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none"></textarea>
+                    <div class="flex items-center justify-between mb-1">
+                      <label class="block text-[11px] font-bold text-gray-600">Paragraph Rich Text (HTML Supported)</label>
+                      <div class="flex gap-1">
+                        <button type="button" (click)="insertHtmlTag(block, 'b')" class="px-2 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 border rounded font-bold">Bold</button>
+                        <button type="button" (click)="insertHtmlTag(block, 'i')" class="px-2 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 border rounded italic">Italic</button>
+                        <button type="button" (click)="insertHtmlTag(block, 'a')" class="px-2 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 border rounded text-indigo-600">Link</button>
+                        <button type="button" (click)="insertHtmlTag(block, 'ul')" class="px-2 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 border rounded">Bullet List</button>
+                        <button type="button" (click)="insertHtmlTag(block, 'ol')" class="px-2 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 border rounded">Numbered List</button>
+                      </div>
+                    </div>
+                    <textarea [(ngModel)]="block.content.text" rows="5" placeholder="Write paragraphs here..."
+                              class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none font-mono"></textarea>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Alignment</label>
+                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                    <div class="md:col-span-2">
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Text Alignment</label>
                       <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
                         <option value="left">Left</option>
                         <option value="center">Center</option>
@@ -430,7 +569,7 @@
                       </select>
                     </div>
                     <div>
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Font Size</label>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Font Size</label>
                       <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border">
                         <option value="text-xs">Extra Small (text-xs)</option>
                         <option value="text-sm">Small (text-sm)</option>
@@ -440,7 +579,44 @@
                       </select>
                     </div>
                     <div>
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Color Override</label>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Max Width</label>
+                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border">
+                        <option value="Full">Full</option>
+                        <option value="Medium">Medium (65ch)</option>
+                        <option value="Narrow">Narrow (45ch)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Line Height</label>
+                      <select [(ngModel)]="block.style.lineHeight" class="w-full p-2 text-xs rounded border">
+                        <option value="Tight">Tight</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Relaxed">Relaxed</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Columns</label>
+                      <select [(ngModel)]="block.style.columnLayout" class="w-full p-2 text-xs rounded border">
+                        <option value="1 Column">1 Column</option>
+                        <option value="2 Columns">2 Columns</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Animation</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Highlight Background Color</label>
+                      <input type="color" [(ngModel)]="block.style.highlightBg" class="w-full h-8 p-0 rounded cursor-pointer">
+                      <span class="text-[9px] text-gray-400">Leaves blank to use default transparent background.</span>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-gray-500 mb-1">Text Color Override</label>
                       <input type="color" [(ngModel)]="block.style.textColor" class="w-full h-8 p-0 rounded cursor-pointer">
                     </div>
                   </div>
@@ -448,33 +624,84 @@
 
                 <!-- GALLERY BLOCK -->
                 <div *ngSwitchCase="'gallery'" class="space-y-4">
-                  <div class="flex items-center justify-between">
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
                     <div>
-                      <label class="text-[11px] font-bold text-gray-600 mr-2">Grid Columns Layout</label>
-                      <select [(ngModel)]="block.style.gridCols" class="p-1.5 text-xs rounded border inline-block">
-                        <option value="grid-cols-1">1 Column</option>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Desktop Columns</label>
+                      <select [(ngModel)]="block.style.colsDesktop" class="w-full p-2 text-xs rounded border">
                         <option value="grid-cols-2">2 Columns</option>
                         <option value="grid-cols-3">3 Columns</option>
                         <option value="grid-cols-4">4 Columns</option>
                       </select>
                     </div>
-                    <button type="button" (click)="addImageToGallery(block)" 
-                            class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded border border-indigo-100 transition-colors">
-                      + Add Image to Gallery
-                    </button>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Tablet Columns</label>
+                      <select [(ngModel)]="block.style.colsTablet" class="w-full p-2 text-xs rounded border">
+                        <option value="md:grid-cols-1">1 Column</option>
+                        <option value="md:grid-cols-2">2 Columns</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Mobile Columns</label>
+                      <select [(ngModel)]="block.style.colsMobile" class="w-full p-2 text-xs rounded border" disabled>
+                        <option value="grid-cols-1">1 Column</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Gallery Style</label>
+                      <select [(ngModel)]="block.style.galleryStyle" class="w-full p-2 text-xs rounded border">
+                        <option value="Grid">Grid</option>
+                        <option value="Masonry">Masonry</option>
+                        <option value="Carousel-Slider">Carousel-Slider</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Image Gap</label>
+                      <select [(ngModel)]="block.style.imageGap" class="w-full p-2 text-xs rounded border">
+                        <option value="None">None</option>
+                        <option value="Small">Small (gap-2)</option>
+                        <option value="Medium">Medium (gap-4)</option>
+                        <option value="Large">Large (gap-8)</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center mt-6">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.lightbox"> Lightbox Popup
+                      </label>
+                    </div>
+                    <div class="flex items-center mt-6">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.lazyLoad"> Lazy Load
+                      </label>
+                    </div>
+                    <div class="flex items-center justify-end mt-4">
+                      <button type="button" (click)="addImageToGallery(block)" 
+                              class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded shadow-sm transition-colors">
+                        + Add Image
+                      </button>
+                    </div>
                   </div>
                   
+                  <!-- Sortable / drag-to-reorder list via up/down buttons -->
                   <div class="space-y-3">
+                    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Gallery Images (Order / Settings)</div>
                     <div *ngFor="let img of block.content.images; let imgIdx = index" 
                          class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-150 relative">
-                       <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                       <div class="flex flex-col gap-1">
+                         <button type="button" (click)="moveGalleryImageUp(block, imgIdx)" [disabled]="imgIdx === 0"
+                                 class="p-1 bg-gray-50 hover:bg-gray-100 rounded text-[9px] text-gray-600 disabled:opacity-40">▲</button>
+                         <button type="button" (click)="moveGalleryImageDown(block, imgIdx)" [disabled]="imgIdx === block.content.images.length - 1"
+                                 class="p-1 bg-gray-50 hover:bg-gray-100 rounded text-[9px] text-gray-600 disabled:opacity-40">▼</button>
+                       </div>
+                       <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                          <input type="text" [(ngModel)]="img.url" placeholder="Image URL (https://...)" 
                                 class="p-2 text-xs rounded border">
-                         <input type="text" [(ngModel)]="img.caption" placeholder="Image Caption (Optional)" 
+                         <input type="text" [(ngModel)]="img.caption" placeholder="Caption (Optional)" 
+                                class="p-2 text-xs rounded border">
+                         <input type="text" [(ngModel)]="img.alt" placeholder="Alt Text (SEO)" 
                                 class="p-2 text-xs rounded border">
                        </div>
                        <button type="button" (click)="removeImageFromGallery(block, imgIdx)" 
-                               class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded border border-rose-100">
+                               class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded border border-rose-100 font-bold ml-2">
                          Remove
                        </button>
                     </div>
@@ -499,11 +726,11 @@
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Alt Text (SEO/Access)</label>
                       <input type="text" [(ngModel)]="block.content.alt" placeholder="Image description"
-                             class="w-full p-2 text-xs rounded border">
+                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Display Mode</label>
-                      <select [(ngModel)]="block.style.displayMode" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.displayMode" class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
                         <option value="inline">Inline (Contained)</option>
                         <option value="full-width">Full Width</option>
                         <option value="full-screen">Full Screen (Edge-to-Edge)</option>
@@ -511,14 +738,14 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Object Fit</label>
-                      <select [(ngModel)]="block.style.objectFit" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.objectFit" class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
                         <option value="cover">Cover (Cropped/Filled)</option>
                         <option value="contain">Contain (Entire Image)</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Aspect Ratio</label>
-                      <select [(ngModel)]="block.style.aspectRatio" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.aspectRatio" class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white outline-none">
                         <option value="auto">Auto</option>
                         <option value="16:9">16:9 (Landscape)</option>
                         <option value="1:1">1:1 (Square)</option>
@@ -526,166 +753,1054 @@
                       </select>
                     </div>
                   </div>
+
+                  <!-- Link options, shadows, radii -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Link URL (Optional)</label>
+                      <input type="text" [(ngModel)]="block.content.linkUrl" placeholder="https://external-link.com"
+                             class="w-full p-2 text-xs rounded border">
+                    </div>
+                    <div class="flex items-center mt-6">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.linkNewTab"> Open in New Tab
+                      </label>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Border Radius</label>
+                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border">
+                        <option value="None">None</option>
+                        <option value="Small">Small (rounded-sm)</option>
+                        <option value="Medium">Medium (rounded-2xl)</option>
+                        <option value="Full-Round">Full-Round (Circle/Capsule)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Filter Effect</label>
+                      <select [(ngModel)]="block.style.filterEffect" class="w-full p-2 text-xs rounded border">
+                        <option value="None">None</option>
+                        <option value="Grayscale">Grayscale</option>
+                        <option value="Duotone">Duotone (Sleek Cyan)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Max Width</label>
+                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border">
+                        <option value="Full">Full</option>
+                        <option value="Large">Large (max-w-4xl)</option>
+                        <option value="Medium">Medium (max-w-2xl)</option>
+                        <option value="Small">Small (max-w-sm)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Animation on Scroll</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                        <option value="Zoom In">Zoom In</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center mt-6">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.style.boxShadow"> Shadow Overlay
+                      </label>
+                    </div>
+                    <div class="flex items-center mt-6">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.lightbox"> Lightbox Popup
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- HERO BLOCK -->
                 <div *ngSwitchCase="'hero'" class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Content Section -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-indigo-700">Hero Content Settings</div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Eyebrow / Label (Optional)</label>
+                      <input type="text" [(ngModel)]="block.content.eyebrow" placeholder="Featured Topic"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Heading Title</label>
                       <input type="text" [(ngModel)]="block.content.heading" placeholder="Banner Headline"
-                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white font-bold">
+                             class="w-full p-2 text-xs rounded border bg-white font-bold">
                     </div>
                     <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Heading Tag</label>
+                      <select [(ngModel)]="block.content.headingTag" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="h1">H1 (Main Heading)</option>
+                        <option value="h2">H2 (Sub Heading)</option>
+                        <option value="h3">H3 (Section Title)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Heading Font Size</label>
+                      <select [(ngModel)]="block.style.headingFontSize" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Small">Small (text-2xl)</option>
+                        <option value="Medium">Medium (text-4xl)</option>
+                        <option value="Large">Large (text-5xl)</option>
+                        <option value="X-Large">X-Large (text-6xl)</option>
+                      </select>
+                    </div>
+                    <div class="md:col-span-2">
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Subtext / Description</label>
                       <textarea [(ngModel)]="block.content.subtext" placeholder="Tagline or main page description" rows="2"
-                                class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none"></textarea>
+                                class="w-full p-2 text-xs rounded border bg-white resize-none"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Content Max Width</label>
+                      <select [(ngModel)]="block.style.contentMaxWidth" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Full">Full Width</option>
+                        <option value="Large">Large (900px)</option>
+                        <option value="Medium">Medium (700px)</option>
+                      </select>
                     </div>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="col-span-1 md:col-span-2">
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Background Image URL</label>
-                      <input type="text" [(ngModel)]="block.content.bgImageUrl" placeholder="https://..."
-                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+
+                  <!-- Background Section -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-teal-700">Background Settings</div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Background Type</label>
+                      <select [(ngModel)]="block.content.bgType" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="image">Image</option>
+                        <option value="color">Solid Color</option>
+                        <option value="gradient">Gradient</option>
+                        <option value="video">Video</option>
+                      </select>
+                    </div>
+
+                    <!-- Image Background URL + upload -->
+                    <div *ngIf="block.content.bgType === 'image'" class="md:col-span-2 flex items-end gap-2">
+                      <div class="flex-1">
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Background Image URL</label>
+                        <input type="text" [(ngModel)]="block.content.bgImageUrl" placeholder="https://..."
+                               class="w-full p-2 text-xs rounded border bg-white">
+                      </div>
+                      <button type="button" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded border border-indigo-100 relative cursor-pointer">
+                        Upload
+                        <input type="file" (change)="uploadBlockImage($event, block)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                      </button>
+                    </div>
+
+                    <div *ngIf="block.content.bgType === 'image'">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Focal Point Crop</label>
+                      <select [(ngModel)]="block.content.bgFocalPoint" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="top">Top</option>
+                        <option value="center">Center</option>
+                        <option value="bottom">Bottom</option>
+                      </select>
+                    </div>
+
+                    <!-- Optional Mobile background image override -->
+                    <div *ngIf="block.content.bgType === 'image'" class="md:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-[11px] font-bold text-gray-500 mb-1">Mobile Background Image (Optional)</label>
+                        <input type="text" [(ngModel)]="block.content.mobileBgImageUrl" placeholder="https://... (small screen overlay)"
+                               class="w-full p-2 text-xs rounded border bg-white">
+                      </div>
+                    </div>
+
+                    <!-- Solid color picker -->
+                    <div *ngIf="block.content.bgType === 'color'">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Solid Color</label>
+                      <input type="color" [(ngModel)]="block.content.bgColor" class="w-full h-10 p-1 rounded border">
+                    </div>
+
+                    <!-- Gradient colors -->
+                    <div *ngIf="block.content.bgType === 'gradient'" class="md:col-span-3 grid grid-cols-3 gap-2">
+                      <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Color 1</label>
+                        <input type="color" [(ngModel)]="block.content.gradientColor1" class="w-full h-10 p-1 rounded border">
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Color 2</label>
+                        <input type="color" [(ngModel)]="block.content.gradientColor2" class="w-full h-10 p-1 rounded border">
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Angle (0-360°)</label>
+                        <input type="number" min="0" max="360" [(ngModel)]="block.content.gradientAngle"
+                               class="w-full p-2 text-xs rounded border bg-white">
+                      </div>
+                    </div>
+
+                    <!-- Video settings -->
+                    <div *ngIf="block.content.bgType === 'video'" class="md:col-span-3 grid grid-cols-3 gap-3">
+                      <div class="col-span-2">
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Video MP4 URL</label>
+                        <input type="text" [(ngModel)]="block.content.videoUrl" placeholder="/uploads/clip.mp4"
+                               class="w-full p-2 text-xs rounded border bg-white">
+                      </div>
+                      <div class="flex items-center gap-3 mt-5">
+                        <label class="flex items-center gap-1 text-xs text-gray-650 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="block.content.videoAutoplay"> Autoplay
+                        </label>
+                        <label class="flex items-center gap-1 text-xs text-gray-650 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="block.content.videoMuted"> Mute
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Overlay customization -->
+                    <div *ngIf="block.content.bgType === 'image' || block.content.bgType === 'video'" class="md:col-span-4 grid grid-cols-2 gap-4 border-t pt-3 mt-2">
+                      <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Overlay Color</label>
+                        <input type="color" [(ngModel)]="block.content.overlayColor" class="w-full h-8 p-1 rounded border">
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Overlay Opacity ({{ block.content.overlayOpacity || 0 }}%)</label>
+                        <input type="range" min="0" max="100" [(ngModel)]="block.content.overlayOpacity"
+                               class="w-full h-8 cursor-pointer">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Layout and Alignments Section -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-slate-700">Layout & Spacing</div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Content Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
                     </div>
                     <div>
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA Text</label>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Vertical Alignment</label>
+                      <select [(ngModel)]="block.content.valign" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="top">Top</option>
+                        <option value="middle">Middle</option>
+                        <option value="bottom">Bottom</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Min Height</label>
+                      <select [(ngModel)]="block.style.minHeightType" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="auto">Auto</option>
+                        <option value="50vh">Half Screen (50vh)</option>
+                        <option value="100vh">Full Screen (100vh)</option>
+                        <option value="custom">Custom (px)</option>
+                      </select>
+                    </div>
+                    <div *ngIf="block.style.minHeightType === 'custom'">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Custom Min Height (px)</label>
+                      <input type="number" [(ngModel)]="block.style.minHeightValue" placeholder="500"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Color Override</label>
+                      <input type="color" [(ngModel)]="block.style.textColor" class="w-full h-8 p-1 rounded border">
+                    </div>
+                  </div>
+
+                  <!-- CTA Section -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-indigo-700">Primary CTA Button</div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA Button Text</label>
                       <input type="text" [(ngModel)]="block.content.ctaText" placeholder="e.g. Get Started"
-                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                             class="w-full p-2 text-xs rounded border bg-white">
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA URL</label>
-                      <input type="text" [(ngModel)]="block.content.ctaUrl" placeholder="e.g. /services"
-                             class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                      <input type="text" [(ngModel)]="block.content.ctaUrl" placeholder="/services"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA Style</label>
+                      <select [(ngModel)]="block.content.ctaStyle" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="primary">Primary (Solid White)</option>
+                        <option value="secondary">Secondary (Purple)</option>
+                        <option value="outline">Outline (Bordered)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">CTA Button Size</label>
+                      <select [(ngModel)]="block.content.ctaSize" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center mt-2 col-span-4">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.ctaNewTab"> Open in New Tab
+                      </label>
                     </div>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  <!-- Secondary CTA Block -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-slate-700">Secondary CTA (Optional)</div>
                     <div>
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Overlay Opacity ({{ block.content.overlayOpacity || 0 }}%)</label>
-                      <input type="range" min="0" max="100" [(ngModel)]="block.content.overlayOpacity"
-                             class="w-full h-8 cursor-pointer">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Text</label>
+                      <input type="text" [(ngModel)]="block.content.secCtaText" placeholder="e.g. Learn More"
+                             class="w-full p-2 text-xs rounded border bg-white">
                     </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button URL</label>
+                      <input type="text" [(ngModel)]="block.content.secCtaUrl" placeholder="/about"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Style</label>
+                      <select [(ngModel)]="block.content.secCtaStyle" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="primary">Primary (Solid White)</option>
+                        <option value="secondary">Secondary (Purple)</option>
+                        <option value="outline">Outline (Bordered)</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center mt-6">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.secCtaNewTab"> Open in New Tab
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Motion & Shapes Polish Section -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-3 border-b pb-1 mb-1 font-bold text-xs text-purple-700">Motion & Bottom Dividers</div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Animation on Load</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                        <option value="Slide Up">Slide Up</option>
+                        <option value="Zoom In">Zoom In</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Entrance Delay (ms)</label>
+                      <input type="number" [(ngModel)]="block.content.animationDelay" placeholder="0"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Bottom Divider Shape</label>
+                      <select [(ngModel)]="block.style.dividerShape" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Wave">Wave</option>
+                        <option value="Angled">Angled</option>
+                      </select>
                   </div>
                 </div>
+              </div>
+              <div *ngSwitchCase="'button'" class="space-y-4">
+                  <!-- Button 1 Settings -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-indigo-700 flex justify-between">
+                      <span>Primary Button Settings</span>
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer font-normal normal-case">
+                        <input type="checkbox" [(ngModel)]="block.content.fullWidthMobile"> Full Width on Mobile
+                      </label>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Label</label>
+                      <input type="text" [(ngModel)]="block.content.label" placeholder="Button Text"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Type</label>
+                      <select [(ngModel)]="block.content.buttonType" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Link URL">Link URL</option>
+                        <option value="Scroll to Section">Scroll to Section (Anchor)</option>
+                        <option value="Trigger Popup">Trigger Popup</option>
+                      </select>
+                    </div>
 
-                <!-- BUTTON BLOCK -->
-                <div *ngSwitchCase="'button'" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Label</label>
-                    <input type="text" [(ngModel)]="block.content.label" placeholder="Button Text"
-                           class="w-full p-2 text-xs rounded border">
+                    <!-- Conditional URL -->
+                    <div *ngIf="block.content.buttonType === 'Link URL' || !block.content.buttonType" class="md:col-span-2 flex items-center gap-4">
+                      <div class="flex-1">
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Link URL</label>
+                        <input type="text" [(ngModel)]="block.content.url" placeholder="https://..."
+                               class="w-full p-2 text-xs rounded border bg-white">
+                      </div>
+                      <div class="mt-4">
+                        <label class="flex items-center gap-1 text-[11px] text-gray-750 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="block.content.newTab"> New Tab
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Conditional Anchor -->
+                    <div *ngIf="block.content.buttonType === 'Scroll to Section'" class="md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Target Section ID / Anchor</label>
+                      <input type="text" [(ngModel)]="block.content.scrollToSection" placeholder="e.g. contact-section"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+
+                    <!-- Conditional Popup -->
+                    <div *ngIf="block.content.buttonType === 'Trigger Popup'" class="md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Popup Alert Content Text</label>
+                      <input type="text" [(ngModel)]="block.content.triggerPopup" placeholder="Popup message to display on click"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+
+                    <!-- Sizing, Icons, Presets -->
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Size</label>
+                      <select [(ngModel)]="block.content.size" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Style</label>
+                      <select [(ngModel)]="block.content.style" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="primary">Primary (Indigo)</option>
+                        <option value="secondary">Secondary (Dark)</option>
+                        <option value="outline">Outline</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Icon Selection</label>
+                      <select [(ngModel)]="block.content.icon" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Arrow">Arrow →</option>
+                        <option value="Play">Play Button</option>
+                        <option value="Envelope">Mail/Contact</option>
+                        <option value="Download">Download File</option>
+                        <option value="Info">Info Tooltip</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Icon Position</label>
+                      <select [(ngModel)]="block.content.iconPosition" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Left">Left Side</option>
+                        <option value="Right">Right Side</option>
+                      </select>
+                    </div>
+
+                    <!-- Style variations -->
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Border Radius</label>
+                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None (Sharp)</option>
+                        <option value="Rounded">Rounded Card</option>
+                        <option value="Pill">Pill / Circle</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Hover Effect</label>
+                      <select [(ngModel)]="block.style.hoverEffect" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Darken">Darken Color</option>
+                        <option value="Lift">Lift Up (Shadow)</option>
+                        <option value="Scale">Scale Zoom</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Custom Background Color</label>
+                      <input type="color" [(ngModel)]="block.content.customBg" class="w-full h-8 p-0 border cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Custom Text Color</label>
+                      <input type="color" [(ngModel)]="block.content.customText" class="w-full h-8 p-0 border cursor-pointer">
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Link URL</label>
-                    <input type="text" [(ngModel)]="block.content.url" placeholder="https://..."
-                           class="w-full p-2 text-xs rounded border">
+
+                  <!-- Layout alignments, Stagger animation, hasSecond Button -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Animation on Scroll</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center mt-5">
+                      <label class="flex items-center gap-1.5 text-xs text-indigo-700 font-bold cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.hasSecondButton"> Add Second Button (CTA Pair)
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Style</label>
-                    <select [(ngModel)]="block.content.style" class="w-full p-2 text-xs rounded border">
-                      <option value="primary">Primary (Filled)</option>
-                      <option value="outline">Outline</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Alignment</label>
-                    <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                    </select>
+
+                  <!-- Optional Second Button Settings -->
+                  <div *ngIf="block.content.hasSecondButton" class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-indigo-50/20 rounded-xl border border-indigo-100">
+                    <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-indigo-700">Secondary Button Settings</div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Label</label>
+                      <input type="text" [(ngModel)]="block.content.secLabel" placeholder="Button Text"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Type</label>
+                      <select [(ngModel)]="block.content.secButtonType" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Link URL">Link URL</option>
+                        <option value="Scroll to Section">Scroll to Section (Anchor)</option>
+                        <option value="Trigger Popup">Trigger Popup</option>
+                      </select>
+                    </div>
+
+                    <!-- Conditional URL -->
+                    <div *ngIf="block.content.secButtonType === 'Link URL' || !block.content.secButtonType" class="md:col-span-2 flex items-center gap-4">
+                      <div class="flex-1">
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Link URL</label>
+                        <input type="text" [(ngModel)]="block.content.secUrl" placeholder="https://..."
+                               class="w-full p-2 text-xs rounded border bg-white">
+                      </div>
+                      <div class="mt-4">
+                        <label class="flex items-center gap-1 text-[11px] text-gray-750 cursor-pointer">
+                          <input type="checkbox" [(ngModel)]="block.content.secNewTab"> New Tab
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Conditional Anchor -->
+                    <div *ngIf="block.content.secButtonType === 'Scroll to Section'" class="md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Target Section ID / Anchor</label>
+                      <input type="text" [(ngModel)]="block.content.secScrollToSection" placeholder="e.g. contact-section"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+
+                    <!-- Conditional Popup -->
+                    <div *ngIf="block.content.secButtonType === 'Trigger Popup'" class="md:col-span-2">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Popup Alert Content Text</label>
+                      <input type="text" [(ngModel)]="block.content.secTriggerPopup" placeholder="Popup message to display on click"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+
+                    <!-- Sizing, Icons, Presets -->
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Size</label>
+                      <select [(ngModel)]="block.content.secSize" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Button Style</label>
+                      <select [(ngModel)]="block.content.secStyle" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="primary">Primary (Indigo)</option>
+                        <option value="secondary">Secondary (Dark)</option>
+                        <option value="outline">Outline</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Icon Selection</label>
+                      <select [(ngModel)]="block.content.secIcon" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Arrow">Arrow →</option>
+                        <option value="Play">Play Button</option>
+                        <option value="Envelope">Mail/Contact</option>
+                        <option value="Download">Download File</option>
+                        <option value="Info">Info Tooltip</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Icon Position</label>
+                      <select [(ngModel)]="block.content.secIconPosition" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Left">Left Side</option>
+                        <option value="Right">Right Side</option>
+                      </select>
+                    </div>
+
+                    <!-- Style variations -->
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Border Radius</label>
+                      <select [(ngModel)]="block.style.secBorderRadius" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None (Sharp)</option>
+                        <option value="Rounded">Rounded Card</option>
+                        <option value="Pill">Pill / Circle</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Hover Effect</label>
+                      <select [(ngModel)]="block.style.secHoverEffect" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Darken">Darken Color</option>
+                        <option value="Lift">Lift Up (Shadow)</option>
+                        <option value="Scale">Scale Zoom</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Custom Background Color</label>
+                      <input type="color" [(ngModel)]="block.content.secCustomBg" class="w-full h-8 p-0 border cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Custom Text Color</label>
+                      <input type="color" [(ngModel)]="block.content.secCustomText" class="w-full h-8 p-0 border cursor-pointer">
+                    </div>
                   </div>
                 </div>
 
                 <!-- DIVIDER BLOCK -->
-                <div *ngSwitchCase="'divider'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Height (Vertical Spacer) ({{ block.content.height || 20 }}px)</label>
-                    <input type="range" min="10" max="150" step="5" [(ngModel)]="block.content.height"
-                           class="w-full h-8 cursor-pointer">
+                <div *ngSwitchCase="'divider'" class="space-y-4">
+                  <!-- General Settings -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Divider Style</label>
+                      <select [(ngModel)]="block.content.dividerStyle" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Blank Space">Blank Space</option>
+                        <option value="Line">Line</option>
+                        <option value="Line with Icon">Line with Icon</option>
+                        <option value="Dots">Dots</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Desktop Height ({{ block.content.height || 40 }}px)</label>
+                      <input type="range" min="10" max="200" step="5" [(ngModel)]="block.content.height"
+                             class="w-full h-8 cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Mobile Height ({{ block.content.mobileHeight || 20 }}px)</label>
+                      <input type="range" min="5" max="100" step="5" [(ngModel)]="block.content.mobileHeight"
+                             class="w-full h-8 cursor-pointer">
+                    </div>
+                    <div *ngIf="block.content.dividerStyle === 'Line' || block.content.dividerStyle === 'Line with Icon'" class="flex flex-col justify-center">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-white" [disabled]="block.content.lineWidth === 'Full' && block.content.dividerStyle === 'Line'">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
                   </div>
-                  <div class="flex items-center pt-5">
-                    <span class="text-xs text-gray-400 font-medium">Adds visual vertical space on the public page.</span>
+
+                  <!-- Line specific settings -->
+                  <div *ngIf="block.content.dividerStyle === 'Line' || block.content.dividerStyle === 'Line with Icon'" 
+                       class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border animate-fade-in">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Line Style</label>
+                      <select [(ngModel)]="block.content.lineStyle" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Solid">Solid</option>
+                        <option value="Dashed">Dashed</option>
+                        <option value="Dotted">Dotted</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Line Color</label>
+                      <input type="color" [(ngModel)]="block.content.lineColor" class="w-full h-8 p-0 border cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Line Thickness ({{ block.content.lineThickness || 2 }}px)</label>
+                      <input type="range" min="1" max="10" step="1" [(ngModel)]="block.content.lineThickness"
+                             class="w-full h-8 cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Line Width</label>
+                      <select [(ngModel)]="block.content.lineWidth" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Full">Full (100%)</option>
+                        <option value="50%">50%</option>
+                        <option value="25%">25%</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Icon specific settings -->
+                  <div *ngIf="block.content.dividerStyle === 'Line with Icon'" 
+                       class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-gray-50/50 rounded-xl border animate-fade-in">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Icon Badge</label>
+                      <select [(ngModel)]="block.content.dividerIcon" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None (Diamond Symbol)</option>
+                        <option value="Arrow">Arrow →</option>
+                        <option value="Play">Play Button</option>
+                        <option value="Envelope">Mail/Contact</option>
+                        <option value="Download">Download File</option>
+                        <option value="Info">Info Tooltip</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center pt-5">
+                      <span class="text-xs text-gray-400 font-medium">Adds a centered icon badge overlaying the divider line.</span>
+                    </div>
+                  </div>
+                  
+                  <div class="text-gray-400 text-xs px-1 font-medium mt-1">
+                    Adds visual vertical space and stylish line dividers on the public page.
                   </div>
                 </div>
 
                 <!-- COLUMNS BLOCK -->
                 <div *ngSwitchCase="'columns'" class="space-y-4">
-                  <div class="flex items-center justify-between border-b border-gray-150 pb-2">
+                  <!-- General Grid Layout & Responsive Controls -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
                     <div>
-                      <label class="text-[11px] font-bold text-gray-600 mr-2">Columns Layout</label>
-                      <select [(ngModel)]="block.style.gridCols" class="p-1 text-xs rounded border inline-block">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Desktop Columns Layout</label>
+                      <select [(ngModel)]="block.style.gridCols" class="w-full p-2 text-xs rounded border bg-white">
                         <option value="grid-cols-1">1 Column</option>
                         <option value="grid-cols-2">2 Columns</option>
                         <option value="grid-cols-3">3 Columns</option>
+                        <option value="grid-cols-4">4 Columns</option>
                       </select>
                     </div>
-                    <button type="button" (click)="addColumn(block)"
-                            class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded border border-indigo-100 transition-colors">
-                      + Add Column
-                    </button>
+
+                    <!-- Column width ratio (visible only on 2-cols layout) -->
+                    <div *ngIf="block.style.gridCols === 'grid-cols-2'">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Desktop Width Ratio</label>
+                      <select [(ngModel)]="block.style.widthRatio" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Equal">Equal (50/50)</option>
+                        <option value="60/40">60% / 40%</option>
+                        <option value="70/30">70% / 30%</option>
+                        <option value="30/70">30% / 70%</option>
+                        <option value="40/60">40% / 60%</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Tablet Columns</label>
+                      <select [(ngModel)]="block.style.colsTablet" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="md:grid-cols-1">1 Column</option>
+                        <option value="md:grid-cols-2">2 Columns</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Mobile Columns</label>
+                      <select [(ngModel)]="block.style.colsMobile" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="grid-cols-1">1 Column</option>
+                        <option value="grid-cols-2">2 Columns</option>
+                      </select>
+                    </div>
                   </div>
-                  
+
+                  <!-- Alignment & Animations -->
+                  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Grid Gap / Spacing</label>
+                      <select [(ngModel)]="block.style.gapSize" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Small">Small Gap</option>
+                        <option value="Medium">Medium Gap</option>
+                        <option value="Large">Large Gap</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Vertical Alignment</label>
+                      <select [(ngModel)]="block.style.valign" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Top">Top</option>
+                        <option value="Middle">Middle / Centered</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Animation on Scroll</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                      </select>
+                    </div>
+                    <div *ngIf="block.content.animation !== 'None'">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Stagger Delay (ms)</label>
+                      <input type="number" [(ngModel)]="block.content.staggerDelay" placeholder="150"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div class="flex items-end justify-end md:col-span-1">
+                      <button type="button" (click)="addColumn(block)"
+                              class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-100 transition-colors w-full">
+                        + Add Column
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Column Items List -->
                   <div class="space-y-4">
                     <div *ngFor="let col of block.content.columns; let colIdx = index"
-                         class="p-4 bg-white rounded-lg border border-gray-150 relative space-y-3 shadow-sm">
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-500">Column {{ colIdx + 1 }}</span>
+                         class="p-4 bg-white rounded-2xl border border-gray-200 relative space-y-4 shadow-sm hover:border-indigo-100 transition-colors">
+                      
+                      <!-- Column Header with Sort & Remove Controls -->
+                      <div class="flex items-center justify-between border-b pb-2">
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-xs font-bold text-indigo-700 mr-2">Column {{ colIdx + 1 }}</span>
+                          <button type="button" (click)="moveColumnUp(block, colIdx)" [disabled]="colIdx === 0"
+                                  class="px-2 py-0.5 bg-gray-50 hover:bg-gray-150 text-xs text-gray-500 rounded border disabled:opacity-40">
+                            ▲
+                          </button>
+                          <button type="button" (click)="moveColumnDown(block, colIdx)" [disabled]="colIdx === block.content.columns.length - 1"
+                                  class="px-2 py-0.5 bg-gray-50 hover:bg-gray-150 text-xs text-gray-500 rounded border disabled:opacity-40">
+                            ▼
+                          </button>
+                        </div>
                         <button type="button" (click)="removeColumn(block, colIdx)"
-                                class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded border border-rose-100">
+                                class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded border border-rose-100 transition-colors">
                           Remove Column
                         </button>
                       </div>
+
+                      <!-- Basic Content Inputs -->
                       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                           <label class="block text-[10px] font-bold text-gray-500 mb-1">Column Title</label>
                           <input type="text" [(ngModel)]="col.title" placeholder="Feature Title"
-                                 class="w-full p-1.5 text-xs rounded border">
+                                 class="w-full p-2 text-xs rounded border bg-white">
                         </div>
                         <div>
                           <label class="block text-[10px] font-bold text-gray-500 mb-1">Description</label>
                           <textarea [(ngModel)]="col.text" placeholder="Detail description text..." rows="2"
-                                    class="w-full p-1.5 text-xs rounded border resize-none"></textarea>
+                                    class="w-full p-2 text-xs rounded border bg-white resize-none"></textarea>
                         </div>
                         <div>
                           <label class="block text-[10px] font-bold text-gray-500 mb-1">Image URL (Optional)</label>
                           <input type="text" [(ngModel)]="col.imageUrl" placeholder="https://..."
-                                 class="w-full p-1.5 text-xs rounded border">
+                                 class="w-full p-2 text-xs rounded border bg-white">
                         </div>
                       </div>
+
+                      <!-- Advanced Styling and CTA Button Inside Card -->
+                      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 p-2.5 bg-gray-50/50 rounded-xl border">
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 mb-1">Icon Selection</label>
+                          <select [(ngModel)]="col.icon" class="w-full p-2 text-xs rounded border bg-white">
+                            <option value="None">None</option>
+                            <option value="Arrow">Arrow →</option>
+                            <option value="Play">Play Button</option>
+                            <option value="Envelope">Mail/Contact</option>
+                            <option value="Download">Download File</option>
+                            <option value="Info">Info Tooltip</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 mb-1">Text Alignment</label>
+                          <select [(ngModel)]="col.align" class="w-full p-2 text-xs rounded border bg-white">
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-500 mb-1">Card Color</label>
+                          <input type="color" [(ngModel)]="col.bg" class="w-full h-8 p-0 border cursor-pointer">
+                        </div>
+                        <div class="flex items-center justify-center pt-2">
+                          <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                            <input type="checkbox" [(ngModel)]="col.cardLook"> Card Border/Shadow
+                          </label>
+                        </div>
+                        <div>
+                          <label class="block text-[10px] font-bold text-gray-600 mb-1">Column CTA Button</label>
+                          <div class="flex flex-col gap-1">
+                            <input type="text" [(ngModel)]="col.btnText" placeholder="Button Text"
+                                   class="w-full p-1.5 text-[10px] rounded border bg-white">
+                            <input type="text" [(ngModel)]="col.btnUrl" placeholder="Link URL"
+                                   class="w-full p-1.5 text-[10px] rounded border bg-white">
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
 
                 <!-- QUOTE BLOCK -->
-                <div *ngSwitchCase="'quote'" class="space-y-3">
+                <div *ngSwitchCase="'quote'" class="space-y-4 animate-fade-in">
                   <div>
                     <label class="block text-[11px] font-bold text-gray-600 mb-1">Quote Text</label>
-                    <textarea [(ngModel)]="block.content.text" rows="2" placeholder="Write quote here..."
+                    <textarea [(ngModel)]="block.content.text" rows="3" placeholder="Write quote here..."
                               class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white resize-none"></textarea>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  <!-- Author and Title -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-gray-50/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-gray-600 mb-1">Author Name / Citation</label>
                       <input type="text" [(ngModel)]="block.content.author" placeholder="Steve Jobs"
-                             class="w-full p-2 text-xs rounded border">
+                             class="w-full p-2 text-xs rounded border bg-white">
                     </div>
                     <div>
-                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Avatar Image URL (Optional)</label>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Author Title / Role</label>
+                      <input type="text" [(ngModel)]="block.content.authorTitle" placeholder="CEO, Acme Inc."
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Avatar Image URL</label>
                       <input type="text" [(ngModel)]="block.content.avatarUrl" placeholder="https://..."
-                             class="w-full p-2 text-xs rounded border">
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                  </div>
+
+                  <!-- Styling, Sizing, Rating and Alignments -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Quote Style</label>
+                      <select [(ngModel)]="block.style.quoteStyle" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Simple">Simple Layout</option>
+                        <option value="Card">Card Block</option>
+                        <option value="Bordered">Left Border Highlight</option>
+                        <option value="Large Display">Large Display Banner</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Quote Font Size</label>
+                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Normal">Normal</option>
+                        <option value="Large">Large</option>
+                        <option value="X-Large">X-Large</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Text Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="left">Left Align</option>
+                        <option value="center">Center Align</option>
+                        <option value="right">Right Align</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Star Rating Badge</label>
+                      <select [(ngModel)]="block.content.rating" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="1">1 Star</option>
+                        <option value="2">2 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="5">5 Stars</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Toggles, Custom Colors, Avatar Placement -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Avatar Position</label>
+                      <select [(ngModel)]="block.content.avatarPos" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Left of Name">Left of Name</option>
+                        <option value="Above Name">Above Name</option>
+                        <option value="None">None (Hidden)</option>
+                      </select>
+                    </div>
+                    <div *ngIf="block.style.quoteStyle === 'Card'">
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Card Background Color</label>
+                      <input type="color" [(ngModel)]="block.content.customBg" class="w-full h-8 p-0 border cursor-pointer">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Animation on Scroll</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                      </select>
+                    </div>
+                    <div class="flex items-center justify-around md:col-span-2 mt-4">
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.showQuoteIcon"> Show Decorative Quote Icon
+                      </label>
+                      <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="block.content.isItalic"> Italic Text
+                      </label>
                     </div>
                   </div>
                 </div>
 
                 <!-- VIDEO BLOCK -->
-                <div *ngSwitchCase="'video'" class="grid grid-cols-1 gap-4">
-                  <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-1">YouTube/Vimeo Embed URL</label>
+                <div *ngSwitchCase="'video'" class="space-y-4">
+
+                  <!-- Video Source Selector -->
+                  <div class="p-3 bg-gray-50/50 rounded-xl border">
+                    <label class="block text-[11px] font-bold text-gray-600 mb-2">Video Source</label>
+                    <div class="flex gap-2">
+                      <button type="button" (click)="block.content.videoSource = 'Embed'"
+                              [class]="block.content.videoSource !== 'SelfHosted' ? 'px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg border border-indigo-600' : 'px-3 py-1.5 bg-white text-gray-600 text-xs font-bold rounded-lg border border-gray-200 hover:border-indigo-300'">
+                        YouTube / Vimeo Embed
+                      </button>
+                      <button type="button" (click)="block.content.videoSource = 'SelfHosted'"
+                              [class]="block.content.videoSource === 'SelfHosted' ? 'px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg border border-indigo-600' : 'px-3 py-1.5 bg-white text-gray-600 text-xs font-bold rounded-lg border border-gray-200 hover:border-indigo-300'">
+                        Self-Hosted / File URL
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Embed URL (shown for YouTube/Vimeo) -->
+                  <div *ngIf="block.content.videoSource !== 'SelfHosted'">
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">YouTube / Vimeo Embed URL</label>
                     <input type="text" [(ngModel)]="block.content.embedUrl" placeholder="e.g. https://www.youtube.com/embed/dQw4w9WgXcQ"
                            class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
                     <span class="text-[10px] text-gray-400">Make sure to use the <b>embed</b> format URL for YouTube videos (e.g., https://www.youtube.com/embed/VIDEO_ID).</span>
                   </div>
+
+                  <!-- Self-Hosted URL (shown for file uploads) -->
+                  <div *ngIf="block.content.videoSource === 'SelfHosted'">
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Video File URL</label>
+                    <input type="text" [(ngModel)]="block.content.selfHostedUrl" placeholder="https://example.com/video.mp4"
+                           class="w-full p-2.5 text-sm rounded-lg border border-gray-200 bg-white">
+                    <span class="text-[10px] text-gray-400">Link to an MP4, WebM, or OGG video file hosted on your server or CDN.</span>
+                  </div>
+
+                  <!-- Layout & Display Options -->
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-gray-50/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Aspect Ratio</label>
+                      <select [(ngModel)]="block.content.aspectRatio" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="16:9">16:9 (Widescreen)</option>
+                        <option value="4:3">4:3 (Standard)</option>
+                        <option value="1:1">1:1 (Square)</option>
+                        <option value="9:16">9:16 (Portrait/Reel)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Max Width</label>
+                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="Full">Full Width</option>
+                        <option value="Large">Large</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Small">Small</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Border Radius</label>
+                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None (Sharp)</option>
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium (Rounded)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Animation on Scroll</label>
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-white">
+                        <option value="None">None</option>
+                        <option value="Fade In">Fade In</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Playback Toggles -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-gray-50/50 rounded-xl border">
+                    <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer p-2 bg-white rounded-lg border hover:border-indigo-200 transition-colors">
+                      <input type="checkbox" [(ngModel)]="block.content.autoplay">
+                      <div>
+                        <span class="font-semibold block">Autoplay</span>
+                        <span class="text-[10px] text-gray-400">Forces mute (browser requirement)</span>
+                      </div>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer p-2 bg-white rounded-lg border hover:border-indigo-200 transition-colors">
+                      <input type="checkbox" [(ngModel)]="block.content.loop">
+                      <div><span class="font-semibold block">Loop</span><span class="text-[10px] text-gray-400">Replay when finished</span></div>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer p-2 bg-white rounded-lg border hover:border-indigo-200 transition-colors">
+                      <input type="checkbox" [(ngModel)]="block.content.showControls">
+                      <div><span class="font-semibold block">Show Controls</span><span class="text-[10px] text-gray-400">Play/pause bar</span></div>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer p-2 bg-white rounded-lg border hover:border-indigo-200 transition-colors">
+                      <input type="checkbox" [(ngModel)]="block.content.lightboxMode">
+                      <div><span class="font-semibold block">Lightbox / Popup</span><span class="text-[10px] text-gray-400">Opens in modal overlay</span></div>
+                    </label>
+                  </div>
+
+                  <!-- Poster Image & Caption -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Thumbnail / Poster Image URL <span class="font-normal text-gray-400">(Optional)</span></label>
+                      <input type="text" [(ngModel)]="block.content.posterUrl" placeholder="https://example.com/thumbnail.jpg"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                      <span class="text-[10px] text-gray-400">Shown before the video plays. Used as lightbox background when Popup Mode is on.</span>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold text-gray-600 mb-1">Caption / Title <span class="font-normal text-gray-400">(Optional)</span></label>
+                      <input type="text" [(ngModel)]="block.content.caption" placeholder="e.g. Product walkthrough"
+                             class="w-full p-2 text-xs rounded border bg-white">
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
