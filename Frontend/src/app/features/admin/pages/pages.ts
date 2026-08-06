@@ -693,15 +693,33 @@ export class PagesComponent implements OnInit {
       };
       newBlock.style = { gridCols: 'grid-cols-2' };
     } else if (type === 'image') {
-      newBlock.content = { 
-        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600', 
-        caption: 'Sample Image Caption', 
-        alt: 'Sample description' 
+      newBlock.content = {
+        url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800',
+        caption: '',
+        alt: 'Featured image',
+        title: '',
+        linkUrl: '',
+        linkNewTab: false,
+        lightbox: false,
+        animation: 'None',
+        customCss: ''
       };
-      newBlock.style = { 
-        displayMode: 'inline', 
-        objectFit: 'cover', 
-        aspectRatio: 'auto' 
+      newBlock.style = {
+        displayMode: 'inline',
+        objectFit: 'cover',
+        aspectRatio: 'auto',
+        maxWidth: 'Large',
+        borderRadius: 'Medium',
+        boxShadow: 'Large',
+        filterEffect: 'None',
+        alignment: 'center',
+        padding: 'None',
+        margin: 'None',
+        border: 'None',
+        backgroundColor: '',
+        responsiveBehavior: 'responsive',
+        additionalClasses: '',
+        hoverEffect: 'Subtle Zoom'
       };
     } else if (type === 'hero') {
       newBlock.content = { 
@@ -1483,47 +1501,117 @@ export class PagesComponent implements OnInit {
             const displayMode = block.style.displayMode || 'inline';
             const objectFit = block.style.objectFit || 'cover';
             const aspectRatio = block.style.aspectRatio || 'auto';
-            const isFullWidth = displayMode === 'full-width' || displayMode === 'full-screen';
-            
+
+            // --- Max Width ---
             let widthClass = 'w-full';
-            if (block.style.maxWidth === 'Large') widthClass = 'max-w-4xl mx-auto';
-            else if (block.style.maxWidth === 'Medium') widthClass = 'max-w-2xl mx-auto';
-            else if (block.style.maxWidth === 'Small') widthClass = 'max-w-sm mx-auto';
-            
-            let radiusClass = 'rounded-lg shadow-md';
+            if (block.style.maxWidth === 'Large') widthClass = 'max-w-4xl';
+            else if (block.style.maxWidth === 'Medium') widthClass = 'max-w-2xl';
+            else if (block.style.maxWidth === 'Small') widthClass = 'max-w-sm';
+
+            // --- Responsive ---
+            if (block.style.responsiveBehavior === 'fixed') {
+              // No mx-auto to strip anymore, but we can leave this block or just ignore it
+            }
+
+            // --- Border Radius ---
+            let radiusClass = 'rounded-xl';
             if (block.style.borderRadius === 'None') radiusClass = 'rounded-none';
-            else if (block.style.borderRadius === 'Small') radiusClass = 'rounded-sm';
-            else if (block.style.borderRadius === 'Full-Round') radiusClass = 'rounded-full';
+            else if (block.style.borderRadius === 'Small') radiusClass = 'rounded-md';
             else if (block.style.borderRadius === 'Medium') radiusClass = 'rounded-2xl';
-            
-            if (block.style.boxShadow) radiusClass += ' shadow-2xl';
-            
+            else if (block.style.borderRadius === 'Full-Round') radiusClass = 'rounded-full';
+
+            // --- Shadow ---
+            let shadowClass = '';
+            const shadowVal = block.style.boxShadow;
+            if (shadowVal === true || shadowVal === 'Large') shadowClass = 'shadow-2xl';
+            else if (shadowVal === 'Medium') shadowClass = 'shadow-lg';
+            else if (shadowVal === 'Small') shadowClass = 'shadow-md';
+            else if (shadowVal === false || shadowVal === 'None') shadowClass = '';
+
+            // --- Border ---
+            let borderStyle = '';
+            if (block.style.border === 'Thin') borderStyle = 'border: 1px solid rgba(0,0,0,0.12); ';
+            else if (block.style.border === 'Medium') borderStyle = 'border: 2px solid rgba(0,0,0,0.18); ';
+            else if (block.style.border === 'Thick') borderStyle = 'border: 4px solid rgba(0,0,0,0.2); ';
+
+            // --- Filter ---
             let filterClass = '';
-            if (block.style.filterEffect === 'Grayscale') filterClass = 'filter grayscale';
-            else if (block.style.filterEffect === 'Duotone') filterClass = 'filter sepia saturate-[200%] hue-rotate-[200deg]';
-            
+            if (block.style.filterEffect === 'Grayscale') filterClass = 'grayscale';
+            else if (block.style.filterEffect === 'Duotone') filterClass = 'sepia saturate-[200%] hue-rotate-[200deg]';
+
+            // --- Hover Effect ---
+            let hoverClass = '';
+            if (block.style.hoverEffect === 'Subtle Zoom') hoverClass = 'hover:scale-[1.04] transition-transform duration-500 ease-out';
+            else if (block.style.hoverEffect === 'Brightness') hoverClass = 'hover:brightness-110 transition-all duration-300';
+            else if (block.style.hoverEffect === 'Lift') hoverClass = 'hover:-translate-y-1 hover:shadow-2xl transition-all duration-300';
+
+            // --- Animation ---
             let animClass = '';
             if (block.content.animation === 'Fade In') animClass = 'transition-opacity duration-700 animate-fade-in';
             else if (block.content.animation === 'Zoom In') animClass = 'hover:scale-[1.03] transition-transform duration-500';
-            
+
+            // --- Wrapper aspect-ratio style ---
             let wrapperStyle = '';
             if (aspectRatio !== 'auto') {
               wrapperStyle += `aspect-ratio: ${aspectRatio.replace(':', '/')}; `;
             }
-            
-            const onclickLightbox = block.content.lightbox ? `onclick="const m=document.createElement('div');m.className='fixed inset-0 bg-black/90 flex items-center justify-center z-[9999] cursor-zoom-out';m.onclick=()=>m.remove();const i=document.createElement('img');i.src='${url}';i.className='max-w-[90vw] max-h-[90vh] object-contain rounded-lg';m.appendChild(i);document.body.appendChild(m);"` : '';
+            if (block.style.backgroundColor) {
+              wrapperStyle += `background-color: ${block.style.backgroundColor}; `;
+            }
+            wrapperStyle += borderStyle;
+
+            // --- Alignment for outer wrapper ---
+            const alignment = block.style.alignment || 'center';
+            const flexAlign = alignment === 'left' ? 'justify-start' : alignment === 'right' ? 'justify-end' : 'justify-center';
+
+            // --- Padding ---
+            let paddingStyle = '';
+            if (block.style.padding === 'Small') paddingStyle = 'padding: 0.5rem; ';
+            else if (block.style.padding === 'Medium') paddingStyle = 'padding: 1rem; ';
+            else if (block.style.padding === 'Large') paddingStyle = 'padding: 2rem; ';
+
+            // --- Margin ---
+            let marginStyle = '';
+            if (block.style.margin === 'Small') marginStyle = 'margin-top: 0.5rem; margin-bottom: 0.5rem; ';
+            else if (block.style.margin === 'Medium') marginStyle = 'margin-top: 1.5rem; margin-bottom: 1.5rem; ';
+            else if (block.style.margin === 'Large') marginStyle = 'margin-top: 3rem; margin-bottom: 3rem; ';
+
+            // --- Additional Classes & Custom CSS ---
+            const extraClasses = (block.style.additionalClasses || '').trim();
+            const blockId = block.id || ('img-' + Math.random().toString(36).slice(2, 8));
+            const customCss = (block.content.customCss || '').trim();
+            const customCssBlock = customCss ? `<style>#${blockId} img { ${customCss} }</style>` : '';
+
+            // --- Lightbox ---
+            const onclickLightbox = block.content.lightbox
+              ? `onclick="const m=document.createElement('div');m.className='fixed inset-0 bg-black/90 flex items-center justify-center z-[9999] cursor-zoom-out';m.onclick=()=>m.remove();const i=document.createElement('img');i.src='${url}';i.className='max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl';m.appendChild(i);document.body.appendChild(m);"`
+              : '';
             const cursorClass = block.content.lightbox ? 'cursor-zoom-in' : '';
-            
-            let imgTag = `<img src="${url}" alt="${block.content.alt || ''}" style="object-fit: ${objectFit}; width: 100%; height: 100%;" class="${radiusClass} ${filterClass} ${animClass} ${cursorClass}" ${onclickLightbox} />`;
-            
+
+            // --- Build the img tag ---
+            let imgTag = `<img
+              src="${url}"
+              alt="${block.content.alt || ''}"
+              title="${block.content.title || ''}"
+              style="object-fit: ${objectFit}; width: 100%; height: 100%; display: block;"
+              class="${radiusClass} ${shadowClass} ${filterClass} ${hoverClass} ${animClass} ${cursorClass} ${extraClasses} overflow-hidden"
+              ${onclickLightbox}
+            />`;
+
             if (block.content.linkUrl) {
               const target = block.content.linkNewTab ? 'target="_blank" rel="noopener noreferrer"' : '';
               imgTag = `<a href="${block.content.linkUrl}" ${target} class="block w-full h-full">${imgTag}</a>`;
             }
-            
-            return `<div class="py-4 flex justify-center w-full">
-                      <div class="${widthClass} overflow-hidden" style="${wrapperStyle}">
+
+            const captionHtml = block.content.caption
+              ? `<p class="mt-2 text-center text-xs text-gray-500 italic">${block.content.caption}</p>`
+              : '';
+
+            return `${customCssBlock}
+                    <div class="py-4 flex ${flexAlign} w-full" style="${marginStyle}">
+                      <div id="${blockId}" class="${widthClass} overflow-hidden" style="${wrapperStyle}${paddingStyle}">
                         ${imgTag}
+                        ${captionHtml}
                       </div>
                     </div>`;
           }
@@ -1725,9 +1813,27 @@ export class PagesComponent implements OnInit {
               const url = resolveImageUrl(img.url);
               const alt = img.alt || '';
               const lazy = block.content.lazyLoad !== false ? 'loading="lazy"' : '';
+              
+              if (block.style.galleryStyle === 'Overlay Card') {
+                return `
+                <div class="relative overflow-hidden rounded-2xl shadow-lg group aspect-[4/3] bg-gray-900 ${cursorClass}" ${onclickLightbox}>
+                  <img src="${url}" alt="${alt}" ${lazy} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                  <div class="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end pointer-events-none">
+                    ${img.category ? `<span class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">${img.category}</span>` : ''}
+                    ${img.caption ? `<h3 class="text-xl font-bold text-white tracking-tight leading-snug">${img.caption}</h3>` : ''}
+                  </div>
+                </div>
+                `;
+              }
+
+              const aspectClass = block.style.imageAspectRatio === '16/9' ? 'aspect-video object-cover' :
+                                  block.style.imageAspectRatio === '1/1' ? 'aspect-square object-cover' :
+                                  block.style.imageAspectRatio === '4/3' ? 'aspect-[4/3] object-cover' : 'object-cover aspect-square';
+
               return `
                 <div class="overflow-hidden rounded-lg shadow-sm bg-gray-50 relative group ${cursorClass}" ${onclickLightbox}>
-                  <img src="${url}" alt="${alt}" ${lazy} class="w-full h-full object-cover aspect-square hover:scale-105 transition-transform duration-500" />
+                  <img src="${url}" alt="${alt}" ${lazy} class="w-full h-full ${aspectClass} hover:scale-105 transition-transform duration-500" />
                   ${img.caption ? `<p class="p-2 text-center text-xs text-gray-500 bg-white border-t">${img.caption}</p>` : ''}
                 </div>
               `;
@@ -1811,9 +1917,13 @@ export class PagesComponent implements OnInit {
                 iconSvg = '<svg class="w-8 h-8 text-indigo-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
               }
 
+              const aspectClass = block.style.imageAspectRatio === '16/9' ? 'aspect-video' :
+                                  block.style.imageAspectRatio === '1/1' ? 'aspect-square' :
+                                  block.style.imageAspectRatio === '4/3' ? 'aspect-[4/3]' : '';
+
               return `<div class="flex flex-col ${alignClass} ${cardClass} ${animClass}" ${styleAttr}>
                         ${iconSvg}
-                        ${imgUrl ? `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full max-h-48 object-cover rounded-xl mb-4" />` : ''}
+                        ${imgUrl ? `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full ${aspectClass || 'max-h-48'} object-cover rounded-xl mb-4" />` : ''}
                         <h3 class="text-xl font-bold mb-2 leading-snug">${col.title || ''}</h3>
                         <p class="text-sm opacity-80 leading-relaxed">${col.text || ''}</p>
                         ${col.btnText ? `<a href="${col.btnUrl || '#'}" class="mt-4 px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition-colors inline-block">${col.btnText}</a>` : ''}
@@ -2237,18 +2347,18 @@ export class PagesComponent implements OnInit {
         if (newMedia && newMedia.filePath) {
           targetObj[targetProp] = newMedia.filePath;
         } else {
-          this.showError('Image uploaded but could not retrieve path.', 3000);
+          this.errorMessage = 'Image uploaded but could not retrieve path.';
+          setTimeout(() => { this.errorMessage = null; this.cdr.detectChanges(); }, 3000);
         }
         this.isUploadingImage = false;
         event.target.value = ''; // Reset input
+        this.updateGeneratedHtml();
         this.cdr.detectChanges();
-        
-        // Auto-save the page content so the new image persists
-        this.savePage();
       },
       error: (err) => {
         console.error('Error uploading image', err);
-        this.showError('Failed to upload image. Please try again.', 3000);
+        this.errorMessage = 'Failed to upload image. Please try again.';
+        setTimeout(() => { this.errorMessage = null; this.cdr.detectChanges(); }, 3000);
         this.isUploadingImage = false;
         event.target.value = ''; // Reset input
         this.cdr.detectChanges();
