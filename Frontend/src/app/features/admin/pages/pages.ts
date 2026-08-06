@@ -17,6 +17,7 @@ interface MenuListItem {
   hasContent: boolean;
   status: string; // 'Published' | 'Draft' | 'Not Added'
   sortOrder: number;
+  isSubMenu?: boolean;
 }
 
 @Component({
@@ -38,6 +39,7 @@ export class PagesComponent implements OnInit {
   pageContent: PageContent | null = null;
   orgPages: PageContent[] = [];
   menuListItems: MenuListItem[] = [];
+  menuNodes: { item: MenuListItem; subItems: MenuListItem[] }[] = [];
   dragIndex: number | null = null;
   
   templates: SiteTemplate[] = SITE_TEMPLATES;
