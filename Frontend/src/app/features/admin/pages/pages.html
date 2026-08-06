@@ -20,16 +20,16 @@
   </div>
 </div>
 
-<!-- TOP UPSIDE ERROR BANNER -->
-<div *ngIf="errorMessage" class="mb-6 bg-rose-500/10 border-2 border-rose-500/30 rounded-2xl p-4 flex items-start justify-between shadow-lg transition-all animate-fade-in">
+<!-- TOAST ERROR NOTIFICATION -->
+<div *ngIf="errorMessage" class="fixed top-20 right-6 z-[100] bg-rose-500 border border-rose-600 rounded-xl p-4 flex items-start justify-between shadow-2xl transition-all animate-fade-in min-w-[300px] max-w-sm">
   <div class="flex items-start gap-3">
-    <svg class="w-8 h-8 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <svg class="w-6 h-6 text-white shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
     <div>
-      <h4 class="text-sm font-bold text-rose-500">Notice</h4>
-      <p class="text-xs text-rose-500 mt-0.5 font-medium leading-relaxed">{{ errorMessage }}</p>
+      <h4 class="text-sm font-bold text-white">Upload Error</h4>
+      <p class="text-xs text-white/90 mt-1 font-medium leading-relaxed">{{ errorMessage }}</p>
     </div>
   </div>
-  <button (click)="dismissError()" class="text-rose-400 hover:text-rose-500 p-1 text-base font-bold">✕</button>
+  <button (click)="dismissError()" class="text-white/70 hover:text-white p-1 text-base font-bold ml-3">✕</button>
 </div>
 
 <!-- Initializing State -->
@@ -43,7 +43,7 @@
 <!-- Top Header / Org Selector -->
 <div *ngIf="role === 'Admin'" class="relative mb-8">
   <div class="dash-card rounded-2xl shadow-sm p-6 flex items-center justify-between z-30 animate-fade-in">
-    <div class="flex-1 max-w-xl">
+    <div class="flex-1 max-w-xl min-w-0">
       <label class="block text-sm font-semibold mb-2" style="color:var(--text-secondary)">Target Organization</label>
       <div class="relative mt-2">
         <button (click)="isOrgDropdownOpen = !isOrgDropdownOpen" type="button" class="flex w-full items-center justify-between rounded-xl p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all border"
@@ -217,12 +217,19 @@
 <!-- Edit / Create Form Block -->
 <div *ngIf="selectedOrgId && selectedMenuId" class="dash-card rounded-2xl shadow-sm p-8 animate-fade-in">
   <div class="flex items-center justify-between mb-8 pb-4" style="border-bottom: 1px solid var(--border-card);">
-    <div class="flex items-center gap-4">
-      <button (click)="backToList()" class="p-2 rounded-xl transition-colors opacity-70 hover:opacity-100" style="color:var(--text-primary)" title="Back to Menu List">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-      </button>
+    <div class="flex flex-col gap-1.5">
+      <!-- Breadcrumb Navigation -->
+      <nav class="flex items-center gap-2 text-sm font-bold text-text-muted mb-1">
+        <button (click)="backToList()" class="hover:text-[var(--accent-indigo)] transition-colors flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          Pages
+        </button>
+        <svg class="w-3 h-3 text-text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+        <span class="text-text-primary">Page Content Details</span>
+      </nav>
+      
       <div>
-        <h3 class="text-xl font-bold" style="color:var(--text-primary)">Page Content Details</h3>
+        <h3 class="text-2xl font-extrabold" style="color:var(--text-primary)">Page Content Details</h3>
         <p class="text-sm mt-0.5" style="color:var(--text-secondary)">Customize your page text & settings, then save to publish to your website.</p>
       </div>
     </div>
@@ -248,30 +255,7 @@
     <!-- DYNAMIC SECTION & BLOCK BUILDER FORM -->
     <div class="border rounded-3xl p-8 space-y-8 shadow-sm" style="background:var(--bg-card); border-color:var(--border-card);">
       
-      <!-- Theme & Global Customization -->
-      <div class="p-6 rounded-2xl border shadow-sm space-y-4" style="background:var(--bg-base); border-color:var(--border-card);">
-        <h4 class="text-sm font-extrabold uppercase tracking-wider flex items-center gap-2" style="color:var(--text-primary)">
-          🎨 Global Theme Style
-        </h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-xs font-bold mb-2" style="color:var(--text-secondary)">Primary Accent Color</label>
-            <input type="color" [(ngModel)]="clientData.globalTheme.primaryColor" 
-                   class="w-full h-11 p-1 rounded-xl border cursor-pointer"
-                   style="background:var(--bg-card); border-color:var(--border-card);">
-          </div>
-          <div>
-            <label class="block text-xs font-bold mb-2" style="color:var(--text-secondary)">Base Font Family</label>
-            <select [(ngModel)]="clientData.globalTheme.fontFamily" 
-                    class="w-full p-3 text-sm rounded-xl border outline-none"
-                    style="background:var(--bg-card); border-color:var(--border-card); color:var(--text-primary);">
-              <option value="Inter">Inter (Sans-serif)</option>
-              <option value="Georgia">Georgia (Serif)</option>
-              <option value="monospace">Courier (Monospace)</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <!-- Theme & Global Customization Removed -->
 
       <!-- Sections Loop -->
       <div class="space-y-8">
@@ -290,16 +274,16 @@
             <div class="flex items-center gap-2">
               <button type="button" (click)="moveSectionUp(secIdx)" [disabled]="secIdx === 0" 
                       class="p-2 bg-surface-base hover:bg-surface-base rounded-lg text-text-secondary disabled:opacity-40 transition-colors">
-                ▲
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
               </button>
               <button type="button" (click)="moveSectionDown(secIdx)" [disabled]="secIdx === clientData.sections.length - 1" 
                       class="p-2 bg-surface-base hover:bg-surface-base rounded-lg text-text-secondary disabled:opacity-40 transition-colors">
-                ▼
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
               </button>
               <button type="button" (click)="duplicateSection(secIdx)" 
                       class="px-2.5 py-2 bg-[var(--accent-indigo)]/10 hover:bg-[var(--accent-indigo)]/20 text-[var(--accent-indigo)] rounded-lg transition-colors font-bold text-xs flex items-center gap-1"
                       title="Duplicate Section">
-                🖨️ Duplicate
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Duplicate
               </button>
               <button type="button" (click)="deleteSection(secIdx)" 
                       class="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg transition-colors ml-2 font-bold text-sm">
@@ -329,7 +313,7 @@
             </div>
 
             <!-- Gradient Controls -->
-            <div *ngIf="section.style.backgroundType === 'gradient'" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <ng-container *ngIf="section.style.backgroundType === 'gradient'">
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-2">Start Color</label>
                 <input type="color" [(ngModel)]="section.style.gradientColor1" 
@@ -362,15 +346,15 @@
                           style="background: linear-gradient(135deg, #0f2027, #203a43);"></button>
                 </div>
               </div>
-            </div>
+            </ng-container>
             
             <!-- Image Controls -->
-            <div *ngIf="section.style.backgroundType === 'image'" class="md:col-span-3 grid grid-cols-1 md:grid-cols-5 gap-4">
+            <ng-container *ngIf="section.style.backgroundType === 'image'">
               <div class="md:col-span-2">
                 <label class="block text-xs font-bold text-text-secondary mb-2">Image URL / File Path</label>
                 <div class="flex items-center gap-2 w-full">
                   <input type="text" [(ngModel)]="section.style.backgroundImageUrl" placeholder="https://..."
-                         class="flex-1  p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
+                         class="flex-1 min-w-0 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
                   <button type="button" (click)="fileInputBgImg.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     Upload
@@ -386,12 +370,12 @@
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-2">Overlay Opacity ({{ section.style.overlayOpacity || 0 }}%)</label>
                 <input type="range" min="0" max="100" [(ngModel)]="section.style.overlayOpacity"
-                       class="w-full h-10 cursor-pointer">
+                       class="w-full h-10 cursor-pointer accent-[var(--accent-indigo)]">
               </div>
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-2">Display Size</label>
                 <select [(ngModel)]="section.style.backgroundSize" 
-                        class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
+                        class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)] outline-none">
                   <option value="cover">Cover (Fit Screen)</option>
                   <option value="contain">Contain (Fit Aspect)</option>
                   <option value="center">Center (Real Size)</option>
@@ -400,24 +384,31 @@
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-2">Parallax / Fixed</label>
                 <select [(ngModel)]="section.style.backgroundAttachment"
-                        class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
+                        class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)] outline-none">
                   <option value="scroll">Default Scroll</option>
                   <option value="fixed">Fixed Background</option>
                 </select>
               </div>
-            </div>
+            </ng-container>
 
             <!-- Video Controls -->
-            <div *ngIf="section.style.backgroundType === 'video'" class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <ng-container *ngIf="section.style.backgroundType === 'video'">
               <div class="md:col-span-2">
-                <label class="block text-xs font-bold text-text-secondary mb-2">Video MP4 URL</label>
-                <input type="text" [(ngModel)]="section.style.videoUrl" placeholder="/uploads/video.mp4"
-                       class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
+                <label class="block text-xs font-bold text-text-secondary mb-2">Video MP4 (or YouTube) URL</label>
+                <div class="flex items-center gap-2 w-full">
+                  <input type="text" [(ngModel)]="section.style.videoUrl" placeholder="https://..."
+                         class="flex-1 min-w-0 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
+                  <button type="button" (click)="fileInputBgVid.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Upload
+                  </button>
+                  <input type="file" #fileInputBgVid (change)="uploadImage($event, section.style, 'videoUrl')" class="hidden" accept="video/*">
+                </div>
               </div>
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-2">Overlay Opacity ({{ section.style.overlayOpacity || 0 }}%)</label>
                 <input type="range" min="0" max="100" [(ngModel)]="section.style.overlayOpacity"
-                       class="w-full h-10 cursor-pointer">
+                       class="w-full h-10 cursor-pointer accent-[var(--accent-indigo)]">
               </div>
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-2">Autoplay/Mute</label>
@@ -430,7 +421,7 @@
                   </label>
                 </div>
               </div>
-            </div>
+            </ng-container>
 
             <!-- Text Color -->
             <div>
@@ -513,12 +504,12 @@
                 </span>
                 <div class="flex items-center gap-1.5">
                   <button type="button" (click)="moveBlockUp(section, blkIdx)" [disabled]="blkIdx === 0" 
-                          class="px-2 py-1 bg-surface-card hover:bg-surface-base text-xs text-text-muted rounded border disabled:opacity-40">
-                    ▲
+                          class="px-2 py-1 bg-surface-card hover:bg-surface-base text-text-muted rounded border disabled:opacity-40 flex items-center justify-center">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
                   </button>
                   <button type="button" (click)="moveBlockDown(section, blkIdx)" [disabled]="blkIdx === section.blocks.length - 1" 
-                          class="px-2 py-1 bg-surface-card hover:bg-surface-base text-xs text-text-muted rounded border disabled:opacity-40">
-                    ▼
+                          class="px-2 py-1 bg-surface-card hover:bg-surface-base text-text-muted rounded border disabled:opacity-40 flex items-center justify-center">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                   </button>
                   <button type="button" (click)="deleteBlock(section, blkIdx)" 
                           class="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-xs text-rose-500 font-bold rounded border border-rose-500/30 ml-1">
@@ -540,7 +531,7 @@
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">H-Level</label>
-                      <select [(ngModel)]="block.content.level" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.content.level" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option [ngValue]="1">H1 (Hero Heading)</option>
                         <option [ngValue]="2">H2 (Section Heading)</option>
                         <option [ngValue]="3">H3 (Sub Heading)</option>
@@ -548,7 +539,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Text Alignment</label>
-                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="left">Left</option>
                         <option value="center">Center</option>
                         <option value="right">Right</option>
@@ -556,7 +547,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Font Size</label>
-                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="text-xl">Small (text-xl)</option>
                         <option value="text-2xl">Normal (text-2xl)</option>
                         <option value="text-3xl">Medium (text-3xl)</option>
@@ -590,7 +581,7 @@
                   <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                     <div class="md:col-span-2">
                       <label class="block text-[10px] font-bold text-text-muted mb-1">Text Alignment</label>
-                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="left">Left</option>
                         <option value="center">Center</option>
                         <option value="right">Right</option>
@@ -598,7 +589,7 @@
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold text-text-muted mb-1">Font Size</label>
-                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="text-xs">Extra Small (text-xs)</option>
                         <option value="text-sm">Small (text-sm)</option>
                         <option value="text-base">Normal (text-base)</option>
@@ -608,7 +599,7 @@
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold text-text-muted mb-1">Max Width</label>
-                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Full">Full</option>
                         <option value="Medium">Medium (65ch)</option>
                         <option value="Narrow">Narrow (45ch)</option>
@@ -616,7 +607,7 @@
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold text-text-muted mb-1">Line Height</label>
-                      <select [(ngModel)]="block.style.lineHeight" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.lineHeight" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Tight">Tight</option>
                         <option value="Normal">Normal</option>
                         <option value="Relaxed">Relaxed</option>
@@ -624,14 +615,14 @@
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold text-text-muted mb-1">Columns</label>
-                      <select [(ngModel)]="block.style.columnLayout" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.columnLayout" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="1 Column">1 Column</option>
                         <option value="2 Columns">2 Columns</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold text-text-muted mb-1">Animation</label>
-                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Fade In">Fade In</option>
                       </select>
@@ -655,7 +646,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Desktop Columns</label>
-                      <select [(ngModel)]="block.style.colsDesktop" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.colsDesktop" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="grid-cols-2">2 Columns</option>
                         <option value="grid-cols-3">3 Columns</option>
                         <option value="grid-cols-4">4 Columns</option>
@@ -663,20 +654,20 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Tablet Columns</label>
-                      <select [(ngModel)]="block.style.colsTablet" class="w-full p-2 text-xs rounded border">
+                      <select [(ngModel)]="block.style.colsTablet" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="md:grid-cols-1">1 Column</option>
                         <option value="md:grid-cols-2">2 Columns</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Mobile Columns</label>
-                      <select [(ngModel)]="block.style.colsMobile" class="w-full p-2 text-xs rounded border" disabled>
+                      <select [(ngModel)]="block.style.colsMobile" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]" disabled>
                         <option value="grid-cols-1">1 Column</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Gallery Style</label>
-                      <select [(ngModel)]="block.style.galleryStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.galleryStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Grid">Grid</option>
                         <option value="Masonry">Masonry</option>
                         <option value="Carousel-Slider">Carousel-Slider</option>
@@ -685,7 +676,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Image Gap</label>
-                      <select [(ngModel)]="block.style.imageGap" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.imageGap" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Small">Small (gap-2)</option>
                         <option value="Medium">Medium (gap-4)</option>
@@ -694,7 +685,7 @@
                     </div>
                     <div *ngIf="block.style.galleryStyle !== 'Overlay Card'">
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Image Aspect Ratio</label>
-                      <select [(ngModel)]="block.style.imageAspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.imageAspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="">Natural (Auto)</option>
                         <option value="4/3">4:3 Standard Card</option>
                         <option value="16/9">16:9 Widescreen</option>
@@ -726,14 +717,14 @@
                          class="flex items-center gap-3 p-3 bg-surface-card rounded-lg border border-gray-150 relative">
                        <div class="flex flex-col gap-1">
                          <button type="button" (click)="moveGalleryImageUp(block, imgIdx)" [disabled]="imgIdx === 0"
-                                 class="p-1 bg-surface-base hover:bg-surface-base rounded text-[9px] text-text-secondary disabled:opacity-40">▲</button>
+                                 class="p-1 bg-surface-base hover:bg-surface-base rounded text-[9px] text-text-secondary disabled:opacity-40"><svg class="w-3 h-3 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg></button>
                          <button type="button" (click)="moveGalleryImageDown(block, imgIdx)" [disabled]="imgIdx === block.content.images.length - 1"
-                                 class="p-1 bg-surface-base hover:bg-surface-base rounded text-[9px] text-text-secondary disabled:opacity-40">▼</button>
+                                 class="p-1 bg-surface-base hover:bg-surface-base rounded text-[9px] text-text-secondary disabled:opacity-40"><svg class="w-3 h-3 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button>
                        </div>
-                       <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                         <div class="flex items-center gap-2 w-full">
+                       <div class="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3 min-w-0">
+                         <div class="flex items-center gap-2 w-full md:col-span-2">
                                 <input type="text" [(ngModel)]="img.url" placeholder="Image URL (https://...)" 
-                                       class="p-2 text-xs rounded border border-border-card flex-1">
+                                       class="p-2 text-xs rounded border border-border-card flex-1 min-w-0">
                                 <button type="button" (click)="fileInputGalImg.click()" class="px-2 py-1.5 bg-[var(--accent-indigo)] text-white text-[10px] font-bold rounded hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0">
                                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                   Upload
@@ -741,11 +732,11 @@
                                 <input type="file" #fileInputGalImg (change)="uploadImage($event, img, 'url')" class="hidden" accept="image/*">
                               </div>
                          <input type="text" [(ngModel)]="img.category" placeholder="Category/Tag (e.g. NEW)" 
-                                class="p-2 text-xs rounded border bg-surface-card" *ngIf="block.style.galleryStyle === 'Overlay Card'">
+                                class="p-2 text-xs rounded border bg-surface-card flex-1 min-w-0" *ngIf="block.style.galleryStyle === 'Overlay Card'">
                          <input type="text" [(ngModel)]="img.caption" placeholder="Caption (Optional)" 
-                                class="p-2 text-xs rounded border bg-surface-card">
+                                class="p-2 text-xs rounded border bg-surface-card flex-1 min-w-0">
                          <input type="text" [(ngModel)]="img.alt" placeholder="Alt Text (SEO)" 
-                                class="p-2 text-xs rounded border bg-surface-card">
+                                class="p-2 text-xs rounded border bg-surface-card flex-1 min-w-0">
                        </div>
                        <button type="button" (click)="removeImageFromGallery(block, imgIdx)" 
                                class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-bold rounded border border-rose-500/30 font-bold ml-2">
@@ -760,14 +751,14 @@
 
                   <!-- ── Section A: Image Source ── -->
                   <div class="p-3 rounded-xl border border-border-card bg-surface-base/50 space-y-3">
-                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2">📷 Image Source</div>
+                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Image Source</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div class="md:col-span-2">
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Image URL</label>
                         <div class="flex items-center gap-2 w-full">
                           <input type="text" [(ngModel)]="block.content.url" placeholder="https://..."
                                  (ngModelChange)="updateGeneratedHtml()"
-                                 class="flex-1 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
+                                 class="flex-1 min-w-0 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
                           <button type="button" (click)="fileInputImg.click()"
                                   class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
@@ -803,7 +794,7 @@
 
                   <!-- ── Section B: Dimensions & Layout ── -->
                   <div class="p-3 rounded-xl border border-border-card bg-surface-base/50 space-y-3">
-                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2">📐 Dimensions & Layout</div>
+                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg> Dimensions & Layout</div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <div>
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Display Mode</label>
@@ -867,7 +858,7 @@
 
                   <!-- ── Section C: Appearance ── -->
                   <div class="p-3 rounded-xl border border-border-card bg-surface-base/50 space-y-3">
-                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2">🎨 Appearance</div>
+                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg> Appearance</div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <div>
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Border Radius</label>
@@ -876,7 +867,7 @@
                           <option value="None">None (sharp)</option>
                           <option value="Small">Small (rounded-md)</option>
                           <option value="Medium">Medium (rounded-2xl)</option>
-                          <option value="Full-Round">Full Round (circle)</option>
+                          <option value="Full">Full (Circular)</option>
                         </select>
                       </div>
                       <div>
@@ -925,7 +916,7 @@
                                  class="w-10 h-9 rounded border border-border-card cursor-pointer">
                           <input type="text" [(ngModel)]="block.style.backgroundColor" placeholder="transparent"
                                  (ngModelChange)="updateGeneratedHtml()"
-                                 class="flex-1 p-2 text-xs rounded border border-border-card bg-surface-card">
+                                 class="flex-1 min-w-0 p-2 text-xs rounded border border-border-card bg-surface-card">
                         </div>
                       </div>
                     </div>
@@ -933,7 +924,10 @@
 
                   <!-- ── Section D: Spacing ── -->
                   <div class="p-3 rounded-xl border border-border-card bg-surface-base/50 space-y-3">
-                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2">📏 Spacing</div>
+                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2 flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                      Spacing
+                    </div>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Padding (inside border)</label>
@@ -960,14 +954,17 @@
 
                   <!-- ── Section E: Link ── -->
                   <div class="p-3 rounded-xl border border-border-card bg-surface-base/50 space-y-3">
-                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2">🔗 Link & Interaction</div>
+                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2 flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                      Link & Interaction
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div class="md:col-span-2">
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Link URL (Optional)</label>
                         <div class="flex items-center gap-2 w-full">
                           <input type="text" [(ngModel)]="block.content.linkUrl" placeholder="https://example.com"
                                  (ngModelChange)="updateGeneratedHtml()"
-                                 class="flex-1 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
+                                 class="flex-1 min-w-0 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
                           <button type="button" (click)="fileInputLink.click()"
                                   class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
@@ -993,7 +990,10 @@
 
                   <!-- ── Section F: Advanced ── -->
                   <div class="p-3 rounded-xl border border-border-card bg-surface-base/50 space-y-3">
-                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2">⚙️ Advanced</div>
+                    <div class="text-xs font-bold text-[var(--accent-indigo)] border-b border-border-card pb-1 mb-2 flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      Advanced
+                    </div>
                     <div class="grid grid-cols-1 gap-3">
                       <div>
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Animation on Load</label>
@@ -1043,7 +1043,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Heading Tag</label>
-                      <select [(ngModel)]="block.content.headingTag" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.headingTag" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="h1">H1 (Main Heading)</option>
                         <option value="h2">H2 (Sub Heading)</option>
                         <option value="h3">H3 (Section Title)</option>
@@ -1051,7 +1051,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Heading Font Size</label>
-                      <select [(ngModel)]="block.style.headingFontSize" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.headingFontSize" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Small">Small (text-2xl)</option>
                         <option value="Medium">Medium (text-4xl)</option>
                         <option value="Large">Large (text-5xl)</option>
@@ -1065,7 +1065,7 @@
                     </div>
                     <div class="md:col-span-2">
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Content Max Width</label>
-                      <select [(ngModel)]="block.style.contentMaxWidth" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.contentMaxWidth" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Full">Full Width</option>
                         <option value="Large">Large (900px)</option>
                         <option value="Medium">Medium (700px)</option>
@@ -1078,7 +1078,7 @@
                     <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-teal-500">Background Settings</div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Background Type</label>
-                      <select [(ngModel)]="block.content.bgType" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.bgType" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="image">Image</option>
                         <option value="color">Solid Color</option>
                         <option value="gradient">Gradient</option>
@@ -1088,11 +1088,11 @@
 
                     <!-- Image Background URL + upload -->
                     <div *ngIf="block.content.bgType === 'image'" class="md:col-span-2 flex items-end gap-2">
-                      <div class="flex-1">
+                      <div class="flex-1 min-w-0">
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Background Image URL</label>
                         <div class="flex items-center gap-2 w-full">
                           <input type="text" [(ngModel)]="block.content.bgImageUrl" placeholder="https://..."
-                                 class="flex-1  p-2 text-xs rounded border bg-surface-card">
+                                 class="flex-1  p-2 text-xs rounded border bg-surface-card min-w-0">
                           <button type="button" (click)="fileInputHeroBg.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                             Upload
@@ -1108,7 +1108,7 @@
 
                     <div *ngIf="block.content.bgType === 'image'">
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Focal Point Crop</label>
-                      <select [(ngModel)]="block.content.bgFocalPoint" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.bgFocalPoint" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="top">Top</option>
                         <option value="center">Center</option>
                         <option value="bottom">Bottom</option>
@@ -1150,9 +1150,16 @@
                     <!-- Video settings -->
                     <div *ngIf="block.content.bgType === 'video'" class="md:col-span-3 grid grid-cols-3 gap-3">
                       <div class="col-span-2">
-                        <label class="block text-[11px] font-bold text-text-secondary mb-1">Video MP4 URL</label>
-                        <input type="text" [(ngModel)]="block.content.videoUrl" placeholder="/uploads/clip.mp4"
-                               class="w-full p-2 text-xs rounded border bg-surface-card">
+                        <label class="block text-[11px] font-bold text-text-secondary mb-1">Video MP4 (or YouTube) URL</label>
+                        <div class="flex items-center gap-2 w-full">
+                          <input type="text" [(ngModel)]="block.content.videoUrl" placeholder="https://..."
+                                 class="flex-1 min-w-0 p-2 text-xs rounded border bg-surface-card outline-none">
+                          <button type="button" (click)="fileInputBgVidBlk.click()" class="px-2 py-1.5 bg-[var(--accent-indigo)] text-white text-[10px] font-bold rounded hover:opacity-90 flex items-center gap-1 shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Upload
+                          </button>
+                          <input type="file" #fileInputBgVidBlk (change)="uploadImage($event, block.content, 'videoUrl')" class="hidden" accept="video/*">
+                        </div>
                       </div>
                       <div class="flex items-center gap-3 mt-5">
                         <label class="flex items-center gap-1 text-xs text-gray-650 cursor-pointer">
@@ -1183,7 +1190,7 @@
                     <div class="md:col-span-4 border-b pb-1 mb-1 font-bold text-xs text-slate-700">Layout & Spacing</div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Content Alignment</label>
-                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="left">Left</option>
                         <option value="center">Center</option>
                         <option value="right">Right</option>
@@ -1191,7 +1198,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Vertical Alignment</label>
-                      <select [(ngModel)]="block.content.valign" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.valign" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="top">Top</option>
                         <option value="middle">Middle</option>
                         <option value="bottom">Bottom</option>
@@ -1199,7 +1206,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Min Height</label>
-                      <select [(ngModel)]="block.style.minHeightType" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.minHeightType" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="auto">Auto</option>
                         <option value="50vh">Half Screen (50vh)</option>
                         <option value="100vh">Full Screen (100vh)</option>
@@ -1232,7 +1239,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">CTA Style</label>
-                      <select [(ngModel)]="block.content.ctaStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.ctaStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="primary">Primary (Solid White)</option>
                         <option value="secondary">Secondary (Purple)</option>
                         <option value="outline">Outline (Bordered)</option>
@@ -1240,7 +1247,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">CTA Button Size</label>
-                      <select [(ngModel)]="block.content.ctaSize" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.ctaSize" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Small">Small</option>
                         <option value="Medium">Medium</option>
                         <option value="Large">Large</option>
@@ -1268,7 +1275,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Style</label>
-                      <select [(ngModel)]="block.content.secCtaStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.secCtaStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="primary">Primary (Solid White)</option>
                         <option value="secondary">Secondary (Purple)</option>
                         <option value="outline">Outline (Bordered)</option>
@@ -1286,7 +1293,7 @@
                     <div class="md:col-span-3 border-b pb-1 mb-1 font-bold text-xs text-purple-500">Motion & Bottom Dividers</div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Animation on Load</label>
-                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Fade In">Fade In</option>
                         <option value="Slide Up">Slide Up</option>
@@ -1300,7 +1307,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Bottom Divider Shape</label>
-                      <select [(ngModel)]="block.style.dividerShape" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.dividerShape" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Wave">Wave</option>
                         <option value="Angled">Angled</option>
@@ -1324,7 +1331,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Type</label>
-                      <select [(ngModel)]="block.content.buttonType" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.buttonType" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Link URL">Link URL</option>
                         <option value="Scroll to Section">Scroll to Section (Anchor)</option>
                         <option value="Trigger Popup">Trigger Popup</option>
@@ -1333,7 +1340,7 @@
 
                     <!-- Conditional URL -->
                     <div *ngIf="block.content.buttonType === 'Link URL' || !block.content.buttonType" class="md:col-span-2 flex items-center gap-4">
-                      <div class="flex-1">
+                      <div class="flex-1 min-w-0">
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Link URL</label>
                         <input type="text" [(ngModel)]="block.content.url" placeholder="https://..."
                                class="w-full p-2 text-xs rounded border bg-surface-card">
@@ -1362,7 +1369,7 @@
                     <!-- Sizing, Icons, Presets -->
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Size</label>
-                      <select [(ngModel)]="block.content.size" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.size" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Small">Small</option>
                         <option value="Medium">Medium</option>
                         <option value="Large">Large</option>
@@ -1370,7 +1377,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Style</label>
-                      <select [(ngModel)]="block.content.style" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.style" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="primary">Primary (Indigo)</option>
                         <option value="secondary">Secondary (Dark)</option>
                         <option value="outline">Outline</option>
@@ -1378,7 +1385,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Icon Selection</label>
-                      <select [(ngModel)]="block.content.icon" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.icon" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Arrow">Arrow →</option>
                         <option value="Play">Play Button</option>
@@ -1389,7 +1396,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Icon Position</label>
-                      <select [(ngModel)]="block.content.iconPosition" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.iconPosition" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Left">Left Side</option>
                         <option value="Right">Right Side</option>
@@ -1399,7 +1406,7 @@
                     <!-- Style variations -->
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Border Radius</label>
-                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None (Sharp)</option>
                         <option value="Rounded">Rounded Card</option>
                         <option value="Pill">Pill / Circle</option>
@@ -1407,7 +1414,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Hover Effect</label>
-                      <select [(ngModel)]="block.style.hoverEffect" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.hoverEffect" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Darken">Darken Color</option>
                         <option value="Lift">Lift Up (Shadow)</option>
@@ -1428,7 +1435,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Alignment</label>
-                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="left">Left</option>
                         <option value="center">Center</option>
                         <option value="right">Right</option>
@@ -1436,7 +1443,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Animation on Scroll</label>
-                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Fade In">Fade In</option>
                       </select>
@@ -1458,7 +1465,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Type</label>
-                      <select [(ngModel)]="block.content.secButtonType" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.secButtonType" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Link URL">Link URL</option>
                         <option value="Scroll to Section">Scroll to Section (Anchor)</option>
                         <option value="Trigger Popup">Trigger Popup</option>
@@ -1467,7 +1474,7 @@
 
                     <!-- Conditional URL -->
                     <div *ngIf="block.content.secButtonType === 'Link URL' || !block.content.secButtonType" class="md:col-span-2 flex items-center gap-4">
-                      <div class="flex-1">
+                      <div class="flex-1 min-w-0">
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Link URL</label>
                         <input type="text" [(ngModel)]="block.content.secUrl" placeholder="https://..."
                                class="w-full p-2 text-xs rounded border bg-surface-card">
@@ -1496,7 +1503,7 @@
                     <!-- Sizing, Icons, Presets -->
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Size</label>
-                      <select [(ngModel)]="block.content.secSize" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.secSize" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Small">Small</option>
                         <option value="Medium">Medium</option>
                         <option value="Large">Large</option>
@@ -1504,7 +1511,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Button Style</label>
-                      <select [(ngModel)]="block.content.secStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.secStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="primary">Primary (Indigo)</option>
                         <option value="secondary">Secondary (Dark)</option>
                         <option value="outline">Outline</option>
@@ -1512,7 +1519,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Icon Selection</label>
-                      <select [(ngModel)]="block.content.secIcon" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.secIcon" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Arrow">Arrow →</option>
                         <option value="Play">Play Button</option>
@@ -1523,7 +1530,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Icon Position</label>
-                      <select [(ngModel)]="block.content.secIconPosition" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.secIconPosition" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Left">Left Side</option>
                         <option value="Right">Right Side</option>
@@ -1533,7 +1540,7 @@
                     <!-- Style variations -->
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Border Radius</label>
-                      <select [(ngModel)]="block.style.secBorderRadius" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.secBorderRadius" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None (Sharp)</option>
                         <option value="Rounded">Rounded Card</option>
                         <option value="Pill">Pill / Circle</option>
@@ -1541,7 +1548,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Hover Effect</label>
-                      <select [(ngModel)]="block.style.secHoverEffect" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.secHoverEffect" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Darken">Darken Color</option>
                         <option value="Lift">Lift Up (Shadow)</option>
@@ -1565,7 +1572,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Divider Style</label>
-                      <select [(ngModel)]="block.content.dividerStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.dividerStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Blank Space">Blank Space</option>
                         <option value="Line">Line</option>
                         <option value="Line with Icon">Line with Icon</option>
@@ -1584,7 +1591,7 @@
                     </div>
                     <div *ngIf="block.content.dividerStyle === 'Line' || block.content.dividerStyle === 'Line with Icon'" class="flex flex-col justify-center">
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Alignment</label>
-                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card" [disabled]="block.content.lineWidth === 'Full' && block.content.dividerStyle === 'Line'">
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]" [disabled]="block.content.lineWidth === 'Full' && block.content.dividerStyle === 'Line'">
                         <option value="left">Left</option>
                         <option value="center">Center</option>
                         <option value="right">Right</option>
@@ -1597,7 +1604,7 @@
                        class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border animate-fade-in">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Line Style</label>
-                      <select [(ngModel)]="block.content.lineStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.lineStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Solid">Solid</option>
                         <option value="Dashed">Dashed</option>
                         <option value="Dotted">Dotted</option>
@@ -1614,7 +1621,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Line Width</label>
-                      <select [(ngModel)]="block.content.lineWidth" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.lineWidth" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Full">Full (100%)</option>
                         <option value="50%">50%</option>
                         <option value="25%">25%</option>
@@ -1627,7 +1634,7 @@
                        class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-surface-base/50 rounded-xl border animate-fade-in">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Icon Badge</label>
-                      <select [(ngModel)]="block.content.dividerIcon" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.dividerIcon" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None (Diamond Symbol)</option>
                         <option value="Arrow">Arrow →</option>
                         <option value="Play">Play Button</option>
@@ -1652,7 +1659,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Desktop Columns Layout</label>
-                      <select [(ngModel)]="block.style.gridCols" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.gridCols" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="grid-cols-1">1 Column</option>
                         <option value="grid-cols-2">2 Columns</option>
                         <option value="grid-cols-3">3 Columns</option>
@@ -1663,7 +1670,7 @@
                     <!-- Column width ratio (visible only on 2-cols layout) -->
                     <div *ngIf="block.style.gridCols === 'grid-cols-2'">
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Desktop Width Ratio</label>
-                      <select [(ngModel)]="block.style.widthRatio" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.widthRatio" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Equal">Equal (50/50)</option>
                         <option value="60/40">60% / 40%</option>
                         <option value="70/30">70% / 30%</option>
@@ -1674,14 +1681,14 @@
 
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Tablet Columns</label>
-                      <select [(ngModel)]="block.style.colsTablet" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.colsTablet" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="md:grid-cols-1">1 Column</option>
                         <option value="md:grid-cols-2">2 Columns</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Mobile Columns</label>
-                      <select [(ngModel)]="block.style.colsMobile" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.colsMobile" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="grid-cols-1">1 Column</option>
                         <option value="grid-cols-2">2 Columns</option>
                       </select>
@@ -1692,7 +1699,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-6 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Image Aspect Ratio</label>
-                      <select [(ngModel)]="block.style.imageAspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.imageAspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="">Natural (Auto)</option>
                         <option value="4/3">4:3 Standard</option>
                         <option value="16/9">16:9 Widescreen</option>
@@ -1701,7 +1708,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Grid Gap / Spacing</label>
-                      <select [(ngModel)]="block.style.gapSize" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.gapSize" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Small">Small Gap</option>
                         <option value="Medium">Medium Gap</option>
                         <option value="Large">Large Gap</option>
@@ -1709,14 +1716,14 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Vertical Alignment</label>
-                      <select [(ngModel)]="block.style.valign" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.valign" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Top">Top</option>
                         <option value="Middle">Middle / Centered</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Animation on Scroll</label>
-                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Fade In">Fade In</option>
                       </select>
@@ -1774,7 +1781,7 @@
                           <label class="block text-[10px] font-bold text-text-muted mb-1">Image URL (Optional)</label>
                           <div class="flex items-center gap-2 w-full">
                             <input type="text" [(ngModel)]="col.imageUrl" placeholder="https://..."
-                                   class="flex-1  p-2 text-xs rounded border bg-surface-card">
+                                   class="flex-1  p-2 text-xs rounded border bg-surface-card min-w-0">
                             <button type="button" (click)="fileInputColImg.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                               Upload
@@ -1788,7 +1795,7 @@
                       <div class="grid grid-cols-1 md:grid-cols-5 gap-3 p-2.5 bg-surface-base/50 rounded-xl border">
                         <div>
                           <label class="block text-[10px] font-bold text-text-muted mb-1">Icon Selection</label>
-                          <select [(ngModel)]="col.icon" class="w-full p-2 text-xs rounded border bg-surface-card">
+                          <select [(ngModel)]="col.icon" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                             <option value="None">None</option>
                             <option value="Arrow">Arrow →</option>
                             <option value="Play">Play Button</option>
@@ -1799,7 +1806,7 @@
                         </div>
                         <div>
                           <label class="block text-[10px] font-bold text-text-muted mb-1">Text Alignment</label>
-                          <select [(ngModel)]="col.align" class="w-full p-2 text-xs rounded border bg-surface-card">
+                          <select [(ngModel)]="col.align" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                             <option value="left">Left</option>
                             <option value="center">Center</option>
                             <option value="right">Right</option>
@@ -1853,7 +1860,7 @@
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Avatar Image URL</label>
                       <div class="flex items-center gap-2 w-full">
                         <input type="text" [(ngModel)]="block.content.avatarUrl" placeholder="https://..."
-                               class="flex-1  p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
+                               class="flex-1 min-w-0 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card outline-none">
                         <button type="button" (click)="fileInputAvatar.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                           Upload
@@ -1867,7 +1874,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Quote Style</label>
-                      <select [(ngModel)]="block.style.quoteStyle" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.quoteStyle" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Simple">Simple Layout</option>
                         <option value="Card">Card Block</option>
                         <option value="Bordered">Left Border Highlight</option>
@@ -1876,7 +1883,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Quote Font Size</label>
-                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.fontSize" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Normal">Normal</option>
                         <option value="Large">Large</option>
                         <option value="X-Large">X-Large</option>
@@ -1884,7 +1891,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Text Alignment</label>
-                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="left">Left Align</option>
                         <option value="center">Center Align</option>
                         <option value="right">Right Align</option>
@@ -1892,7 +1899,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Star Rating Badge</label>
-                      <select [(ngModel)]="block.content.rating" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.rating" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="1">1 Star</option>
                         <option value="2">2 Stars</option>
@@ -1907,7 +1914,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Avatar Position</label>
-                      <select [(ngModel)]="block.content.avatarPos" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.avatarPos" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Left of Name">Left of Name</option>
                         <option value="Above Name">Above Name</option>
                         <option value="None">None (Hidden)</option>
@@ -1919,7 +1926,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Animation on Scroll</label>
-                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Fade In">Fade In</option>
                       </select>
@@ -1964,16 +1971,23 @@
                   <!-- Self-Hosted URL (shown for file uploads) -->
                   <div *ngIf="block.content.videoSource === 'SelfHosted'">
                     <label class="block text-[11px] font-bold text-text-secondary mb-1">Video File URL</label>
-                    <input type="text" [(ngModel)]="block.content.selfHostedUrl" placeholder="https://example.com/video.mp4"
-                           class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
-                    <span class="text-[10px] text-text-muted">Link to an MP4, WebM, or OGG video file hosted on your server or CDN.</span>
+                    <div class="flex gap-2">
+                      <input type="text" [(ngModel)]="block.content.selfHostedUrl" placeholder="https://example.com/video.mp4"
+                             class="flex-1 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
+                      <button type="button" (click)="fileInputSelfHosted.click()" class="px-4 py-2 bg-[var(--accent-indigo)] text-white text-sm font-bold rounded-lg hover:bg-indigo-600 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm shadow-indigo-500/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Upload
+                      </button>
+                      <input type="file" #fileInputSelfHosted (change)="uploadImage($event, block.content, 'selfHostedUrl')" class="hidden" accept="video/*">
+                    </div>
+                    <span class="text-[10px] text-text-muted mt-1 block">Link to an MP4, WebM, or OGG video file hosted on your server or CDN.</span>
                   </div>
 
                   <!-- Layout & Display Options -->
                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Aspect Ratio</label>
-                      <select [(ngModel)]="block.content.aspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.aspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="16:9">16:9 (Widescreen)</option>
                         <option value="4:3">4:3 (Standard)</option>
                         <option value="1:1">1:1 (Square)</option>
@@ -1982,7 +1996,7 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Max Width</label>
-                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.maxWidth" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="Full">Full Width</option>
                         <option value="Large">Large</option>
                         <option value="Medium">Medium</option>
@@ -1991,15 +2005,16 @@
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Border Radius</label>
-                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.style.borderRadius" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None (Sharp)</option>
                         <option value="Small">Small</option>
                         <option value="Medium">Medium (Rounded)</option>
+                        <option value="Full">Full (Circular)</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Animation on Scroll</label>
-                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card">
+                      <select [(ngModel)]="block.content.animation" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
                         <option value="None">None</option>
                         <option value="Fade In">Fade In</option>
                       </select>
@@ -2035,7 +2050,7 @@
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Thumbnail / Poster Image URL <span class="font-normal text-text-muted">(Optional)</span></label>
                       <div class="flex items-center gap-2 w-full">
                         <input type="text" [(ngModel)]="block.content.posterUrl" placeholder="https://..."
-                               class="flex-1  p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
+                               class="flex-1 min-w-0 p-2.5 text-sm rounded-lg border border-border-card bg-surface-card">
                         <button type="button" (click)="fileInputPoster.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                           Upload
