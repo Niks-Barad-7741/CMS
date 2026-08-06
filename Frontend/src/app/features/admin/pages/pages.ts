@@ -18,6 +18,8 @@ interface MenuListItem {
   status: string; // 'Published' | 'Draft' | 'Not Added'
   sortOrder: number;
   isSubMenu?: boolean;
+  expanded?: boolean;
+  parentId?: string;
 }
 
 @Component({
@@ -219,7 +221,9 @@ export class PagesComponent implements OnInit {
         page,
         hasContent,
         status,
-        sortOrder
+        sortOrder,
+        isSubMenu: false,
+        expanded: false
       });
 
       // Map submenus if present
@@ -245,7 +249,7 @@ export class PagesComponent implements OnInit {
 
           const wrappedMenu: MenuItem = {
             id: subMenu.id,
-            title: `${menu.title} > ${subMenu.title}`,
+            title: subMenu.title,
             page: subMenu.page,
             sortOrder: subMenu.sortOrder,
             isVisible: subMenu.isVisible
@@ -256,7 +260,9 @@ export class PagesComponent implements OnInit {
             page: subPage,
             hasContent: subHasContent,
             status: subStatus,
-            sortOrder: subSortOrder
+            sortOrder: subSortOrder,
+            isSubMenu: true,
+            parentId: menu.id
           });
         });
       }
@@ -264,6 +270,31 @@ export class PagesComponent implements OnInit {
 
     this.menuListItems = items;
     this.buildMenuNodes();
+  }
+
+  toggleMenu(parentId: string) {
+    const parent = this.menuListItems.find(i => !i.isSubMenu && i.menu.id === parentId);
+    if (parent) {
+      const isExpanding = !parent.expanded;
+      if (isExpanding) {
+        this.menuListItems.forEach(item => {
+          if (!item.isSubMenu) {
+            item.expanded = false;
+          }
+        });
+      }
+      parent.expanded = isExpanding;
+    }
+  }
+
+  isRowVisible(item: MenuListItem): boolean {
+    if (!item.isSubMenu) return true;
+    const parent = this.menuListItems.find(i => !i.isSubMenu && i.menu.id === item.parentId);
+    return parent ? !!parent.expanded : true;
+  }
+
+  hasSubMenus(menuId: string): boolean {
+    return this.menuListItems.some(i => i.isSubMenu && i.parentId === menuId);
   }
 
   buildMenuNodes() {
@@ -318,26 +349,58 @@ export class PagesComponent implements OnInit {
     }
 
     const draggedItem = this.menuListItems[this.dragIndex];
-    this.menuListItems.splice(this.dragIndex, 1);
-    this.menuListItems.splice(dropIndex, 0, draggedItem);
+    const dropTarget = this.menuListItems[dropIndex];
 
-    let currentOrder = 1;
-    let newSortOrderForDragged = 1;
+    if (draggedItem.isSubMenu) {
+      // Submenus can only be dropped on their parent or siblings
+      if (dropTarget.parentId !== draggedItem.parentId && dropTarget.menu.id !== draggedItem.parentId) {
+        this.dragIndex = null;
+        return;
+      }
+      this.menuListItems.splice(this.dragIndex, 1);
+      this.menuListItems.splice(dropIndex, 0, draggedItem);
+    } else {
+      // Main menus can only be dropped on other main menus
+      if (dropTarget.isSubMenu) {
+        this.dragIndex = null;
+        return;
+      }
+
+      // Move the parent AND all its submenus
+      const family = this.menuListItems.filter(i => i.menu.id === draggedItem.menu.id || i.parentId === draggedItem.menu.id);
+      this.menuListItems = this.menuListItems.filter(i => i.menu.id !== draggedItem.menu.id && i.parentId !== draggedItem.menu.id);
+      
+      let newDropIndex = this.menuListItems.findIndex(i => i === dropTarget);
+      if (newDropIndex === -1) newDropIndex = this.menuListItems.length;
+      
+      this.menuListItems.splice(newDropIndex, 0, ...family);
+    }
+
+    // Recalculate sort orders separately for main menus and submenus
+    let mainOrder = 1;
+    let subOrders: { [key: string]: number } = {};
 
     this.menuListItems.forEach(item => {
-      item.sortOrder = currentOrder++;
+      if (!item.hasContent) {
+        item.sortOrder = 0;
+      } else {
+        if (!item.isSubMenu) {
+          item.sortOrder = mainOrder++;
+          subOrders[item.menu.id] = 1;
+        } else {
+          if (!subOrders[item.parentId!]) subOrders[item.parentId!] = 1;
+          item.sortOrder = subOrders[item.parentId!]++;
+        }
+      }
       if (item.page) {
         item.page.sortOrder = item.sortOrder;
-      }
-      if (item === draggedItem) {
-        newSortOrderForDragged = item.sortOrder;
       }
     });
 
     if (draggedItem.page && draggedItem.page.id) {
        this.pageService.updatePage(draggedItem.page.id, { 
          ...draggedItem.page, 
-         sortOrder: newSortOrderForDragged 
+         sortOrder: draggedItem.sortOrder 
        }).subscribe({
          error: err => console.error('Failed to update sort order', err)
        });
@@ -2158,6 +2221,39 @@ export class PagesComponent implements OnInit {
   dismissError() {
     this.errorMessage = null;
     this.cdr.detectChanges();
+  }
+
+  uploadImage(event: any, targetObj: any, targetProp: string) {
+    const file = event.target.files[0];
+    if (!file || !this.selectedOrgId) return;
+
+    this.isUploadingImage = true;
+    this.cdr.detectChanges();
+
+    this.mediaService.uploadMedia(this.selectedOrgId, file).subscribe({
+      next: (res) => {
+        // Handle direct object response vs envelope wrapper response
+        const newMedia = res.data ? res.data : res;
+        if (newMedia && newMedia.filePath) {
+          targetObj[targetProp] = newMedia.filePath;
+        } else {
+          this.showError('Image uploaded but could not retrieve path.', 3000);
+        }
+        this.isUploadingImage = false;
+        event.target.value = ''; // Reset input
+        this.cdr.detectChanges();
+        
+        // Auto-save the page content so the new image persists
+        this.savePage();
+      },
+      error: (err) => {
+        console.error('Error uploading image', err);
+        this.showError('Failed to upload image. Please try again.', 3000);
+        this.isUploadingImage = false;
+        event.target.value = ''; // Reset input
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadWireframe() {
