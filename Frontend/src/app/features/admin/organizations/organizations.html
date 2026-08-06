@@ -139,6 +139,53 @@
                  onblur="this.style.borderColor=''; this.style.boxShadow=''"
                  placeholder="e.g. acme-corp">
         </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--text-secondary)">Organization Logo</label>
+          <div class="flex items-center gap-4">
+            <div *ngIf="formData.logoUrl" class="w-16 h-16 rounded-full overflow-hidden border bg-white flex items-center justify-center shrink-0 shadow-sm">
+              <img [src]="formData.logoUrl" class="w-full h-full object-cover">
+            </div>
+            <div *ngIf="!formData.logoUrl" class="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            
+            <div class="flex-1 space-y-2">
+              <div class="flex gap-2">
+                <label class="px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 cursor-pointer transition-colors relative"
+                       [class.opacity-50]="!editingId" [class.cursor-not-allowed]="!editingId">
+                  <input type="file" (change)="uploadLogo($event)" class="hidden" [disabled]="!editingId" accept="image/*">
+                  Upload Image
+                </label>
+                <button *ngIf="formData.logoUrl" type="button" (click)="removeLogo()" class="px-4 py-2 text-sm font-semibold rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
+                  Remove
+                </button>
+              </div>
+              <p *ngIf="!editingId" class="text-xs text-amber-600 font-medium">You must save the new organization first before uploading a logo.</p>
+              <p class="text-xs text-gray-500">Or enter logo URL manually:</p>
+              <input type="text" name="logoUrl" [(ngModel)]="formData.logoUrl"
+                     class="w-full px-4 py-2 text-sm rounded-lg outline-none transition-all border"
+                     style="background:var(--bg-base); border-color:var(--border-card); color:var(--text-primary);"
+                     onfocus="this.style.borderColor='#6366F1'; this.style.boxShadow='0 0 0 4px rgba(99,102,241,0.12)'"
+                     onblur="this.style.borderColor=''; this.style.boxShadow=''"
+                     placeholder="https://example.com/logo.png">
+            </div>
+          </div>
+        </div>
+        <!-- Navbar Layout -->
+        <div class="mt-4">
+          <label class="block text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--text-secondary)">Navbar Layout</label>
+          <div class="flex flex-col gap-2">
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="radio" name="navbarLayout" [(ngModel)]="formData.navbarLayout" value="LogoLeft" class="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out">
+              <span class="ml-2 text-sm text-[color:var(--text-primary)]">Layout 1 – Logo Left</span>
+            </label>
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="radio" name="navbarLayout" [(ngModel)]="formData.navbarLayout" value="LogoRight" class="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out">
+              <span class="ml-2 text-sm text-[color:var(--text-primary)]">Layout 2 – Logo Right</span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <!-- Footer & Contact Section -->

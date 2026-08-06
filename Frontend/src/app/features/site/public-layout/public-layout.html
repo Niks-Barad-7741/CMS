@@ -17,16 +17,18 @@
 <div *ngIf="!isLoading && !isNotFound && orgProfile" class="min-h-screen bg-white flex flex-col font-sans">
   
   <!-- ═══ NAVBAR ═══ -->
-  <nav class="sticky top-0 z-50 bg-white transition-shadow duration-300"
+  <nav class="sticky top-0 z-50 bg-[#0A192F] transition-shadow duration-300"
        [class.shadow-lg]="isScrolled"
-       style="border-bottom: 1px solid #e5e7eb;">
+       style="border-bottom: 1px solid rgba(255,255,255,0.1);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
+      <div class="flex items-center justify-between h-20" [class.flex-row-reverse]="orgProfile?.navbarLayout === 'LogoRight'">
         
         <!-- Logo -->
-        <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" [routerLink]="getPageLink('home')">
-          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-auto object-contain">
-          <span *ngIf="!orgProfile?.logoUrl" class="text-[#0A192F] font-bold text-2xl tracking-tight">
+        <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" 
+             [routerLink]="getPageLink('home')"
+             [class.flex-row-reverse]="orgProfile?.navbarLayout === 'LogoRight'">
+          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-12 object-cover rounded-full bg-white shadow-sm">
+          <span class="text-white font-bold text-2xl tracking-tight">
             {{ orgProfile.name }}
           </span>
         </div>
@@ -38,23 +40,23 @@
                  (mouseenter)="showDropdown(menu.id)" 
                  (mouseleave)="hideDropdown(menu.id)">
               <a [routerLink]="getPageLink(menu.page)"
-                 routerLinkActive="text-[#0056B3] font-bold"
+                 routerLinkActive="text-white font-bold"
                  [routerLinkActiveOptions]="{ exact: menu.page === 'home' }"
-                 class="text-[#0A192F] hover:text-[#0056B3] px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1 relative group">
+                 class="text-gray-300 hover:text-white px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1 relative group">
                 {{ menu.title }}
                 <svg *ngIf="menu.subMenuItems?.length" class="w-3.5 h-3.5 ml-0.5 transition-transform" [class.rotate-180]="activeDropdown === menu.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
-                <span class="absolute bottom-0 left-4 right-4 h-0.5 bg-[#0056B3] scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                <span class="absolute bottom-0 left-4 right-4 h-0.5 bg-[#3B82F6] scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </a>
 
               <!-- Dropdown for Sub-menus -->
               <div *ngIf="menu.subMenuItems?.length && activeDropdown === menu.id"
-                   class="absolute top-full left-0 mt-0 w-56 bg-white rounded-b-xl shadow-xl border border-gray-100 py-2 z-50"
+                   class="absolute top-full left-0 mt-0 w-56 bg-[#0A192F] rounded-b-xl shadow-xl border border-white/10 py-2 z-50"
                    style="animation: fadeDown 0.2s ease-out;">
                 <a *ngFor="let sub of menu.subMenuItems"
                    [routerLink]="getPageLink(sub.page)"
-                   class="block px-5 py-3 text-sm text-[#0A192F] hover:bg-blue-50 hover:text-[#0056B3] transition-colors font-medium">
+                   class="block px-5 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors font-medium">
                   {{ sub.title }}
                 </a>
               </div>
@@ -64,18 +66,18 @@
           <!-- More Dropdown -->
           <div *ngIf="overflowMenus.length > 0" class="relative">
             <button (click)="toggleMoreDropdown()" 
-                    class="text-[#0A192F] hover:text-[#0056B3] px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1">
+                    class="text-gray-300 hover:text-white px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1">
               More
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </button>
             <div *ngIf="showMoreDropdown"
-                 class="absolute top-full right-0 mt-0 w-56 bg-white rounded-b-xl shadow-xl border border-gray-100 py-2 z-50">
+                 class="absolute top-full right-0 mt-0 w-56 bg-[#0A192F] rounded-b-xl shadow-xl border border-white/10 py-2 z-50">
               <a *ngFor="let menu of overflowMenus"
                  [routerLink]="getPageLink(menu.page)"
                  (click)="showMoreDropdown = false"
-                 class="block px-5 py-3 text-sm text-[#0A192F] hover:bg-blue-50 hover:text-[#0056B3] transition-colors font-medium">
+                 class="block px-5 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors font-medium">
                 {{ menu.title }}
               </a>
             </div>
@@ -83,11 +85,11 @@
         </div>
 
         <!-- Mobile Menu Button -->
-        <button (click)="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <svg *ngIf="!isMobileMenuOpen" class="h-6 w-6 text-[#0A192F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button (click)="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg hover:bg-white/5 transition-colors">
+          <svg *ngIf="!isMobileMenuOpen" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          <svg *ngIf="isMobileMenuOpen" class="h-6 w-6 text-[#0A192F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg *ngIf="isMobileMenuOpen" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -95,26 +97,26 @@
     </div>
 
     <!-- Mobile Menu Overlay -->
-    <div *ngIf="isMobileMenuOpen" class="lg:hidden fixed inset-0 top-20 bg-white z-40 overflow-y-auto" style="animation: slideDown 0.3s ease-out;">
+    <div *ngIf="isMobileMenuOpen" class="lg:hidden fixed inset-0 top-20 bg-[#0A192F] z-40 overflow-y-auto border-t border-white/10" style="animation: slideDown 0.3s ease-out;">
       <div class="px-4 py-6 space-y-1">
         <ng-container *ngFor="let menu of menus">
           <div>
             <div class="flex items-center justify-between">
               <a [routerLink]="getPageLink(menu.page)" (click)="isMobileMenuOpen = false"
-                 class="flex-1 block px-4 py-3 text-base font-semibold text-[#0A192F] hover:text-[#0056B3] hover:bg-blue-50 rounded-lg transition-colors">
+                 class="flex-1 block px-4 py-3 text-base font-semibold text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                 {{ menu.title }}
               </a>
-              <button *ngIf="menu.subMenuItems?.length" (click)="toggleMobileSubmenu(menu.id)" class="p-3 rounded-lg hover:bg-gray-100">
+              <button *ngIf="menu.subMenuItems?.length" (click)="toggleMobileSubmenu(menu.id)" class="p-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white">
                 <svg class="w-4 h-4 transition-transform" [class.rotate-180]="expandedMobileMenu === menu.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
               </button>
             </div>
             <!-- Mobile Sub-menus -->
-            <div *ngIf="menu.subMenuItems?.length && expandedMobileMenu === menu.id" class="ml-6 mt-1 space-y-1 border-l-2 border-blue-100 pl-4">
+            <div *ngIf="menu.subMenuItems?.length && expandedMobileMenu === menu.id" class="ml-6 mt-1 space-y-1 border-l-2 border-white/10 pl-4">
               <a *ngFor="let sub of menu.subMenuItems"
                  [routerLink]="getPageLink(sub.page)" (click)="isMobileMenuOpen = false"
-                 class="block py-2.5 px-3 text-sm text-gray-600 hover:text-[#0056B3] hover:bg-blue-50 rounded-lg transition-colors">
+                 class="block py-2.5 px-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                 {{ sub.title }}
               </a>
             </div>
@@ -137,7 +139,7 @@
         <!-- Brand Column -->
         <div class="space-y-6">
           <div class="flex items-center gap-3">
-            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-10 w-auto object-contain brightness-0 invert">
+            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-10 w-10 object-cover rounded-full bg-white shadow-sm">
             <span *ngIf="!orgProfile?.logoUrl" class="text-white font-bold text-xl tracking-tight">{{ orgProfile?.name }}</span>
           </div>
           <p class="text-gray-400 text-sm leading-relaxed">

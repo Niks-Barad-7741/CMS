@@ -261,6 +261,44 @@ export class PagesComponent implements OnInit {
     });
 
     this.menuListItems = items;
+    this.buildMenuNodes();
+  }
+
+  buildMenuNodes() {
+    this.menuNodes = [];
+    if (!this.menus || this.menus.length === 0) {
+      return;
+    }
+    
+    const mainItems = this.menuListItems.filter(item => !item.isSubMenu);
+    
+    let mainActiveCounter = 1;
+    for (const main of mainItems) {
+      if (main.hasContent) {
+        main.sortOrder = mainActiveCounter++;
+      } else {
+        main.sortOrder = 0;
+      }
+
+      const subItems = this.menuListItems.filter(item => 
+        item.isSubMenu && 
+        (main.menu as any).subMenuItems?.find((s: any) => s.id === item.menu.id)
+      );
+      
+      let subActiveCounter = 1;
+      subItems.forEach(sub => {
+        if (sub.hasContent) {
+          sub.sortOrder = subActiveCounter++;
+        } else {
+          sub.sortOrder = 0;
+        }
+      });
+
+      this.menuNodes.push({
+        item: main,
+        subItems: subItems
+      });
+    }
   }
 
   onDragStart(index: number) {

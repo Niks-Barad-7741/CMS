@@ -14,5 +14,7 @@ namespace Dynamic_CMS.Application.DTOs
         public string? SocialTwitter { get; set; }
         public string? SocialFacebook { get; set; }
         public string? SocialInstagram { get; set; }
+        public string? LogoUrl { get; set; }
+        public string? NavbarLayout { get; set; }
     }
 }

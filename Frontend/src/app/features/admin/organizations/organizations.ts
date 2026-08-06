@@ -5,6 +5,7 @@ import { OrganizationService, Organization } from '../../../core/services/organi
 import { MenuService } from '../../../core/services/menu.service';
 import { PageService } from '../../../core/services/page.service';
 import { DashboardService } from '../../../core/services/dashboard.service';
+import { MediaService } from '../../../core/services/media.service';
 import { 
   HOME_TEMPLATE, 
   ABOUT_TEMPLATE, 
@@ -78,6 +79,7 @@ export class OrganizationsComponent implements OnInit {
     private menuService: MenuService,
     private pageService: PageService,
     private dashboardService: DashboardService,
+    private mediaService: MediaService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -116,7 +118,8 @@ export class OrganizationsComponent implements OnInit {
       address: '',
       socialTwitter: '',
       socialFacebook: '',
-      socialInstagram: ''
+      socialInstagram: '',
+      navbarLayout: 'LogoLeft'
     };
     this.errorMessage = null;
     this.showForm = true;
@@ -140,6 +143,38 @@ export class OrganizationsComponent implements OnInit {
     if (!this.editingId) {
       this.formData.slug = (this.formData.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
+  }
+
+  uploadLogo(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (!this.editingId) {
+        this.errorMessage = 'Please create the organization first before uploading a logo.';
+        return;
+      }
+      this.isSaving = true;
+      this.mediaService.uploadMedia(this.editingId, file).subscribe({
+        next: (res) => {
+          if (res && res.filePath) {
+            const url = res.filePath.startsWith('/uploads/') ? `https://localhost:7170${res.filePath}` : res.filePath;
+            this.formData.logoUrl = url;
+            this.showToast('Logo uploaded successfully. Save the organization to apply changes.');
+          }
+          this.isSaving = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Logo upload failed', err);
+          this.errorMessage = 'Logo upload failed. Please try again.';
+          this.isSaving = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  removeLogo() {
+    this.formData.logoUrl = null;
   }
 
   save() {
@@ -219,17 +254,19 @@ export class OrganizationsComponent implements OnInit {
 
     this.isSaving = true;
 
-    const payload = {
+    const payload: any = {
       name: this.formData.name,
       slug: this.formData.slug,
       isActive: this.formData.isActive,
+      logoUrl: this.formData.logoUrl,
       footerDescription: this.formData.footerDescription,
       contactEmail: this.formData.contactEmail,
       contactPhone: this.formData.contactPhone,
       address: this.formData.address,
       socialTwitter: this.formData.socialTwitter,
       socialFacebook: this.formData.socialFacebook,
-      socialInstagram: this.formData.socialInstagram
+      socialInstagram: this.formData.socialInstagram,
+      navbarLayout: this.formData.navbarLayout || 'LogoLeft'
     };
 
     if (this.editingId) {

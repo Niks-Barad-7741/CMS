@@ -72,7 +72,9 @@ namespace Dynamic_CMS.Application.Services
                 Address = organization.Address,
                 SocialTwitter = organization.SocialTwitter,
                 SocialFacebook = organization.SocialFacebook,
-                SocialInstagram = organization.SocialInstagram
+                SocialInstagram = organization.SocialInstagram,
+                LogoUrl = organization.LogoUrl,
+                NavbarLayout = organization.NavbarLayout
             };
         }
 
