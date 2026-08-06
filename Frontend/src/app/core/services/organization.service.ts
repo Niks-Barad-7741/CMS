@@ -16,6 +16,7 @@ export interface Organization {
   socialTwitter?: string;
   socialFacebook?: string;
   socialInstagram?: string;
+  navbarLayout?: string;
 }
 
 @Injectable({
