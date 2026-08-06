@@ -147,13 +147,37 @@ export class PageViewerComponent implements OnInit {
 
         let videoHtml = '';
         if (isVideoBg && section.style.videoUrl) {
-          const autoplay = section.style.videoAutoplay !== false ? 'autoplay' : '';
-          const muted = section.style.videoMuted !== false ? 'muted' : '';
-          videoHtml = `
-            <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="z-index: 0;">
-              <source src="${resolveImageUrl(section.style.videoUrl)}" type="video/mp4">
-            </video>
-          `;
+          const url = section.style.videoUrl;
+          // Extract YouTube video ID from any format
+          let ytId = '';
+          if (url.includes('youtube.com/watch')) {
+            const match = url.match(/[?&]v=([^&]+)/);
+            if (match) ytId = match[1];
+          } else if (url.includes('youtube.com/embed/')) {
+            ytId = url.split('embed/')[1].split('?')[0];
+          } else if (url.includes('youtu.be/')) {
+            ytId = url.split('youtu.be/')[1].split('?')[0];
+          } else if (url.includes('youtube.com/shorts/')) {
+            ytId = url.split('shorts/')[1].split('?')[0];
+          }
+
+          if (ytId) {
+            const autoParam = section.style.videoAutoplay !== false ? '&autoplay=1' : '&autoplay=0';
+            const muteParam = section.style.videoMuted !== false ? '&mute=1' : '&mute=0';
+            videoHtml = `
+              <iframe class="pointer-events-none" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05); z-index: 0;"
+                      src="https://www.youtube.com/embed/${ytId}?controls=0&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
+                      frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            `;
+          } else {
+            const autoplay = section.style.videoAutoplay !== false ? 'autoplay' : '';
+            const muted = section.style.videoMuted !== false ? 'muted' : '';
+            videoHtml = `
+              <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="z-index: 0;">
+                <source src="${resolveImageUrl(url)}" type="video/mp4">
+              </video>
+            `;
+          }
         }
         
         const ptClass = section.style.paddingTop || 'pt-16';
@@ -293,13 +317,37 @@ export class PageViewerComponent implements OnInit {
               // Video HTML
               let videoHtml = '';
               if (bgType === 'video' && block.content.videoUrl) {
-                const autoplay = block.content.videoAutoplay !== false ? 'autoplay' : '';
-                const muted = block.content.videoMuted !== false ? 'muted' : '';
-                videoHtml = `
-                  <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0">
-                    <source src="${resolveImageUrl(block.content.videoUrl)}" type="video/mp4">
-                  </video>
-                `;
+                const url = block.content.videoUrl;
+                // Extract YouTube video ID from any format
+                let ytId = '';
+                if (url.includes('youtube.com/watch')) {
+                  const match = url.match(/[?&]v=([^&]+)/);
+                  if (match) ytId = match[1];
+                } else if (url.includes('youtube.com/embed/')) {
+                  ytId = url.split('embed/')[1].split('?')[0];
+                } else if (url.includes('youtu.be/')) {
+                  ytId = url.split('youtu.be/')[1].split('?')[0];
+                } else if (url.includes('youtube.com/shorts/')) {
+                  ytId = url.split('shorts/')[1].split('?')[0];
+                }
+
+                if (ytId) {
+                  const autoParam = block.content.videoAutoplay !== false ? '&autoplay=1' : '&autoplay=0';
+                  const muteParam = block.content.videoMuted !== false ? '&mute=1' : '&mute=0';
+                  videoHtml = `
+                    <iframe class="pointer-events-none z-0" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05);"
+                            src="https://www.youtube.com/embed/${ytId}?controls=0&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
+                            frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+                  `;
+                } else {
+                  const autoplay = block.content.videoAutoplay !== false ? 'autoplay' : '';
+                  const muted = block.content.videoMuted !== false ? 'muted' : '';
+                  videoHtml = `
+                    <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0">
+                      <source src="${resolveImageUrl(url)}" type="video/mp4">
+                    </video>
+                  `;
+                }
               }
 
               // Divider HTML
@@ -386,7 +434,7 @@ export class PageViewerComponent implements OnInit {
               if (block.style.borderRadius === 'None') radiusClass = 'rounded-none';
               else if (block.style.borderRadius === 'Small') radiusClass = 'rounded-md';
               else if (block.style.borderRadius === 'Medium') radiusClass = 'rounded-2xl';
-              else if (block.style.borderRadius === 'Full-Round') radiusClass = 'rounded-full';
+              else if (block.style.borderRadius === 'Full-Round' || block.style.borderRadius === 'Full') radiusClass = 'rounded-full';
 
               // --- Shadow ---
               let shadowClass = '';
@@ -930,7 +978,7 @@ export class PageViewerComponent implements OnInit {
               const mwClass = mwMap[block.style.maxWidth || 'Large'] || 'max-w-5xl mx-auto';
 
               // Border radius class
-              const brMap: Record<string,string> = { 'None': 'rounded-none', 'Small': 'rounded-lg', 'Medium': 'rounded-2xl' };
+              const brMap: Record<string,string> = { 'None': 'rounded-none', 'Small': 'rounded-lg', 'Medium': 'rounded-2xl', 'Full': 'rounded-full' };
               const brClass = brMap[block.style.borderRadius || 'Medium'] || 'rounded-2xl';
 
               // Build iframe src with params
@@ -950,9 +998,9 @@ export class PageViewerComponent implements OnInit {
                   <div id="${videoId}" class="${arClass} ${brClass} overflow-hidden relative cursor-pointer group shadow-2xl"
                        style="${bgStyle}"
                        onclick="document.getElementById('${modalId}').classList.remove('hidden')">
-                    <div class="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-                      <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                        <svg class="w-7 h-7 text-indigo-600 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.84A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.27l9.344-5.891a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                      <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                        <svg class="w-10 h-10 text-indigo-600 ml-2" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.84A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.27l9.344-5.891a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
                       </div>
                     </div>
                   </div>
