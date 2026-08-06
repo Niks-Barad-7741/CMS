@@ -21,6 +21,15 @@ export interface MenuItem {
   subMenuItems?: SubMenuItem[];
 }
 
+export interface SubMenuItem {
+  id: string;
+  menuItemId: string;
+  title: string;
+  page: string;
+  sortOrder: number;
+  isVisible: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })

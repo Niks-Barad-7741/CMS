@@ -176,6 +176,7 @@ namespace Dynamic_CMS.Application.Services
             Id = content.Id,
             OrganizationId = content.OrganizationId,
             MenuItemId = content.MenuItemId,
+            SubMenuItemId = content.SubMenuItemId,
             Title = content.Title,
             Status = content.Status,
             TemplateId = content.TemplateId,

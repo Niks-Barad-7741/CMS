@@ -50,9 +50,11 @@ namespace Dynamic_CMS.Infrastructure.Repositories
                 .AsNoTracking()
                 .Include(p => p.Organization)
                 .Include(p => p.MenuItem)
+                .Include(p => p.SubMenuItem)
                 .FirstOrDefaultAsync(p => !p.IsDeleted &&
                     p.Organization.Slug.ToLower() == targetSlug &&
-                    p.MenuItem.Page.ToLower() == targetPage, cancellationToken);
+                    ((p.MenuItem != null && p.MenuItem.Page.ToLower() == targetPage) ||
+                     (p.SubMenuItem != null && p.SubMenuItem.Page.ToLower() == targetPage)), cancellationToken);
         }
 
         public async Task<PageContent> AddAsync(PageContent pageContent, CancellationToken cancellationToken)

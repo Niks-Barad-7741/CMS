@@ -99,309 +99,162 @@ export class PageViewerComponent implements OnInit {
       return url && url.startsWith('/uploads/') ? `https://localhost:7170${url}` : url;
     };
 
-    if (title.includes('home') || slug.includes('home')) {
-        if (data.blocks && Array.isArray(data.blocks)) {
-          return data.blocks.map((block: any) => {
-            switch (block.type) {
-              case 'hero-banner': {
-                const bUrl = resolveImageUrl(block.data.bgImage);
-                const bg = bUrl
-                  ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
-                  : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
-                return `
-                  <div class="relative w-full min-h-[70vh] flex items-center justify-center" ${bg}>
-                    <div class="absolute inset-0" style="background: rgba(0, 40, 85, 0.55);"></div>
-                    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto py-24">
-                      <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-wider mb-6 leading-tight">${block.data.title || ''}</h1>
-                      <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed font-light">${block.data.subtitle || ''}</p>
-                      ${block.data.ctaText ? `<a href="${block.data.ctaLink || '#'}" class="inline-block px-10 py-4 bg-white/10 hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.ctaText}</a>` : ''}
-                    </div>
-                  </div>
-                `;
-              }
-              case 'solutions-grid': {
-                const cardsHtml = (block.data.cards || []).map((card: any) => {
-                  const img = resolveImageUrl(card.image);
-                  const imgTag = img ? `<img src="${img}" alt="${card.title || ''}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">` : `<div class="absolute inset-0 w-full h-full bg-[#002855]"></div>`;
-                  return `
-                    <a href="${card.link || '#'}" class="group relative block overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1" style="aspect-ratio: 3/4;">
-                      ${imgTag}
-                      <div class="absolute inset-0 bg-gradient-to-t from-[#002855]/80 via-[#002855]/30 to-transparent group-hover:from-[#0056B3]/90 transition-all duration-500"></div>
-                      <div class="absolute bottom-0 left-0 right-0 p-6">
-                        <h3 class="text-white text-lg font-bold tracking-wide text-center">${card.title || ''}</h3>
-                      </div>
-                    </a>
-                  `;
-                }).join('');
-                return `
-                  <section class="py-20 bg-white">
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                      ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] text-center uppercase tracking-wider mb-16">${block.data.sectionTitle}</h2>` : ''}
-                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">${cardsHtml}</div>
-                    </div>
-                  </section>
-                `;
-              }
-              case 'features-row': {
-                const featsHtml = (block.data.items || []).map((item: any) => `
-                  <div class="group bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0056B3]"></div>
-                    <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center text-4xl">${item.icon || '⭐'}</div>
-                    <p class="text-gray-600 text-center leading-relaxed text-sm">${item.desc || ''}</p>
-                  </div>
-                `).join('');
-                return `
-                  <section class="py-20" style="background: #F8F9FA;">
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                      <div class="text-center mb-16">
-                        ${block.data.sectionTitle ? `<h2 class="text-3xl md:text-4xl font-extrabold text-[#002855] uppercase tracking-wider mb-4">${block.data.sectionTitle}</h2>` : ''}
-                        ${block.data.subtitle ? `<p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">${block.data.subtitle}</p>` : ''}
-                      </div>
-                      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${featsHtml}</div>
-                    </div>
-                  </section>
-                `;
-              }
-              case 'cta-banner': {
-                return `
-                  <section class="py-20" style="background: #002855;">
-                    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                      <h2 class="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider mb-8">${block.data.title || ''}</h2>
-                      ${block.data.buttonText ? `<a href="${block.data.buttonLink || '#'}" class="inline-block px-12 py-4 bg-transparent hover:bg-white hover:text-[#002855] text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.data.buttonText}</a>` : ''}
-                    </div>
-                  </section>
-                `;
-              }
-              default:
-                return '';
-            }
-          }).join('');
+    // If it is the new section-based builder content, render sections dynamically
+    if (data && data.sections && Array.isArray(data.sections)) {
+      return data.sections.map((section: any) => {
+        let isImageBg = section.style.backgroundType === 'image';
+        let secStyle = '';
+        if (section.style.backgroundType === 'color') {
+          secStyle += `background-color: ${section.style.backgroundColor || '#ffffff'}; `;
+        } else if (isImageBg && section.style.backgroundImageUrl) {
+          let sizeStyle = `background-image: url('${resolveImageUrl(section.style.backgroundImageUrl)}'); background-position: center; `;
+          if (section.style.backgroundSize === 'contain') {
+            sizeStyle += 'background-size: contain; background-repeat: no-repeat; ';
+          } else if (section.style.backgroundSize === 'repeat') {
+            sizeStyle += 'background-size: auto; background-repeat: repeat; ';
+          } else {
+            sizeStyle += 'background-size: cover; background-repeat: no-repeat; ';
+          }
+          secStyle += `${sizeStyle} min-height: 480px; display: flex; align-items: center; `;
         }
+        
+        let defaultTextColor = isImageBg ? '#ffffff' : '#1f2937';
+        let textColor = section.style.textColor || defaultTextColor;
+        secStyle += `color: ${textColor}; `;
+        
+        const paddingClass = section.style.paddingY || 'py-16';
+        let overlayOpacity = section.style.overlayOpacity !== undefined ? section.style.overlayOpacity / 100 : 0;
 
-        // Fallback for old data without blocks
-        const bgStyle = data.homeBackgroundImage ? `style="background-image: url('${resolveImageUrl(data.homeBackgroundImage)}'); background-size: cover; background-position: center; background-repeat: no-repeat;"` : 'style="background-color: #0A0F1A;"';
+        let blocksHtml = (section.blocks || []).map((block: any) => {
+          switch (block.type) {
+            case 'heading': {
+              const level = block.content.level || 2;
+              const Tag = `h${level}`;
+              const align = block.content.align || 'left';
+              const size = block.style.fontSize || 'text-3xl';
+              let textShadow = isImageBg ? 'text-shadow: 0 2px 4px rgba(0,0,0,0.8);' : '';
+              let style = `color: ${block.style.textColor || textColor}; ${textShadow}`;
+              return `<div class="py-4 text-${align}"><${Tag} class="${size} font-black tracking-tight leading-tight" style="${style}">${block.content.text || ''}</${Tag}></div>`;
+            }
+            case 'paragraph': {
+              const align = block.content.align || 'left';
+              const size = block.style.fontSize || 'text-base';
+              let textShadow = isImageBg ? 'text-shadow: 0 1px 3px rgba(0,0,0,0.8);' : '';
+              let style = `color: ${block.style.textColor || textColor}; ${textShadow}`;
+              return `<div class="py-2 text-${align}"><p class="${size} leading-relaxed opacity-95" style="${style}">${block.content.text || ''}</p></div>`;
+            }
+            case 'hero': {
+              const bUrl = resolveImageUrl(block.content.bgImageUrl);
+              const bg = bUrl
+                ? `style="background-image: url('${bUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;"`
+                : 'style="background: linear-gradient(135deg, #002855 0%, #0A192F 100%);"';
+              const opacity = block.content.overlayOpacity !== undefined ? block.content.overlayOpacity / 100 : 0.55;
+              return `
+                <div class="relative w-full min-h-[50vh] flex items-center justify-center rounded-2xl overflow-hidden shadow-lg my-6" ${bg}>
+                  <div class="absolute inset-0 bg-black" style="opacity: ${opacity};"></div>
+                  <div class="relative z-10 text-center px-6 max-w-4xl mx-auto py-16">
+                    <h1 class="text-3xl md:text-5xl font-extrabold text-white uppercase tracking-wider mb-4" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">${block.content.heading || ''}</h1>
+                    <p class="text-base md:text-lg text-gray-200 max-w-3xl mx-auto mb-8 font-light" style="text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${block.content.subtext || ''}</p>
+                    ${block.content.ctaText ? `<a href="${block.content.ctaUrl || '#'}" class="inline-block px-8 py-3 bg-white/10 hover:bg-white hover:text-gray-900 text-white font-semibold text-sm uppercase tracking-widest border-2 border-white rounded transition-all duration-300">${block.content.ctaText}</a>` : ''}
+                  </div>
+                </div>
+              `;
+            }
+            case 'image': {
+              const url = resolveImageUrl(block.content.url);
+              const displayMode = block.style.displayMode || 'inline';
+              const objectFit = block.style.objectFit || 'cover';
+              const aspectRatio = block.style.aspectRatio || 'auto';
+              const isFullWidth = displayMode === 'full-width' || displayMode === 'full-screen';
+              const imgClass = isFullWidth ? 'w-full' : 'max-w-full rounded-lg shadow-md';
+              
+              let wrapperStyle = '';
+              if (aspectRatio !== 'auto') {
+                wrapperStyle += `aspect-ratio: ${aspectRatio.replace(':', '/')}; `;
+              }
+
+              return `<div class="py-4 flex justify-center">
+                        <div class="w-full overflow-hidden" style="${wrapperStyle}">
+                          <img src="${url}" alt="${block.content.alt || ''}" style="object-fit: ${objectFit}; width: 100%; height: 100%;" class="${imgClass}" />
+                        </div>
+                      </div>`;
+            }
+            case 'button': {
+              const align = block.content.align || 'left';
+              const style = block.content.style === 'outline' 
+                ? 'border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white' 
+                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg';
+              let flexAlign = align === 'left' ? 'justify-start' : (align === 'right' ? 'justify-end' : 'justify-center');
+              return `<div class="py-6 flex ${flexAlign}">
+                        <a href="${block.content.url || '#'}" class="inline-block px-6 py-3 rounded-xl font-bold transition-all ${style}">${block.content.label || 'Click Here'}</a>
+                      </div>`;
+            }
+            case 'divider': {
+              const height = block.content.height || 40;
+              return `<div style="height: ${height}px;" class="w-full"></div>`;
+            }
+            case 'gallery': {
+              const cols = block.style.gridCols || 'grid-cols-2';
+              const imagesHtml = (block.content.images || []).map((img: any) => {
+                const url = resolveImageUrl(img.url);
+                return `<div class="overflow-hidden rounded-lg shadow-sm bg-gray-50">
+                          <img src="${url}" alt="Gallery Image" class="w-full h-full object-cover aspect-square hover:scale-105 transition-transform duration-500" />
+                          ${img.caption ? `<p class="p-2 text-center text-xs text-gray-500">${img.caption}</p>` : ''}
+                        </div>`;
+              }).join('');
+              return `<div class="py-6 grid ${cols} gap-4">${imagesHtml}</div>`;
+            }
+            case 'columns': {
+              const cols = block.style.gridCols || 'grid-cols-2';
+              const colsHtml = (block.content.columns || []).map((col: any) => {
+                const imgUrl = resolveImageUrl(col.imageUrl);
+                return `<div class="p-6 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 flex flex-col items-center text-center">
+                          ${imgUrl ? `<img src="${imgUrl}" alt="Column Image" class="w-16 h-16 rounded-full object-cover mb-4" />` : ''}
+                          <h3 class="text-lg font-bold mb-2">${col.title || ''}</h3>
+                          <p class="text-sm opacity-80 leading-relaxed">${col.text || ''}</p>
+                        </div>`;
+              }).join('');
+              return `<div class="py-6 grid grid-cols-1 md:${cols} gap-6">${colsHtml}</div>`;
+            }
+            case 'quote': {
+               const avatar = resolveImageUrl(block.content.avatarUrl);
+               return `
+                 <div class="max-w-4xl mx-auto py-12 text-center">
+                   <svg class="w-10 h-10 mx-auto text-indigo-200 mb-4" fill="currentColor" viewBox="0 0 32 32"><path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z"></path></svg>
+                   <p class="text-xl font-medium italic mb-6">"${block.content.text || ''}"</p>
+                   <footer class="flex items-center justify-center gap-3">
+                     ${avatar ? `<img src="${avatar}" class="w-8 h-8 rounded-full object-cover" alt="Author avatar">` : ''}
+                     <span class="font-bold">${block.content.author || ''}</span>
+                   </footer>
+                 </div>
+               `;
+            }
+            case 'video': {
+               const url = block.content.embedUrl;
+               return `<div class="max-w-5xl mx-auto py-8">
+                         <div class="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
+                           ${url ? `<iframe src="${url}" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : '<div class="w-full h-full flex items-center justify-center text-gray-400">No Video URL</div>'}
+                         </div>
+                       </div>`;
+            }
+            default:
+              return '';
+          }
+        }).join('');
 
         return `
-          <!-- HERO -->
-          <div class="relative w-full h-[600px] flex items-center justify-center overflow-hidden"
-               ${bgStyle}>
-            
-            <!-- Overlay to ensure text readability -->
-            <div class="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
-
+          <section class="relative ${paddingClass} overflow-hidden" style="${secStyle}">
+            ${isImageBg && overlayOpacity > 0 ? `
+              <div class="absolute inset-0 bg-black" style="opacity: ${overlayOpacity}; pointer-events: none; z-index: 1;"></div>
+            ` : ''}
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div class="max-w-3xl">
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-[#002855] uppercase tracking-tighter mb-6 leading-[1.1]">
-                  ${data.homeHeroTitle || data.companyName || 'Welcome'}
-                </h1>
-                <p class="text-xl sm:text-2xl text-[#0056B3] font-medium max-w-2xl leading-snug mb-10">
-                  ${data.homeHeroSubtitle || data.tagline || ''}
-                </p>
-                <div class="flex gap-4">
-                  <a href="/site/${slug}/about" class="px-8 py-4 bg-[#002855] hover:bg-[#0056B3] text-white font-bold text-sm uppercase tracking-widest rounded-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
-                    ${data.homeCtaText || 'Learn More'}
-                  </a>
-                  <a href="/site/${slug}/contact" class="px-8 py-4 bg-white hover:bg-gray-50 text-[#002855] font-bold text-sm uppercase tracking-widest rounded-lg shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
-                    Contact Us
-                  </a>
-                </div>
-              </div>
+              ${blocksHtml}
             </div>
-          </div>
+          </section>
         `;
-      }
+      }).join('');
+    }
 
-      if (title.includes('about') || slug.includes('about')) {
-        return `
-          <div class="max-w-6xl mx-auto pt-8">
-            <div class="text-center mb-20 relative">
-              <div class="inline-block relative">
-                <h1 class="text-5xl sm:text-6xl font-black text-slate-900 mb-6 tracking-tight relative z-10">${data.aboutTitle || 'Our Story'}</h1>
-                <div class="absolute -bottom-2 -right-4 w-24 h-6 bg-indigo-200 -z-10 -rotate-2"></div>
-              </div>
-              <p class="text-2xl text-slate-500 max-w-3xl mx-auto font-light leading-relaxed">${data.aboutSubtitle || 'Discover the passion and purpose driving our mission forward.'}</p>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center mb-20">
-              <div class="relative group">
-                <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500 -z-10"></div>
-                <img src="${data.aboutImage || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2850&auto=format&fit=crop'}" alt="About" class="w-full rounded-3xl shadow-2xl object-cover h-[500px] group-hover:scale-[1.02] transition-transform duration-700">
-                <div class="absolute -bottom-8 -left-8 bg-white p-6 rounded-2xl shadow-xl max-w-xs animate-bounce" style="animation-duration: 3s;">
-                  <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl font-bold">✓</div>
-                    <div>
-                      <div class="font-bold text-slate-900">Trusted by many</div>
-                      <div class="text-sm text-slate-500">Years of excellence</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="space-y-8">
-                <div class="prose prose-lg text-slate-600 font-light leading-relaxed">
-                  <p class="text-xl text-slate-800 font-medium mb-6">${data.aboutStory1 || 'We started with a simple idea: to make complex systems beautiful and intuitive.'}</p>
-                  <p>${data.aboutStory2 || 'Over the years, our team has grown, but our core philosophy remains unchanged. We believe in crafting digital experiences that empower organizations to reach their full potential.'}</p>
-                </div>
-                
-                <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100">
-                  <h3 class="text-lg font-bold text-slate-900 mb-6 uppercase tracking-wider text-sm">Why choose us</h3>
-                  <ul class="space-y-5">
-                    ${data.aboutPoint1 ? `
-                      <li class="flex items-start group">
-                        <span class="w-8 h-8 rounded-xl bg-white shadow-sm text-indigo-600 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">✓</span>
-                        <span class="text-slate-700 font-medium mt-1">${data.aboutPoint1}</span>
-                      </li>
-                    ` : ''}
-                    ${data.aboutPoint2 ? `
-                      <li class="flex items-start group">
-                        <span class="w-8 h-8 rounded-xl bg-white shadow-sm text-indigo-600 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">✓</span>
-                        <span class="text-slate-700 font-medium mt-1">${data.aboutPoint2}</span>
-                      </li>
-                    ` : ''}
-                    ${data.aboutPoint3 ? `
-                      <li class="flex items-start group">
-                        <span class="w-8 h-8 rounded-xl bg-white shadow-sm text-indigo-600 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">✓</span>
-                        <span class="text-slate-700 font-medium mt-1">${data.aboutPoint3}</span>
-                      </li>
-                    ` : ''}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      if (title.includes('service') || slug.includes('service')) {
-        return `
-          <div class="pt-8">
-            <div class="text-center mb-20 max-w-3xl mx-auto">
-              <h2 class="text-indigo-600 font-bold tracking-widest uppercase text-sm mb-4">What we do</h2>
-              <h1 class="text-5xl sm:text-6xl font-black text-slate-900 mb-6 tracking-tight">${data.servicesTitle || 'Premium Services'}</h1>
-              <p class="text-xl text-slate-500 font-light leading-relaxed">${data.servicesSubtitle || 'Discover how we can help elevate your organization to new heights with our specialized offerings.'}</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <!-- Service 1 -->
-              <div class="group bg-white rounded-[2rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_20px_40px_rgba(79,70,229,0.1)] hover:border-indigo-100 transition-all duration-500 relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform duration-500 group-hover:rotate-12">💻</div>
-                <h3 class="text-2xl font-bold text-slate-900 mb-4">${data.service1Title || 'Digital Transformation'}</h3>
-                <p class="text-slate-500 font-light leading-relaxed mb-8">${data.service1Desc || 'Modernize your infrastructure with cutting edge technologies tailored to your specific needs.'}</p>
-                <a href="#" class="inline-flex items-center text-indigo-600 font-semibold group-hover:text-indigo-700">
-                  Learn more
-                  <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </a>
-              </div>
-              
-              <!-- Service 2 -->
-              <div class="group bg-white rounded-[2rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_20px_40px_rgba(168,85,247,0.1)] hover:border-purple-100 transition-all duration-500 relative overflow-hidden mt-0 md:mt-12">
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                <div class="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform duration-500 group-hover:-rotate-12">📱</div>
-                <h3 class="text-2xl font-bold text-slate-900 mb-4">${data.service2Title || 'Mobile Experiences'}</h3>
-                <p class="text-slate-500 font-light leading-relaxed mb-8">${data.service2Desc || 'Engaging mobile applications that deliver intuitive functionality right to your users fingertips.'}</p>
-                <a href="#" class="inline-flex items-center text-purple-600 font-semibold group-hover:text-purple-700">
-                  Learn more
-                  <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </a>
-              </div>
-              
-              <!-- Service 3 -->
-              <div class="group bg-white rounded-[2rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_20px_40px_rgba(14,165,233,0.1)] hover:border-sky-100 transition-all duration-500 relative overflow-hidden mt-0 md:mt-24">
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-sky-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                <div class="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform duration-500 group-hover:rotate-12">📈</div>
-                <h3 class="text-2xl font-bold text-slate-900 mb-4">${data.service3Title || 'Data Analytics'}</h3>
-                <p class="text-slate-500 font-light leading-relaxed mb-8">${data.service3Desc || 'Actionable insights derived from complex data to help you make informed business decisions.'}</p>
-                <a href="#" class="inline-flex items-center text-sky-600 font-semibold group-hover:text-sky-700">
-                  Learn more
-                  <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      if (title.includes('contact') || slug.includes('contact')) {
-        return `
-          <div class="bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden relative">
-            <div class="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-indigo-50 to-transparent rounded-bl-full pointer-events-none"></div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-5 h-full">
-              <!-- Info Side -->
-              <div class="lg:col-span-2 bg-[#0A0F1A] text-white p-12 lg:p-16 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-50"></div>
-                <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/30 blur-[60px] rounded-full"></div>
-                
-                <div class="relative z-10 h-full flex flex-col">
-                  <div>
-                    <h2 class="text-4xl font-black mb-4 tracking-tight">${data.contactTitle || "Let's Talk"}</h2>
-                    <p class="text-indigo-200 font-light text-lg mb-12">${data.contactSubtitle || 'We would love to hear from you. Reach out and we will respond as soon as possible.'}</p>
-                  </div>
-                  
-                  <div class="space-y-8 mt-auto">
-                    <div class="flex items-start gap-5 group">
-                      <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl shrink-0 group-hover:bg-indigo-500 group-hover:scale-110 transition-all">📍</div>
-                      <div>
-                        <div class="text-sm text-indigo-300 mb-1 uppercase tracking-wider font-bold">Visit Us</div>
-                        <div class="font-light">${data.address || '123 Innovation Drive<br>Tech City, TC 90210'}</div>
-                      </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-5 group">
-                      <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl shrink-0 group-hover:bg-indigo-500 group-hover:scale-110 transition-all">✉️</div>
-                      <div>
-                        <div class="text-sm text-indigo-300 mb-1 uppercase tracking-wider font-bold">Email Us</div>
-                        <div class="font-light">${data.email || 'hello@company.com'}</div>
-                      </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-5 group">
-                      <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl shrink-0 group-hover:bg-indigo-500 group-hover:scale-110 transition-all">📞</div>
-                      <div>
-                        <div class="text-sm text-indigo-300 mb-1 uppercase tracking-wider font-bold">Call Us</div>
-                        <div class="font-light">${data.phone || '+1 (555) 123-4567'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Form Side -->
-              <div class="lg:col-span-3 p-12 lg:p-20 relative z-10">
-                <h3 class="text-2xl font-bold text-slate-900 mb-8">Send a Message</h3>
-                
-                <form class="space-y-6">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                      <label class="text-sm font-medium text-slate-700">First Name</label>
-                      <input type="text" placeholder="John" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                    </div>
-                    <div class="space-y-2">
-                      <label class="text-sm font-medium text-slate-700">Last Name</label>
-                      <input type="text" placeholder="Doe" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                    </div>
-                  </div>
-                  
-                  <div class="space-y-2">
-                    <label class="text-sm font-medium text-slate-700">Email Address</label>
-                    <input type="email" placeholder="john@example.com" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                  </div>
-                  
-                  <div class="space-y-2">
-                    <label class="text-sm font-medium text-slate-700">Your Message</label>
-                    <textarea placeholder="How can we help you?" rows="5" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"></textarea>
-                  </div>
-                  
-                  <button type="button" class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-2xl shadow-[0_10px_20px_rgba(79,70,229,0.2)] hover:shadow-[0_15px_30px_rgba(79,70,229,0.3)] hover:-translate-y-1 transition-all duration-300">
-                    Send Message
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        `;
-      }
     if (page.bodyHtml) return page.bodyHtml;
     return '';
   }
