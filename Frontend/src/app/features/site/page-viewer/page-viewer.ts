@@ -367,50 +367,120 @@ export class PageViewerComponent implements OnInit {
             }
             case 'image': {
               const url = resolveImageUrl(block.content.url);
-              const displayMode = block.style.displayMode || 'inline';
               const objectFit = block.style.objectFit || 'cover';
               const aspectRatio = block.style.aspectRatio || 'auto';
-              const isFullWidth = displayMode === 'full-width' || displayMode === 'full-screen';
-              
+
+              // --- Max Width ---
               let widthClass = 'w-full';
-              if (block.style.maxWidth === 'Large') widthClass = 'max-w-4xl mx-auto';
-              else if (block.style.maxWidth === 'Medium') widthClass = 'max-w-2xl mx-auto';
-              else if (block.style.maxWidth === 'Small') widthClass = 'max-w-sm mx-auto';
-              
-              let radiusClass = 'rounded-lg shadow-md';
+              if (block.style.maxWidth === 'Large') widthClass = 'max-w-4xl';
+              else if (block.style.maxWidth === 'Medium') widthClass = 'max-w-2xl';
+              else if (block.style.maxWidth === 'Small') widthClass = 'max-w-sm';
+
+              // --- Responsive ---
+              if (block.style.responsiveBehavior === 'fixed') {
+                widthClass = widthClass.trim();
+              }
+
+              // --- Border Radius ---
+              let radiusClass = 'rounded-xl';
               if (block.style.borderRadius === 'None') radiusClass = 'rounded-none';
-              else if (block.style.borderRadius === 'Small') radiusClass = 'rounded-sm';
-              else if (block.style.borderRadius === 'Full-Round') radiusClass = 'rounded-full';
+              else if (block.style.borderRadius === 'Small') radiusClass = 'rounded-md';
               else if (block.style.borderRadius === 'Medium') radiusClass = 'rounded-2xl';
-              
-              if (block.style.boxShadow) radiusClass += ' shadow-2xl';
-              
+              else if (block.style.borderRadius === 'Full-Round') radiusClass = 'rounded-full';
+
+              // --- Shadow ---
+              let shadowClass = '';
+              const shadowVal = block.style.boxShadow;
+              if (shadowVal === true || shadowVal === 'Large') shadowClass = 'shadow-2xl';
+              else if (shadowVal === 'Medium') shadowClass = 'shadow-lg';
+              else if (shadowVal === 'Small') shadowClass = 'shadow-md';
+              else if (shadowVal === false || shadowVal === 'None') shadowClass = '';
+
+              // --- Border ---
+              let borderStyle = '';
+              if (block.style.border === 'Thin') borderStyle = 'border: 1px solid rgba(0,0,0,0.12); ';
+              else if (block.style.border === 'Medium') borderStyle = 'border: 2px solid rgba(0,0,0,0.18); ';
+              else if (block.style.border === 'Thick') borderStyle = 'border: 4px solid rgba(0,0,0,0.2); ';
+
+              // --- Filter ---
               let filterClass = '';
-              if (block.style.filterEffect === 'Grayscale') filterClass = 'filter grayscale';
-              else if (block.style.filterEffect === 'Duotone') filterClass = 'filter sepia saturate-[200%] hue-rotate-[200deg]';
-              
+              if (block.style.filterEffect === 'Grayscale') filterClass = 'grayscale';
+              else if (block.style.filterEffect === 'Duotone') filterClass = 'sepia saturate-[200%] hue-rotate-[200deg]';
+
+              // --- Hover Effect ---
+              let hoverClass = '';
+              if (block.style.hoverEffect === 'Subtle Zoom') hoverClass = 'hover:scale-[1.04] transition-transform duration-500 ease-out';
+              else if (block.style.hoverEffect === 'Brightness') hoverClass = 'hover:brightness-110 transition-all duration-300';
+              else if (block.style.hoverEffect === 'Lift') hoverClass = 'hover:-translate-y-1 hover:shadow-2xl transition-all duration-300';
+
+              // --- Animation ---
               let animClass = '';
               if (block.content.animation === 'Fade In') animClass = 'transition-opacity duration-700 animate-fade-in';
               else if (block.content.animation === 'Zoom In') animClass = 'hover:scale-[1.03] transition-transform duration-500';
-              
+
+              // --- Wrapper style ---
               let wrapperStyle = '';
               if (aspectRatio !== 'auto') {
                 wrapperStyle += `aspect-ratio: ${aspectRatio.replace(':', '/')}; `;
               }
-              
-              const onclickLightbox = block.content.lightbox ? `onclick="const m=document.createElement('div');m.className='fixed inset-0 bg-black/90 flex items-center justify-center z-[9999] cursor-zoom-out';m.onclick=()=>m.remove();const i=document.createElement('img');i.src='${url}';i.className='max-w-[90vw] max-h-[90vh] object-contain rounded-lg';m.appendChild(i);document.body.appendChild(m);"` : '';
+              if (block.style.backgroundColor) {
+                wrapperStyle += `background-color: ${block.style.backgroundColor}; `;
+              }
+              wrapperStyle += borderStyle;
+
+              // --- Alignment ---
+              const alignment = block.style.alignment || 'center';
+              const flexAlign = alignment === 'left' ? 'justify-start' : alignment === 'right' ? 'justify-end' : 'justify-center';
+
+              // --- Padding ---
+              let paddingStyle = '';
+              if (block.style.padding === 'Small') paddingStyle = 'padding: 0.5rem; ';
+              else if (block.style.padding === 'Medium') paddingStyle = 'padding: 1rem; ';
+              else if (block.style.padding === 'Large') paddingStyle = 'padding: 2rem; ';
+
+              // --- Margin ---
+              let marginStyle = '';
+              if (block.style.margin === 'Small') marginStyle = 'margin-top: 0.5rem; margin-bottom: 0.5rem; ';
+              else if (block.style.margin === 'Medium') marginStyle = 'margin-top: 1.5rem; margin-bottom: 1.5rem; ';
+              else if (block.style.margin === 'Large') marginStyle = 'margin-top: 3rem; margin-bottom: 3rem; ';
+
+              // --- Additional Classes & Custom CSS ---
+              const extraClasses = (block.style.additionalClasses || '').trim();
+              const blockId = block.id || ('img-' + Math.random().toString(36).slice(2, 8));
+              const customCss = (block.content.customCss || '').trim();
+              const customCssBlock = customCss ? `<style>#${blockId} img { ${customCss} }</style>` : '';
+
+              // --- Lightbox ---
+              const onclickLightbox = block.content.lightbox
+                ? `onclick="const m=document.createElement('div');m.className='fixed inset-0 bg-black/90 flex items-center justify-center z-[9999] cursor-zoom-out';m.onclick=()=>m.remove();const i=document.createElement('img');i.src='${url}';i.className='max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl';m.appendChild(i);document.body.appendChild(m);"`
+                : '';
               const cursorClass = block.content.lightbox ? 'cursor-zoom-in' : '';
-              
-              let imgTag = `<img src="${url}" alt="${block.content.alt || ''}" style="object-fit: ${objectFit}; width: 100%; height: 100%;" class="${radiusClass} ${filterClass} ${animClass} ${cursorClass}" ${onclickLightbox} />`;
-              
+
+              // --- Build img tag ---
+              let imgTag = `<img
+                src="${url}"
+                alt="${block.content.alt || ''}"
+                title="${block.content.title || ''}"
+                loading="lazy"
+                style="object-fit: ${objectFit}; width: 100%; height: 100%; display: block;"
+                class="${radiusClass} ${shadowClass} ${filterClass} ${hoverClass} ${animClass} ${cursorClass} ${extraClasses} overflow-hidden"
+                ${onclickLightbox}
+              />`;
+
               if (block.content.linkUrl) {
                 const target = block.content.linkNewTab ? 'target="_blank" rel="noopener noreferrer"' : '';
                 imgTag = `<a href="${block.content.linkUrl}" ${target} class="block w-full h-full">${imgTag}</a>`;
               }
-              
-              return `<div class="py-4 flex justify-center w-full">
-                        <div class="${widthClass} overflow-hidden" style="${wrapperStyle}">
+
+              const captionHtml = block.content.caption
+                ? `<p class="mt-2 text-center text-xs text-gray-500 italic">${block.content.caption}</p>`
+                : '';
+
+              return `${customCssBlock}
+                      <div class="py-4 flex ${flexAlign} w-full" style="${marginStyle}">
+                        <div id="${blockId}" class="${widthClass} overflow-hidden" style="${wrapperStyle}${paddingStyle}">
                           ${imgTag}
+                          ${captionHtml}
                         </div>
                       </div>`;
             }

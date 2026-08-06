@@ -211,3 +211,11 @@ html, body {
 }
 .search-input::placeholder { color: var(--text-muted); }
 .search-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+
+/* ────────────────────────────────────────────────
+   Fix native select options styling in Dark Mode
+   ──────────────────────────────────────────────── */
+select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
