@@ -43,6 +43,8 @@ namespace Dynamic_CMS.API.Controllers
 
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
+        [RequestSizeLimit(209715200)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 209715200)]
         public async Task<IActionResult> Upload([FromForm] UploadMediaDto dto)
         {
             var userIdString = User.FindFirst("UserId")?.Value;

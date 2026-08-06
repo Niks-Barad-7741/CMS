@@ -4,9 +4,20 @@ using Dynamic_CMS.Infrastructure;
 using Dynamic_CMS.Infrastructure.Data;
 using Microsoft.OpenApi.Models;
 
+using Microsoft.AspNetCore.Http.Features;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 209715200; // 200 MB
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 209715200; // 200 MB
+});
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
