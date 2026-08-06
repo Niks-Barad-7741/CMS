@@ -1,6 +1,16 @@
 @import 'grapesjs/dist/css/grapes.min.css';
 @import 'tailwindcss';
 
+@theme {
+  --color-surface-base: var(--bg-base);
+  --color-surface-card: var(--bg-card);
+  --color-surface-sidebar: var(--bg-sidebar);
+  --color-border-card: var(--border-card);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+}
+
 /* ────────────────────────────────────────────────
    Dark Mode Strategy: .dark class on <html>
    ──────────────────────────────────────────────── */
