@@ -17,46 +17,47 @@
 <div *ngIf="!isLoading && !isNotFound && orgProfile" class="min-h-screen bg-surface-card flex flex-col font-sans">
   
   <!-- ═══ NAVBAR ═══ -->
-  <nav class="sticky top-0 z-50 bg-[#0A192F] transition-shadow duration-300"
-       [class.shadow-lg]="isScrolled"
-       style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+  <nav class="sticky top-0 z-50 transition-all duration-500 backdrop-blur-2xl bg-white/80 dark:bg-[#0A192F]/90 border-b border-black/5 dark:border-white/5"
+       [style.backgroundColor]="orgProfile?.navbarColor || null"
+       [class.shadow-xl]="isScrolled" [class.py-2]="!isScrolled">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20" [class.flex-row-reverse]="orgProfile?.navbarLayout === 'LogoRight'">
+      <div class="flex items-center justify-between h-20 transition-all duration-300" [class.h-16]="isScrolled" [class.flex-row-reverse]="orgProfile?.navbarLayout === 'LogoRight'">
         
         <!-- Logo -->
-        <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" 
+        <div class="flex-shrink-0 flex items-center gap-4 cursor-pointer group" 
              [routerLink]="getPageLink('home')"
              [class.flex-row-reverse]="orgProfile?.navbarLayout === 'LogoRight'">
-          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-12 object-cover rounded-full bg-surface-card shadow-sm">
-          <span class="text-white font-bold text-2xl tracking-tight">
+          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-12 object-contain group-hover:scale-105 transition-transform duration-300">
+          <span [ngClass]="isNavbarDark ? 'text-white' : 'text-gray-900'" class="font-black text-2xl tracking-tight">
             {{ orgProfile.name }}
           </span>
         </div>
 
         <!-- Desktop Navigation -->
-        <div class="hidden lg:flex items-center space-x-1">
+        <div class="hidden lg:flex items-center space-x-2">
           <ng-container *ngFor="let menu of visibleMenus">
             <div class="relative" 
                  (mouseenter)="showDropdown(menu.id)" 
                  (mouseleave)="hideDropdown(menu.id)">
               <a [routerLink]="getPageLink(menu.page)"
-                 routerLinkActive="text-white font-bold"
+                 [routerLinkActive]="isNavbarDark ? 'text-white font-bold' : 'text-indigo-600 font-bold'"
                  [routerLinkActiveOptions]="{ exact: menu.page === 'home' }"
-                 class="text-gray-300 hover:text-white px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1 relative group">
+                 [ngClass]="isNavbarDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-indigo-600'"
+                 class="px-4 py-6 text-sm font-semibold transition-all inline-flex items-center gap-1.5 relative group">
                 {{ menu.title }}
                 <svg *ngIf="menu.subMenuItems?.length" class="w-3.5 h-3.5 ml-0.5 transition-transform" [class.rotate-180]="activeDropdown === menu.id" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
-                <span class="absolute bottom-0 left-4 right-4 h-0.5 bg-[#3B82F6] scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                <span class="absolute bottom-4 left-4 right-4 h-0.5 bg-indigo-600 dark:bg-indigo-400 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full"></span>
               </a>
 
               <!-- Dropdown for Sub-menus -->
               <div *ngIf="menu.subMenuItems?.length && activeDropdown === menu.id"
-                   class="absolute top-full left-0 mt-0 w-56 bg-[#0A192F] rounded-b-xl shadow-xl border border-white/10 py-2 z-50"
+                   class="absolute top-full left-0 mt-0 w-60 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-black/5 dark:border-white/10 py-3 z-50"
                    style="animation: fadeDown 0.2s ease-out;">
                 <a *ngFor="let sub of menu.subMenuItems"
                    [routerLink]="getPageLink(sub.page)"
-                   class="block px-5 py-3 text-sm text-gray-300 hover:bg-surface-card/5 hover:text-white transition-colors font-medium">
+                   class="block px-6 py-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-white transition-colors font-medium">
                   {{ sub.title }}
                 </a>
               </div>
@@ -66,7 +67,8 @@
           <!-- More Dropdown -->
           <div *ngIf="overflowMenus.length > 0" class="relative">
             <button (click)="toggleMoreDropdown()" 
-                    class="text-gray-300 hover:text-white px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1">
+                    [ngClass]="isNavbarDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-indigo-600'"
+                    class="px-4 py-6 text-sm font-semibold transition-colors inline-flex items-center gap-1">
               More
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -86,10 +88,10 @@
 
         <!-- Mobile Menu Button -->
         <button (click)="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg hover:bg-surface-card/5 transition-colors">
-          <svg *ngIf="!isMobileMenuOpen" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg *ngIf="!isMobileMenuOpen" [ngClass]="isNavbarDark ? 'text-white' : 'text-gray-900'" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          <svg *ngIf="isMobileMenuOpen" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg *ngIf="isMobileMenuOpen" [ngClass]="isNavbarDark ? 'text-white' : 'text-gray-900'" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -132,17 +134,19 @@
   </main>
 
   <!-- ═══ FOOTER ═══ -->
-  <footer class="bg-[#0A192F] text-gray-300 relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+  <footer class="relative border-t border-black/5 dark:border-white/10"
+          [ngClass]="isFooterDark ? 'bg-[#0f172a] text-gray-300' : 'bg-white text-gray-600'"
+          [style.backgroundColor]="orgProfile?.footerColor || null">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 lg:gap-12">
         
         <!-- Brand Column -->
         <div class="space-y-6">
-          <div class="flex items-center gap-3">
-            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-10 w-10 object-cover rounded-full bg-surface-card shadow-sm">
-            <span *ngIf="!orgProfile?.logoUrl" class="text-white font-bold text-xl tracking-tight">{{ orgProfile?.name }}</span>
+          <div class="flex items-center gap-4">
+            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-12 object-contain bg-white p-1 rounded-xl shadow-lg">
+            <span *ngIf="!orgProfile?.logoUrl" [ngClass]="isFooterDark ? 'text-white' : 'text-gray-900'" class="font-black text-2xl tracking-tight">{{ orgProfile?.name }}</span>
           </div>
-          <p class="text-gray-400 text-sm leading-relaxed">
+          <p [ngClass]="isFooterDark ? 'text-gray-400' : 'text-gray-500'" class="text-sm leading-relaxed max-w-sm">
             {{ orgProfile?.footerDescription || 'Empowering clients with custom content, modern tools, and robust platform solutions.' }}
           </p>
           <!-- Social Icons -->
@@ -167,7 +171,7 @@
 
         <!-- Quick Links Column -->
         <div class="space-y-6" *ngIf="menus && menus.length > 0">
-          <h4 class="text-sm font-bold text-white uppercase tracking-wider">Quick Links</h4>
+          <h4 [ngClass]="isFooterDark ? 'text-white' : 'text-gray-900'" class="text-sm font-bold uppercase tracking-wider">Quick Links</h4>
           <ul class="space-y-3 text-sm">
             <li *ngFor="let menu of menus">
               <a [routerLink]="getPageLink(menu.page)" class="text-gray-400 hover:text-[#0056B3] transition-colors flex items-center gap-2">
@@ -180,8 +184,8 @@
 
         <!-- Contact Column -->
         <div class="space-y-6">
-          <h4 class="text-sm font-bold text-white uppercase tracking-wider">Contact Info</h4>
-          <ul class="space-y-4 text-sm text-gray-400">
+          <h4 [ngClass]="isFooterDark ? 'text-white' : 'text-gray-900'" class="text-sm font-bold uppercase tracking-wider">Contact Info</h4>
+          <ul [ngClass]="isFooterDark ? 'text-gray-400' : 'text-gray-600'" class="space-y-4 text-sm">
             <li *ngIf="orgProfile?.address" class="flex items-start gap-3">
               <svg class="w-5 h-5 text-[#0056B3] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -203,27 +207,15 @@
             </li>
           </ul>
         </div>
-        
-        <!-- Newsletter Column -->
-        <div class="space-y-6">
-          <h4 class="text-sm font-bold text-white uppercase tracking-wider">Newsletter</h4>
-          <p class="text-sm text-gray-400">Subscribe for the latest updates.</p>
-          <div class="relative">
-            <input type="email" placeholder="Email Address" class="w-full pl-4 pr-24 py-3 bg-surface-card/5 border border-white/10 rounded-lg text-sm text-white outline-none focus:border-[#0056B3] focus:ring-1 focus:ring-[#0056B3] placeholder-gray-500">
-            <button class="absolute right-1 top-1 bottom-1 px-4 bg-[#0056B3] hover:bg-[#004494] text-white font-medium text-xs rounded-md transition-colors">
-              Subscribe
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>
 
     <!-- Bottom Bar -->
-    <div class="border-t border-white/10 py-6" style="background: rgba(0,0,0,0.15);">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-text-muted">
+    <div class="border-t border-black/5 dark:border-white/10 py-6" [style.background]="isFooterDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)'">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs" [ngClass]="isFooterDark ? 'text-gray-400' : 'text-gray-500'">
         <div>
-          &copy; {{ currentYear }} <strong class="text-gray-300">{{ orgProfile?.name }}</strong>. All rights reserved.
+          &copy; {{ currentYear }} <strong [ngClass]="isFooterDark ? 'text-gray-300' : 'text-gray-700'">{{ orgProfile?.name }}</strong>. All rights reserved.
         </div>
         <div class="flex items-center space-x-6">
           <a href="#" class="hover:text-[#0056B3] transition-colors">Privacy Policy</a>

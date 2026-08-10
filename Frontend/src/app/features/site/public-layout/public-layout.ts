@@ -22,6 +22,25 @@ export class PublicLayoutComponent implements OnInit {
   isLoading = true;
   currentYear = new Date().getFullYear();
 
+  get isNavbarDark(): boolean {
+    return this.isColorDark(this.orgProfile?.navbarColor || '#ffffff');
+  }
+
+  get isFooterDark(): boolean {
+    return this.isColorDark(this.orgProfile?.footerColor || '#0f172a');
+  }
+
+  private isColorDark(color: string): boolean {
+    if (!color) return true;
+    const hex = color.replace('#', '');
+    if (hex.length !== 6) return true;
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return yiq < 128;
+  }
+
   // Navbar state
   isMobileMenuOpen = false;
   expandedMobileMenu: string | null = null;

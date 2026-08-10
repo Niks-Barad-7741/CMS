@@ -186,6 +186,7 @@ export class PageViewerComponent implements OnInit {
         let overlayOpacity = section.style.overlayOpacity !== undefined ? section.style.overlayOpacity / 100 : 0;
 
         let blocksHtml = (section.blocks || []).map((block: any) => {
+          const getInnerHtml = () => {
           switch (block.type) {
             case 'heading': {
               const level = block.content.level || 2;
@@ -784,11 +785,15 @@ export class PageViewerComponent implements OnInit {
                 const align = col.align || 'center';
                 const alignClass = align === 'left' ? 'text-left items-start' : (align === 'right' ? 'text-end items-end' : 'text-center items-center');
                 
-                let cardClass = 'p-6 rounded-2xl transition-all duration-300';
-                if (col.cardLook) {
-                  cardClass += ' border border-black/10 dark:border-white/10 shadow-lg hover:shadow-xl';
+                let cardClass = 'rounded-2xl transition-all duration-300 relative overflow-hidden group';
+                const isOverlay = col.cardLook === 'imageOverlay';
+                
+                if (isOverlay) {
+                  cardClass += ' shadow-lg hover:shadow-xl h-80 flex flex-col justify-end p-6 border border-black/5 dark:border-white/5';
+                } else if (col.cardLook) {
+                  cardClass += ' p-6 border border-black/10 dark:border-white/10 shadow-lg hover:shadow-xl';
                 } else {
-                  cardClass += ' border border-transparent';
+                  cardClass += ' p-6 border border-transparent';
                 }
 
                 let colStyle = '';
@@ -816,12 +821,20 @@ export class PageViewerComponent implements OnInit {
                   iconSvg = '<svg class="w-8 h-8 text-indigo-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
                 }
 
-                return `<div class="flex flex-col ${alignClass} ${cardClass} ${animClass}" ${styleAttr}>
-                          ${iconSvg}
-                          ${imgUrl ? `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full max-h-48 object-cover rounded-xl mb-4" />` : ''}
-                          <h3 class="text-xl font-bold mb-2 leading-snug">${col.title || ''}</h3>
-                          <p class="text-sm opacity-80 leading-relaxed">${col.text || ''}</p>
-                          ${col.btnText ? `<a href="${col.btnUrl || '#'}" class="mt-4 px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition-colors inline-block">${col.btnText}</a>` : ''}
+                const aspectClass = block.style.imageAspectRatio === '16/9' ? 'aspect-video' :
+                                    block.style.imageAspectRatio === '1/1' ? 'aspect-square' :
+                                    block.style.imageAspectRatio === '4/3' ? 'aspect-[4/3]' : '';
+
+                return `<div class="flex flex-col ${isOverlay ? 'items-center justify-end text-center' : alignClass} ${cardClass} ${animClass}" ${styleAttr}>
+                          ${!isOverlay ? iconSvg : ''}
+                          ${!isOverlay && imgUrl ? `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full ${aspectClass || 'max-h-48'} object-cover rounded-xl mb-4" />` : ''}
+                          ${isOverlay && imgUrl ? `<div class="absolute inset-0 z-0"><img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /><div class="absolute inset-0 bg-blue-900/60 group-hover:bg-blue-900/50 transition-colors"></div></div>` : ''}
+                          
+                          <div class="relative z-10 flex flex-col ${isOverlay ? 'text-white' : ''} w-full h-full ${isOverlay ? 'justify-end' : ''}">
+                            <h3 class="text-xl font-bold mb-2 leading-snug">${col.title || ''}</h3>
+                            <p class="text-sm ${isOverlay ? 'text-blue-50' : 'opacity-80'} leading-relaxed">${col.text || ''}</p>
+                            ${col.btnText ? `<a href="${col.btnUrl || '#'}" class="mt-4 px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition-colors inline-block">${col.btnText}</a>` : ''}
+                          </div>
                         </div>`;
               }).join('');
 
@@ -956,6 +969,22 @@ export class PageViewerComponent implements OnInit {
                 </div>
               `;
             }
+            case 'iconList': {
+              const items = block.content?.items || [];
+              const iconColor = block.content?.iconColor || '#0056B3';
+              const fontSize = block.style?.fontSize || 'text-base';
+              const itemColor = block.style?.textColor || textColor || '#1f2937';
+              const spacing = block.style?.spacing === 'Large' ? 'space-y-4' : 'space-y-2';
+              
+              const listHtml = items.map((item: any) => `
+                <li class="flex items-start gap-3">
+                  <svg class="w-6 h-6 shrink-0 mt-0.5 transition-transform hover:scale-110" style="color: ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <span class="${fontSize} font-medium" style="color: ${itemColor}">${typeof item === 'string' ? item : (item.text || '')}</span>
+                </li>
+              `).join('');
+              
+              return `<ul class="${spacing} py-4 px-2">${listHtml}</ul>`;
+            }
             case 'video': {
               const videoSource  = block.content.videoSource || 'Embed';
               const embedUrl     = block.content.embedUrl || '';
@@ -1056,13 +1085,18 @@ export class PageViewerComponent implements OnInit {
             default:
               return '';
           }
+          };
+          const innerHtml = getInnerHtml();
+          const extraClasses = (block.style?.additionalClasses || '').trim();
+          return extraClasses ? `<div class="${extraClasses}">${innerHtml}</div>` : innerHtml;
         }).join('');
 
         const isBoxed = section.style.containerWidth !== 'full';
         const containerClass = isBoxed ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' : 'w-full';
+        const secExtra = (section.style?.additionalClasses || '').trim();
 
         return `
-          <section class="relative ${ptClass} ${pbClass} overflow-hidden" style="${secStyle}">
+          <section class="relative ${ptClass} ${pbClass} overflow-hidden ${secExtra}" style="${secStyle}">
             ${videoHtml}
             ${(isImageBg || isVideoBg) && overlayOpacity > 0 ? `
               <div class="absolute inset-0" style="background-color: ${overlayColor}; opacity: ${overlayOpacity}; pointer-events: none; z-index: 1;"></div>

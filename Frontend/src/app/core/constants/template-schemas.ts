@@ -26,6 +26,13 @@ export interface TemplateSchema {
 
 export const SITE_BUILDER_TEMPLATES: TemplateSchema[] = [
   {
+    id: 'corporate-services',
+    name: 'Corporate Services (Starter)',
+    description: 'A premium, modern, fully automatic template designed for service businesses. This is the default starter website for new organizations.',
+    thumbnail: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&q=80',
+    sections: []
+  },
+  {
     id: 'business-corporate',
     name: 'Business Corporate',
     description: 'A modern, professional template for businesses and agencies.',

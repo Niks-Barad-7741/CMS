@@ -142,8 +142,8 @@ export class MenusComponent implements OnInit {
         this.newMenuData = { title: '', page: '' };
       },
       error: (err) => {
-        console.error('Create failed:', err);
-        alert(this.extractErrorMessage(err));
+        console.error('Menu Save Failed', err);
+        this.errorMessage = this.extractErrorMessage(err);
       }
     });
   }
@@ -391,7 +391,7 @@ export class MenusComponent implements OnInit {
         this.loadSubMenus(menuId);
       },
       error: (err) => {
-        alert(this.extractErrorMessage(err));
+        this.errorMessage = this.extractErrorMessage(err);
       }
     });
   }
@@ -421,7 +421,7 @@ export class MenusComponent implements OnInit {
         this.editingSubMenuId = null;
         this.loadSubMenus(this.subMenuFormData.menuItemId);
       },
-      error: (err) => alert(this.extractErrorMessage(err))
+      error: (err) => { this.errorMessage = this.extractErrorMessage(err); }
     });
   }
 

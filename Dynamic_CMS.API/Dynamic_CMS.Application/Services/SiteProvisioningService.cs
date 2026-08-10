@@ -48,8 +48,58 @@ namespace Dynamic_CMS.Application.Services
         public async Task EnsureDefaultPagesForOrganizationAsync(Guid organizationId, string orgSlug, string orgName)
         {
             await EnsureDefaultMenusAsync(organizationId);
-            // No default pages inserted into PageContents table automatically.
-            // PageContent table remains empty until explicitly saved by admin/user.
+
+            // Generate starter pages if no pages exist for this organization
+            var existingPages = await _pageContentRepository.GetAllByOrganizationIdAsync(organizationId, CancellationToken.None);
+            if (existingPages.Any())
+            {
+                return;
+            }
+
+            var menus = await _menuItemRepository.GetAllAsync(organizationId);
+
+            foreach (var menu in menus)
+            {
+                string? contentJson = null;
+                string templateId = "corporate-services";
+
+                switch (menu.Page.ToLowerInvariant())
+                {
+                    case "home":
+                        contentJson = StarterTemplateBuilder.BuildHomeTemplate();
+                        break;
+                    case "about-us":
+                    case "about":
+                        contentJson = StarterTemplateBuilder.BuildAboutTemplate();
+                        break;
+                    case "services":
+                        contentJson = StarterTemplateBuilder.BuildServicesTemplate();
+                        break;
+                    case "contact-us":
+                    case "contact":
+                        contentJson = StarterTemplateBuilder.BuildContactTemplate();
+                        break;
+                }
+
+                if (contentJson != null)
+                {
+                    var pageContent = new PageContent
+                    {
+                        Id = Guid.NewGuid(),
+                        OrganizationId = organizationId,
+                        MenuItemId = menu.Id,
+                        Title = menu.Title,
+                        Status = "Published",
+                        TemplateId = templateId,
+                        ContentJson = contentJson,
+                        CreateDate = DateTime.UtcNow,
+                        CreatedBy = "System",
+                        SortOrder = menu.SortOrder
+                    };
+
+                    await _pageContentRepository.AddAsync(pageContent, CancellationToken.None);
+                }
+            }
         }
 
         public async Task<SiteProfileDto?> GetSiteProfileAsync(string orgSlug)

@@ -186,6 +186,22 @@
             </label>
           </div>
         </div>
+
+        <!-- Global Theme Color -->
+        <div class="mt-6">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--text-secondary)">Navbar & Footer Background Color</label>
+            <div class="flex items-center gap-3">
+              <input type="color" name="navbarColor" [(ngModel)]="formData.navbarColor" 
+                     class="h-10 w-14 p-1 rounded cursor-pointer border-0 outline-none" style="background:var(--bg-card);">
+              <input type="text" name="navbarColorHex" [(ngModel)]="formData.navbarColor" 
+                     class="w-full max-w-xs px-3 py-2 text-sm rounded-lg outline-none transition-all border font-mono uppercase"
+                     style="background:var(--bg-base); border-color:var(--border-card); color:var(--text-primary);"
+                     onfocus="this.style.borderColor='#6366F1'; this.style.boxShadow='0 0 0 4px rgba(99,102,241,0.12)'"
+                     onblur="this.style.borderColor=''; this.style.boxShadow=''">
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer & Contact Section -->

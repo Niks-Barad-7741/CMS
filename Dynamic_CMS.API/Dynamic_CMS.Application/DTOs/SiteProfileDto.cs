@@ -16,5 +16,7 @@ namespace Dynamic_CMS.Application.DTOs
         public string? SocialInstagram { get; set; }
         public string? LogoUrl { get; set; }
         public string? NavbarLayout { get; set; }
+        public string? NavbarColor { get; set; }
+        public string? FooterColor { get; set; }
     }
 }

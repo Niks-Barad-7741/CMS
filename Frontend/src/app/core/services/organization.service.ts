@@ -16,6 +16,8 @@ export interface Organization {
   socialTwitter?: string;
   socialFacebook?: string;
   socialInstagram?: string;
+  navbarColor?: string;
+  footerColor?: string;
   navbarLayout?: string;
 }
 

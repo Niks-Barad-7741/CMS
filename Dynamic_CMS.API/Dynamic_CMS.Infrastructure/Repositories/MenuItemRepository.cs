@@ -21,7 +21,7 @@ namespace Dynamic_CMS.Infrastructure.Repositories
         {
             return await _context.MenuItems
                 .Include(m => m.SubMenuItems)
-                .Where(m => m.OrganizationId == organizationId)
+                .Where(m => m.OrganizationId == organizationId && !m.IsDeleted)
                 .ToListAsync();
         }
 
@@ -33,19 +33,19 @@ namespace Dynamic_CMS.Infrastructure.Repositories
         public async Task<MenuItem?> GetByPageAsync(Guid organizationId, string page)
         {
             return await _context.MenuItems
-                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Page == page);
+                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Page == page && !m.IsDeleted);
         }
 
         public async Task<MenuItem?> GetBySortOrderAsync(Guid organizationId, int sortOrder)
         {
             return await _context.MenuItems
-                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.SortOrder == sortOrder);
+                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.SortOrder == sortOrder && !m.IsDeleted);
         }
 
         public async Task<MenuItem?> GetByTitleAsync(Guid organizationId, string title)
         {
             return await _context.MenuItems
-                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Title.ToLower() == title.ToLower());
+                .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Title.ToLower() == title.ToLower() && !m.IsDeleted);
         }
 
 

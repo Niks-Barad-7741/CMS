@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrganizationService, Organization } from '../../../core/services/organization.service';
 import { MenuService } from '../../../core/services/menu.service';
@@ -80,11 +80,14 @@ export class OrganizationsComponent implements OnInit {
     private pageService: PageService,
     private dashboardService: DashboardService,
     private mediaService: MediaService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit() {
-    this.loadOrganizations();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadOrganizations();
+    }
   }
 
   loadOrganizations() {
@@ -119,6 +122,8 @@ export class OrganizationsComponent implements OnInit {
       socialTwitter: '',
       socialFacebook: '',
       socialInstagram: '',
+      navbarColor: '#ffffff',
+      footerColor: '#0f172a',
       navbarLayout: 'LogoLeft'
     };
     this.errorMessage = null;
@@ -266,6 +271,8 @@ export class OrganizationsComponent implements OnInit {
       socialTwitter: this.formData.socialTwitter,
       socialFacebook: this.formData.socialFacebook,
       socialInstagram: this.formData.socialInstagram,
+      navbarColor: this.formData.navbarColor,
+      footerColor: this.formData.navbarColor,
       navbarLayout: this.formData.navbarLayout || 'LogoLeft'
     };
 

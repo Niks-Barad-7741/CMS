@@ -1,9 +1,12 @@
+import { CORPORATE_SERVICES_TEMPLATE_ENTRY } from './corporate-services-template';
+
 export interface SiteTemplate {
   id: string;
   name: string;
   description: string;
   iconSvg: string;
   html: string;
+  buildSections?: () => any[];
 }
 
 export const SITE_TEMPLATES: SiteTemplate[] = [
@@ -219,5 +222,6 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
         <p>&copy; 2026 The Journal Publications.</p>
       </footer>
     `
-  }
+  },
+  CORPORATE_SERVICES_TEMPLATE_ENTRY,
 ];

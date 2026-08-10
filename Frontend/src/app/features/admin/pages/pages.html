@@ -252,6 +252,27 @@
       </div>
     </div>
 
+    <!-- Template Picker -->
+    <div class="mt-6 mb-2">
+      <div class="flex items-center justify-between mb-3">
+        <label class="block text-sm font-semibold" style="color:var(--text-secondary)">Choose Template</label>
+        <span *ngIf="pageContent" class="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded">Warning: Applying a template will replace existing content</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div *ngFor="let tpl of templates"
+             (click)="applyTemplate(tpl.id)"
+             [class.ring-2]="selectedTemplateId === tpl.id"
+             [class.ring-indigo-500]="selectedTemplateId === tpl.id"
+             [class.bg-indigo-50]="selectedTemplateId === tpl.id"
+             class="cursor-pointer rounded-xl p-4 border transition-all duration-200 hover:shadow-md"
+             style="border-color:var(--border-card); background:var(--bg-card);">
+          <div [innerHTML]="tpl.iconSvg" class="text-indigo-600 mb-2"></div>
+          <div class="font-semibold text-sm" style="color:var(--text-primary)">{{ tpl.name }}</div>
+          <div class="text-xs mt-1" style="color:var(--text-secondary)">{{ tpl.description }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- DYNAMIC SECTION & BLOCK BUILDER FORM -->
     <div class="border rounded-3xl p-8 space-y-8 shadow-sm" style="background:var(--bg-card); border-color:var(--border-card);">
       
@@ -483,6 +504,17 @@
               <label class="block text-xs font-bold text-text-secondary mb-2">Custom Min Height (px)</label>
               <input type="number" [(ngModel)]="section.style.minHeightValue" placeholder="500"
                      class="w-full p-2 text-sm rounded-lg border border-border-card bg-surface-card">
+            </div>
+
+            <!-- Additional Tailwind Classes for Section -->
+            <div class="md:col-span-4 lg:col-span-4">
+              <label class="block text-xs font-bold text-text-secondary mb-2">Additional Tailwind Classes (Section Container)</label>
+              <input type="text" [(ngModel)]="section.style.additionalClasses" placeholder="e.g. shadow-2xl rounded-b-[50px] relative z-10"
+                     (ngModelChange)="updateGeneratedHtml()"
+                     class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card font-mono text-text-primary focus:border-[var(--accent-indigo)] outline-none">
+              <p class="mt-1 text-[10px] text-text-muted leading-relaxed">
+                ⚠️ Ensure classes exist in your Tailwind build. These will be appended to the outer &lt;section&gt; element.
+              </p>
             </div>
           </div>
 
@@ -1003,15 +1035,6 @@
                           <option value="Fade In">Fade In</option>
                           <option value="Zoom In">Zoom In (on hover)</option>
                         </select>
-                      </div>
-                      <div>
-                        <label class="block text-[11px] font-bold text-text-secondary mb-1">Additional Tailwind Classes</label>
-                        <input type="text" [(ngModel)]="block.style.additionalClasses" placeholder="e.g. opacity-90 grayscale-[50%]"
-                               (ngModelChange)="updateGeneratedHtml()"
-                               class="w-full p-2 text-xs rounded border border-border-card bg-surface-card font-mono">
-                        <p class="mt-1 text-[10px] text-text-muted leading-relaxed">
-                          ⚠️ Classes must exist in the project's Tailwind build. Preset options above are always safe.
-                        </p>
                       </div>
                       <div>
                         <label class="block text-[11px] font-bold text-text-secondary mb-1">Custom CSS (applied to this image only)</label>
@@ -2068,6 +2091,26 @@
 
                 </div>
               </div>
+
+              <!-- GLOBAL BLOCK SETTINGS: Advanced (Applied to all blocks) -->
+              <div class="mt-6 pt-4 border-t border-border-card">
+                <div class="p-4 rounded-xl border border-[var(--accent-indigo)]/20 bg-[var(--accent-indigo)]/5 space-y-4">
+                  <div class="text-xs font-bold text-[var(--accent-indigo)] flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Global Block Customization (Tailwind)
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-text-secondary mb-1">Additional Tailwind Classes</label>
+                    <input type="text" [(ngModel)]="block.style.additionalClasses" placeholder="e.g. shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300"
+                           (ngModelChange)="updateGeneratedHtml()"
+                           class="w-full p-2 text-sm rounded border border-border-card bg-surface-card font-mono text-text-primary focus:border-[var(--accent-indigo)] outline-none">
+                    <p class="mt-1 text-[10px] text-text-muted leading-relaxed">
+                      ⚠️ These classes will be injected into the main container for this block.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 

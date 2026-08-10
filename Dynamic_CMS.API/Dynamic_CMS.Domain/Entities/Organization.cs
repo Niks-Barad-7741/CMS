@@ -23,6 +23,8 @@ namespace Dynamic_CMS.Domain.Entities
         public string? SocialFacebook { get; set; }
         public string? SocialInstagram { get; set; }
         public string? LogoUrl { get; set; }
+        public string? NavbarColor { get; set; }
+        public string? FooterColor { get; set; }
         public string NavbarLayout { get; set; } = "LogoLeft";
 
         // Navigation properties
