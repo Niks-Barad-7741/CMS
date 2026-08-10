@@ -466,6 +466,18 @@
               </select>
             </div>
 
+            <!-- Block Layout -->
+            <div>
+              <label class="block text-[11px] font-bold text-text-secondary mb-1">
+                <svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                Block Layout
+              </label>
+              <select [(ngModel)]="section.style.blockLayout" (ngModelChange)="updateGeneratedHtml()" class="w-full p-2 text-xs rounded-lg border bg-surface-card text-text-primary focus:border-[var(--accent-indigo)] transition-colors">
+                <option value="stack">Stack (Vertical)</option>
+                <option value="row">Side-by-side (Row)</option>
+              </select>
+            </div>
+
             <!-- Min Height -->
             <div>
               <label class="block text-xs font-bold text-text-secondary mb-2">Min Height</label>
@@ -568,14 +580,14 @@
                     <div class="flex items-center justify-between mb-1">
                       <label class="block text-[11px] font-bold text-text-secondary">Paragraph Rich Text (HTML Supported)</label>
                       <div class="flex gap-1">
-                        <button type="button" (click)="insertHtmlTag(block, 'b')" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded font-bold">Bold</button>
-                        <button type="button" (click)="insertHtmlTag(block, 'i')" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded italic">Italic</button>
-                        <button type="button" (click)="insertHtmlTag(block, 'a')" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded text-indigo-500">Link</button>
-                        <button type="button" (click)="insertHtmlTag(block, 'ul')" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded">Bullet List</button>
-                        <button type="button" (click)="insertHtmlTag(block, 'ol')" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded">Numbered List</button>
+                        <button type="button" (mousedown)="$event.preventDefault()" (click)="insertHtmlTag(block, 'b', pTextarea)" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded font-bold">Bold</button>
+                        <button type="button" (mousedown)="$event.preventDefault()" (click)="insertHtmlTag(block, 'i', pTextarea)" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded italic">Italic</button>
+                        <button type="button" (mousedown)="$event.preventDefault()" (click)="insertHtmlTag(block, 'a', pTextarea)" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded text-indigo-500">Link</button>
+                        <button type="button" (mousedown)="$event.preventDefault()" (click)="insertHtmlTag(block, 'ul', pTextarea)" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded">Bullet List</button>
+                        <button type="button" (mousedown)="$event.preventDefault()" (click)="insertHtmlTag(block, 'ol', pTextarea)" class="px-2 py-0.5 text-[10px] bg-surface-card hover:opacity-70 border rounded">Numbered List</button>
                       </div>
                     </div>
-                    <textarea [(ngModel)]="block.content.text" rows="5" placeholder="Write paragraphs here..."
+                    <textarea #pTextarea [(ngModel)]="block.content.text" rows="5" placeholder="Write paragraphs here..."
                               class="w-full p-2.5 text-sm rounded-lg border border-border-card bg-surface-card resize-none font-mono"></textarea>
                   </div>
                   <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -1766,27 +1778,60 @@
                       </div>
 
                       <!-- Basic Content Inputs -->
-                      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
                           <label class="block text-[10px] font-bold text-text-muted mb-1">Column Title</label>
                           <input type="text" [(ngModel)]="col.title" placeholder="Feature Title"
                                  class="w-full p-2 text-xs rounded border bg-surface-card">
                         </div>
-                        <div>
+                        <div class="md:col-span-1">
                           <label class="block text-[10px] font-bold text-text-muted mb-1">Description</label>
                           <textarea [(ngModel)]="col.text" placeholder="Detail description text..." rows="2"
                                     class="w-full p-2 text-xs rounded border bg-surface-card resize-none"></textarea>
                         </div>
-                        <div>
-                          <label class="block text-[10px] font-bold text-text-muted mb-1">Image URL (Optional)</label>
-                          <div class="flex items-center gap-2 w-full">
-                            <input type="text" [(ngModel)]="col.imageUrl" placeholder="https://..."
-                                   class="flex-1  p-2 text-xs rounded border bg-surface-card min-w-0">
-                            <button type="button" (click)="fileInputColImg.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                              Upload
-                            </button>
-                            <input type="file" #fileInputColImg (change)="uploadImage($event, col, 'imageUrl')" class="hidden" accept="image/*">
+                        <div class="md:col-span-2 space-y-2">
+                          <div class="flex gap-2">
+                            <div class="w-1/3">
+                              <label class="block text-[10px] font-bold text-text-muted mb-1">Media Type</label>
+                              <select [(ngModel)]="col.mediaType" class="w-full p-2 text-xs rounded border bg-surface-card text-text-primary">
+                                <option [value]="undefined">Image</option>
+                                <option value="image">Image</option>
+                                <option value="video">Video</option>
+                              </select>
+                            </div>
+                            <div class="w-2/3" *ngIf="col.mediaType !== 'video'">
+                              <label class="block text-[10px] font-bold text-text-muted mb-1">Image URL (Optional)</label>
+                              <div class="flex items-center gap-2 w-full">
+                                <input type="text" [(ngModel)]="col.imageUrl" placeholder="https://..."
+                                       class="flex-1 p-2 text-xs rounded border bg-surface-card min-w-0">
+                                <button type="button" (click)="fileInputColImg.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
+                                  Upload
+                                </button>
+                                <input type="file" #fileInputColImg (change)="uploadImage($event, col, 'imageUrl')" class="hidden" accept="image/*">
+                              </div>
+                            </div>
+                            <div class="w-2/3" *ngIf="col.mediaType === 'video'">
+                              <label class="block text-[10px] font-bold text-text-muted mb-1">Video URL (YT/File)</label>
+                              <div class="flex items-center gap-2 w-full">
+                                <input type="text" [(ngModel)]="col.videoUrl" placeholder="https://..."
+                                       class="flex-1 p-2 text-xs rounded border bg-surface-card min-w-0">
+                                <button type="button" (click)="fileInputColVid.click()" class="px-3 py-2 bg-[var(--accent-indigo)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 shrink-0 shadow-sm">
+                                  Upload
+                                </button>
+                                <input type="file" #fileInputColVid (change)="uploadImage($event, col, 'videoUrl')" class="hidden" accept="video/*">
+                              </div>
+                            </div>
+                          </div>
+                          <div *ngIf="col.mediaType === 'video'">
+                            <label class="block text-[10px] font-bold text-text-muted mb-1">Video Poster Image (Optional)</label>
+                            <div class="flex items-center gap-2 w-full">
+                              <input type="text" [(ngModel)]="col.videoPoster" placeholder="https://..."
+                                     class="flex-1 p-2 text-xs rounded border bg-surface-card min-w-0">
+                              <button type="button" (click)="fileInputColPoster.click()" class="px-3 py-2 bg-surface-base text-text-secondary text-xs font-bold rounded-lg border hover:bg-surface-card transition-colors flex items-center gap-1 shrink-0">
+                                  Upload
+                              </button>
+                              <input type="file" #fileInputColPoster (change)="uploadImage($event, col, 'videoPoster')" class="hidden" accept="image/*">
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1984,7 +2029,15 @@
                   </div>
 
                   <!-- Layout & Display Options -->
-                  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-surface-base/50 rounded-xl border">
+                  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 p-3 bg-surface-base/50 rounded-xl border">
+                    <div>
+                      <label class="block text-[11px] font-bold text-text-secondary mb-1">Alignment</label>
+                      <select [(ngModel)]="block.content.align" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
+                        <option value="center">Center</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </div>
                     <div>
                       <label class="block text-[11px] font-bold text-text-secondary mb-1">Aspect Ratio</label>
                       <select [(ngModel)]="block.content.aspectRatio" class="w-full p-2 text-xs rounded border bg-surface-card bg-surface-card text-text-primary focus:border-[var(--accent-indigo)]">
@@ -2120,11 +2173,44 @@
       </div>
 
       <!-- Add Section Action -->
-      <div class="flex justify-center py-4">
+      <div class="flex justify-center py-4 gap-4 flex-wrap">
         <button type="button" (click)="addSection()" 
                 class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow transition-all">
           + Add Layout Section Block
         </button>
+
+        <button type="button" (click)="showTemplatePicker = !showTemplatePicker" 
+                class="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+          Choose Template
+        </button>
+      </div>
+
+      <!-- Template Picker Panel -->
+      <div *ngIf="showTemplatePicker" class="mt-4 mb-8 p-6 bg-surface-card rounded-2xl border border-border-card shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-text-primary flex items-center gap-2">
+            <svg class="w-4 h-4 text-[var(--accent-indigo)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+            Choose a Starter Template
+          </h3>
+          <button type="button" (click)="showTemplatePicker = false" class="p-1.5 hover:bg-surface-base rounded-lg transition-colors">
+            <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <p class="text-xs text-text-secondary mb-4">Select a pre-designed layout to jumpstart your page. You can customize everything after applying.</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div *ngFor="let t of templates" 
+               (click)="selectTemplate(t.id); showTemplatePicker = false"
+               class="cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-lg hover:border-[var(--accent-indigo)] hover:-translate-y-0.5"
+               [class.border-[var(--accent-indigo)]]="selectedTemplateId === t.id"
+               [class.bg-[var(--accent-indigo)]/5]="selectedTemplateId === t.id"
+               [class.border-border-card]="selectedTemplateId !== t.id"
+               [class.bg-surface-base]="selectedTemplateId !== t.id">
+            <div class="flex items-center justify-center mb-3 text-[var(--accent-indigo)]" [innerHTML]="t.iconSvg"></div>
+            <h4 class="text-xs font-bold text-text-primary text-center mb-1">{{ t.name }}</h4>
+            <p class="text-[10px] text-text-muted text-center leading-tight">{{ t.description }}</p>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -2145,3 +2231,50 @@
   </div>
 </div>
 </ng-container>
+
+<!-- Template Replace Confirmation Modal -->
+<div *ngIf="showTemplateConfirm" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+  <div class="bg-surface-card rounded-2xl shadow-2xl border border-border-card w-full max-w-md transform transition-all animate-fade-in" style="animation: fadeInScale 0.2s ease-out;">
+    <!-- Header -->
+    <div class="flex items-center gap-3 p-5 border-b border-border-card">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-text-primary">Replace Current Sections?</h3>
+        <p class="text-xs text-text-secondary mt-0.5">This action cannot be undone</p>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="p-5">
+      <p class="text-xs text-text-secondary leading-relaxed">
+        Applying a new template will <span class="font-bold text-amber-500">remove all existing sections and blocks</span> on this page and replace them with the selected template layout. Any unsaved changes will be lost.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 px-5 pb-5">
+      <button type="button" (click)="cancelTemplateApply()"
+              class="px-4 py-2.5 bg-surface-base hover:bg-surface-base/80 text-text-secondary text-xs font-bold rounded-xl border border-border-card transition-all hover:shadow-sm">
+        Cancel
+      </button>
+      <button type="button" (click)="confirmTemplateApply()"
+              class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        Yes, Replace Sections
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fadeInScale {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+</style>

@@ -38,9 +38,25 @@ import grapesjs, { Editor } from 'grapesjs';
         </div>
       </div>
       
-      <!-- Editor Container -->
       <div class="flex-1 relative w-full h-full">
          <div #gjs id="gjs" class="absolute inset-0"></div>
+      </div>
+    </div>
+    
+    <!-- Custom Error Notification Modal -->
+    <div *ngIf="errorModalMessage" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" (click)="closeErrorModal()"></div>
+      <div class="bg-gray-800 border border-gray-700 max-w-sm w-full p-6 relative z-10 rounded-2xl text-center shadow-2xl">
+        <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4 bg-amber-500/10 text-amber-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold mb-2 text-white">Notice</h3>
+        <p class="text-sm mb-6 leading-relaxed text-gray-300">{{ errorModalMessage }}</p>
+        <button (click)="closeErrorModal()" class="w-full py-2.5 rounded-xl font-bold text-sm text-white transition-colors hover:opacity-90 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600">
+          Okay
+        </button>
       </div>
     </div>
   `,
@@ -73,6 +89,8 @@ export class BuilderComponent implements OnInit, OnDestroy {
   pageData: any = null;
   isSaving = false;
   saveStatus = '';
+  
+  errorModalMessage: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -154,10 +172,19 @@ export class BuilderComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error loading page content', err);
-        alert('Failed to load page content. Make sure the ID is correct.');
-        this.router.navigate(['/admin/pages']);
+        this.showErrorModal('Failed to load page content. Make sure the ID is correct.');
+        // Optionally delay routing so they can see the error, or just let them stay on the blank builder and read it
+        setTimeout(() => this.router.navigate(['/admin/pages']), 3000);
       }
     });
+  }
+
+  showErrorModal(msg: string) {
+    this.errorModalMessage = msg;
+  }
+
+  closeErrorModal() {
+    this.errorModalMessage = null;
   }
 
   saveContent() {

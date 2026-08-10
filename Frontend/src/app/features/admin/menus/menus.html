@@ -249,16 +249,33 @@
         <p class="text-xs" style="color: var(--text-muted);">Are you sure you want to delete this menu?</p>
       </div>
     </div>
-    <div class="flex justify-end gap-3 mt-6">
-      <button (click)="cancelDelete()" class="px-4 py-2 text-sm font-semibold rounded-xl transition-all"
-              style="background: var(--bg-base); color: var(--text-secondary);">
-        Cancel
-      </button>
-      <button (click)="executeDelete()" class="px-5 py-2 text-sm font-bold rounded-xl text-white transition-all"
-              style="background: #F43F5E; box-shadow: 0 3px 10px rgba(244,63,94,.3);">
-        Delete
-      </button>
+      <div class="flex items-center gap-3 w-full mt-6">
+        <button (click)="cancelDelete()" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition-colors hover:bg-[color:var(--bg-base)]" style="color: var(--text-secondary); border: 1px solid var(--border-card);">Cancel</button>
+        <button (click)="executeDelete()" class="flex-1 py-2.5 rounded-xl font-bold text-sm text-white transition-colors hover:opacity-90 shadow-lg shadow-rose-500/20" style="background: #F43F5E;">Yes, Delete</button>
+      </div>
+  </div>
+</div>
+
+<!-- Custom Error Notification Modal -->
+<div *ngIf="errorModalMessage" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" (click)="closeErrorModal()"></div>
+  <div class="dash-card max-w-sm w-full p-6 relative z-10 animate-scale-up text-center" 
+       style="background: var(--bg-card); border: 1px solid var(--border-card); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+    
+    <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4" style="background: rgba(245,158,11,.15); color: #F59E0B;">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
     </div>
+    
+    <h3 class="text-lg font-bold mb-2" style="color: var(--text-primary);">Notice</h3>
+    <p class="text-sm mb-6 leading-relaxed" style="color: var(--text-secondary);">{{ errorModalMessage }}</p>
+    
+    <button (click)="closeErrorModal()" 
+            class="w-full py-2.5 rounded-xl font-bold text-sm text-white transition-colors hover:opacity-90 shadow-lg"
+            style="background: linear-gradient(135deg, #F59E0B, #D97706);">
+      Okay
+    </button>
   </div>
 </div>
 

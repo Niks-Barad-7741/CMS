@@ -143,8 +143,8 @@
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--text-secondary)">Organization Logo</label>
           <div class="flex items-center gap-4">
-            <div *ngIf="formData.logoUrl" class="w-16 h-16 rounded-full overflow-hidden border bg-surface-card flex items-center justify-center shrink-0 shadow-sm">
-              <img [src]="formData.logoUrl" class="w-full h-full object-cover">
+            <div *ngIf="formData.logoUrl" class="h-16 w-auto max-w-xs rounded-xl overflow-hidden border bg-surface-card flex items-center justify-center shrink-0 shadow-sm p-1">
+              <img [src]="formData.logoUrl" class="h-full w-auto object-contain">
             </div>
             <div *ngIf="!formData.logoUrl" class="w-16 h-16 rounded-xl border-2 border-dashed border-border-card bg-surface-base flex items-center justify-center shrink-0">
               <svg class="w-6 h-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>

@@ -67,6 +67,54 @@ import { Subscription } from 'rxjs';
         </ng-container>
       </main>
     </div>
+    
+    <!-- Toast Notification -->
+    <div *ngIf="toastMessage" class="fixed top-6 right-6 z-[9999] p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-semibold text-white animate-fade-in"
+         style="background: linear-gradient(135deg, #10B981, #059669); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+    
+    <!-- Custom Error Notification Modal -->
+    <div *ngIf="errorModalMessage" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" (click)="closeErrorModal()"></div>
+      <div class="bg-white border border-gray-200 max-w-sm w-full p-6 relative z-10 rounded-2xl text-center shadow-2xl">
+        <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4 bg-amber-100 text-amber-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold mb-2 text-gray-900">Notice</h3>
+        <p class="text-sm mb-6 leading-relaxed text-gray-500">{{ errorModalMessage }}</p>
+        <button (click)="closeErrorModal()" class="w-full py-2.5 rounded-xl font-bold text-sm text-white transition-colors hover:opacity-90 shadow-lg bg-gradient-to-r from-amber-500 to-amber-600">
+          Okay
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div *ngIf="showConfirmModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" (click)="cancelChangeTemplate()"></div>
+      <div class="bg-white border border-gray-200 max-w-sm w-full p-6 relative z-10 rounded-2xl shadow-2xl">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-rose-50 text-rose-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-lg font-bold text-gray-900">Change Template?</h4>
+            <p class="text-xs text-gray-500">Are you sure? This will reset your form data.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 w-full mt-6">
+          <button (click)="cancelChangeTemplate()" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition-colors hover:bg-gray-50 text-gray-600 border border-gray-200">Cancel</button>
+          <button (click)="executeChangeTemplate()" class="flex-1 py-2.5 rounded-xl font-bold text-sm text-white transition-colors hover:opacity-90 shadow-lg shadow-rose-500/20 bg-rose-500">Yes, Change</button>
+        </div>
+      </div>
+    </div>
   `
 })
 export class SiteBuilderShellComponent implements OnInit, OnDestroy {
@@ -76,6 +124,10 @@ export class SiteBuilderShellComponent implements OnInit, OnDestroy {
   isSaving = false;
   pageId: string | null = null;
   orgId: string | null = null;
+
+  toastMessage: string | null = null;
+  errorModalMessage: string | null = null;
+  showConfirmModal: boolean = false;
 
   private sub = new Subscription();
 
@@ -137,9 +189,16 @@ export class SiteBuilderShellComponent implements OnInit, OnDestroy {
   }
 
   changeTemplate() {
-    if (confirm('Are you sure you want to change the template? This will reset your current form data.')) {
-      this.siteBuilderService.setCurrentTemplate(null);
-    }
+    this.showConfirmModal = true;
+  }
+
+  executeChangeTemplate() {
+    this.showConfirmModal = false;
+    this.siteBuilderService.setCurrentTemplate(null);
+  }
+
+  cancelChangeTemplate() {
+    this.showConfirmModal = false;
   }
 
   onFormDataChange(data: any) {
@@ -177,13 +236,28 @@ export class SiteBuilderShellComponent implements OnInit, OnDestroy {
     this.pageService.updatePage(this.pageId, payload).subscribe({
       next: () => {
         this.isSaving = false;
-        alert(`Site successfully saved as ${status}!`);
+        this.showToast(`Site successfully saved as ${status}!`);
       },
       error: (err) => {
         this.isSaving = false;
         console.error('Error saving site', err);
-        alert('Failed to save site.');
+        this.showErrorModal('Failed to save site.');
       }
     });
+  }
+
+  showToast(msg: string) {
+    this.toastMessage = msg;
+    setTimeout(() => {
+      this.toastMessage = null;
+    }, 4000);
+  }
+
+  showErrorModal(msg: string) {
+    this.errorModalMessage = msg;
+  }
+
+  closeErrorModal() {
+    this.errorModalMessage = null;
   }
 }

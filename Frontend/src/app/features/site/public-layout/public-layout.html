@@ -27,7 +27,7 @@
         <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" 
              [routerLink]="getPageLink('home')"
              [class.flex-row-reverse]="orgProfile?.navbarLayout === 'LogoRight'">
-          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-12 w-12 object-cover rounded-full bg-surface-card shadow-sm">
+          <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="max-h-12 w-auto object-contain drop-shadow-sm">
           <span class="text-white font-bold text-2xl tracking-tight">
             {{ orgProfile.name }}
           </span>
@@ -139,7 +139,7 @@
         <!-- Brand Column -->
         <div class="space-y-6">
           <div class="flex items-center gap-3">
-            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="h-10 w-10 object-cover rounded-full bg-surface-card shadow-sm">
+            <img *ngIf="orgProfile?.logoUrl" [src]="orgProfile.logoUrl" alt="Logo" class="max-h-10 w-auto object-contain drop-shadow-sm">
             <span *ngIf="!orgProfile?.logoUrl" class="text-white font-bold text-xl tracking-tight">{{ orgProfile?.name }}</span>
           </div>
           <p class="text-gray-400 text-sm leading-relaxed">
@@ -193,7 +193,7 @@
               <svg class="w-5 h-5 text-[#0056B3] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
               </svg>
-              <span>{{ orgProfile.contactEmail }}</span>
+              <a [href]="'mailto:' + orgProfile.contactEmail" class="hover:text-white transition-colors">{{ orgProfile.contactEmail }}</a>
             </li>
             <li *ngIf="orgProfile?.contactPhone" class="flex items-center gap-3">
               <svg class="w-5 h-5 text-[#0056B3] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
