@@ -62,6 +62,9 @@ export class StaticBuilderComponent implements OnInit {
   activeSection = 'hero';
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
 
+  toastMessage: string | null = null;
+  errorModalMessage: string | null = null;
+
   sections = [
     { key: 'hero', label: 'Hero', icon: '🚀' },
     { key: 'about', label: 'About', icon: '🏢' },
@@ -396,7 +399,7 @@ export class StaticBuilderComponent implements OnInit {
 
   save(status: string = 'Draft') {
     if (!this.pageId) {
-      alert('No page ID found. Please go back and select a page.');
+      this.showErrorModal('No page ID found. Please go back and select a page.');
       return;
     }
 
@@ -413,16 +416,32 @@ export class StaticBuilderComponent implements OnInit {
     this.pageService.updatePage(this.pageId, payload).subscribe({
       next: () => {
         this.saveStatus = 'saved';
-        this.cdr.detectChanges();
+        this.showToast(`Template successfully saved as ${status}!`);
         setTimeout(() => { this.saveStatus = 'idle'; this.cdr.detectChanges(); }, 3000);
       },
       error: (err: any) => {
         this.saveStatus = 'error';
         this.cdr.detectChanges();
+        this.showErrorModal('Failed to save template. Check the console for details.');
         console.error('Save failed:', err);
         setTimeout(() => { this.saveStatus = 'idle'; this.cdr.detectChanges(); }, 3000);
       }
     });
+  }
+
+  showToast(msg: string) {
+    this.toastMessage = msg;
+    setTimeout(() => {
+      this.toastMessage = null;
+    }, 4000);
+  }
+
+  showErrorModal(msg: string) {
+    this.errorModalMessage = msg;
+  }
+
+  closeErrorModal() {
+    this.errorModalMessage = null;
   }
 
   goBack() {

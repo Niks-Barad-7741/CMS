@@ -10,6 +10,19 @@ import { MenuService, MenuItem } from '../../../core/services/menu.service';
 import { MediaService } from '../../../core/services/media.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SITE_TEMPLATES, SiteTemplate } from '../../../core/constants/templates';
+import { cloneSectionsWithFreshIds } from '../../../core/utils/id-generator.util';
+import { CORPORATE_TEMPLATE_SECTIONS } from '../../../core/constants/template-data/corporate-services.data';
+import { PORTFOLIO_TEMPLATE_SECTIONS } from '../../../core/constants/template-data/portfolio.data';
+import { ECOMMERCE_TEMPLATE_SECTIONS } from '../../../core/constants/template-data/ecommerce.data';
+import { BLOG_TEMPLATE_SECTIONS } from '../../../core/constants/template-data/blog.data';
+
+const TEMPLATE_REGISTRY: Record<string, any[]> = {
+  blank: [],
+  corporate: CORPORATE_TEMPLATE_SECTIONS,
+  portfolio: PORTFOLIO_TEMPLATE_SECTIONS,
+  ecommerce: ECOMMERCE_TEMPLATE_SECTIONS,
+  blog: BLOG_TEMPLATE_SECTIONS,
+};
 
 interface MenuListItem {
   menu: MenuItem;
@@ -55,6 +68,9 @@ export class PagesComponent implements OnInit {
   isInitializing = true;
   isLoadingPages = false;
   isOrgDropdownOpen = false;
+  showTemplatePicker = false;
+  showTemplateConfirm = false;
+  pendingTemplateId: string | null = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
   toastTitle: string = 'Saved Successfully!';
@@ -98,31 +114,19 @@ export class PagesComponent implements OnInit {
 
   processMenus(data: any) {
     const fetched = (data && Array.isArray(data)) ? data : [];
-    const defaults: MenuItem[] = [
-      { id: 'def-1', title: 'Home', page: 'home', isVisible: true, sortOrder: 1 },
-      { id: 'def-2', title: 'About Us', page: 'about-us', isVisible: true, sortOrder: 2 },
-      { id: 'def-3', title: 'Services', page: 'services', isVisible: true, sortOrder: 3 },
-      { id: 'def-4', title: 'Contact Us', page: 'contact-us', isVisible: true, sortOrder: 4 }
-    ];
-
-    const merged = [...defaults];
-    fetched.forEach(item => {
-      const pageSlug = (item.page || '').toLowerCase();
-      const idx = merged.findIndex(m => 
-        m.page.toLowerCase() === pageSlug || 
-        (pageSlug.includes('about') && m.page.includes('about')) ||
-        (pageSlug.includes('service') && m.page.includes('service')) ||
-        (pageSlug.includes('contact') && m.page.includes('contact')) ||
-        (pageSlug.includes('home') && m.page.includes('home'))
-      );
-      if (idx !== -1) {
-        merged[idx] = item;
-      } else {
-        merged.push(item);
-      }
-    });
-
-    this.menus = merged.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    
+    if (fetched.length > 0) {
+      // API returned real menus — use them directly, no defaults injection
+      this.menus = fetched.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    } else {
+      // No menus from API — show defaults as placeholder guidance
+      this.menus = [
+        { id: 'def-1', title: 'Home', page: 'home', isVisible: true, sortOrder: 1 },
+        { id: 'def-2', title: 'About Us', page: 'about-us', isVisible: true, sortOrder: 2 },
+        { id: 'def-3', title: 'Services', page: 'services', isVisible: true, sortOrder: 3 },
+        { id: 'def-4', title: 'Contact Us', page: 'contact-us', isVisible: true, sortOrder: 4 }
+      ];
+    }
   }
 
   getSelectedMenuType(): 'home' | 'about' | 'services' | 'contact' | 'generic' {
@@ -591,6 +595,39 @@ export class PagesComponent implements OnInit {
     return defaultData;
   }
 
+  selectTemplate(templateId: string) {
+    if (this.clientData.sections && this.clientData.sections.length > 0) {
+      this.pendingTemplateId = templateId;
+      this.showTemplateConfirm = true;
+      return;
+    }
+    this.applyTemplate(templateId);
+  }
+
+  confirmTemplateApply() {
+    if (this.pendingTemplateId) {
+      this.applyTemplate(this.pendingTemplateId);
+    }
+    this.showTemplateConfirm = false;
+    this.pendingTemplateId = null;
+  }
+
+  cancelTemplateApply() {
+    this.showTemplateConfirm = false;
+    this.pendingTemplateId = null;
+  }
+
+  private applyTemplate(templateId: string) {
+    this.selectedTemplateId = templateId;
+    const templateData = TEMPLATE_REGISTRY[templateId] ?? TEMPLATE_REGISTRY['blank'];
+    this.clientData.schemaVersion = '1.0';
+    this.clientData.globalTheme = this.clientData.globalTheme || { primaryColor: '#6366F1', fontFamily: 'Inter' };
+    this.clientData.sections = cloneSectionsWithFreshIds(templateData);
+    this.showTemplatePicker = false;
+    this.updateGeneratedHtml();
+    this.cdr.detectChanges();
+  }
+
   addSection() {
     if (!this.clientData.sections) {
       this.clientData.sections = [];
@@ -920,23 +957,50 @@ export class PagesComponent implements OnInit {
     }
   }
 
-  insertHtmlTag(block: any, tag: string) {
+  insertHtmlTag(block: any, tag: string, textareaEl?: HTMLTextAreaElement) {
     if (!block.content) block.content = {};
     if (!block.content.text) block.content.text = '';
-    
-    if (tag === 'b') {
-      block.content.text += '<b>bold text</b>';
-    } else if (tag === 'i') {
-      block.content.text += '<i>italic text</i>';
-    } else if (tag === 'a') {
-      block.content.text += '<a href="https://example.com" class="text-indigo-600 underline">link text</a>';
-    } else if (tag === 'ul') {
-      block.content.text += '\n<ul>\n  <li>List Item 1</li>\n  <li>List Item 2</li>\n</ul>\n';
-    } else if (tag === 'ol') {
-      block.content.text += '\n<ol>\n  <li>Item 1</li>\n  <li>Item 2</li>\n</ol>\n';
+
+    let textToWrap = '';
+    let startIdx = block.content.text.length;
+    let endIdx = block.content.text.length;
+
+    if (textareaEl) {
+      startIdx = textareaEl.selectionStart;
+      endIdx = textareaEl.selectionEnd;
+      textToWrap = block.content.text.substring(startIdx, endIdx);
     }
+    
+    let replacement = '';
+    if (tag === 'b') {
+      replacement = `<b>${textToWrap || 'bold text'}</b>`;
+    } else if (tag === 'i') {
+      replacement = `<i>${textToWrap || 'italic text'}</i>`;
+    } else if (tag === 'a') {
+      replacement = `<a href="https://example.com" class="text-indigo-600 underline">${textToWrap || 'link text'}</a>`;
+    } else if (tag === 'ul') {
+      replacement = `\n<ul>\n  <li>${textToWrap || 'List Item 1'}</li>\n</ul>\n`;
+    } else if (tag === 'ol') {
+      replacement = `\n<ol>\n  <li>${textToWrap || 'Item 1'}</li>\n</ol>\n`;
+    }
+
+    if (textareaEl && textToWrap) {
+      block.content.text = block.content.text.substring(0, startIdx) + replacement + block.content.text.substring(endIdx);
+    } else {
+      // If nothing selected or no textarea, append or insert at cursor
+      block.content.text = block.content.text.substring(0, startIdx) + replacement + block.content.text.substring(endIdx);
+    }
+
     this.updateGeneratedHtml();
     this.cdr.detectChanges();
+
+    if (textareaEl) {
+      setTimeout(() => {
+        textareaEl.focus();
+        const newSelectionStart = startIdx + replacement.indexOf('>') + 1;
+        textareaEl.setSelectionRange(newSelectionStart, newSelectionStart + (textToWrap || '').length);
+      });
+    }
   }
 
   moveGalleryImageUp(block: any, idx: number) {
@@ -1018,6 +1082,7 @@ export class PagesComponent implements OnInit {
         if (sec.style.overlayOpacity === undefined) sec.style.overlayOpacity = 0;
         if (sec.style.backgroundSize === undefined) sec.style.backgroundSize = 'cover';
         if (sec.style.textColor === undefined) sec.style.textColor = '#1f2937';
+        if (sec.style.blockLayout === undefined) sec.style.blockLayout = 'stack';
         if (sec.style.paddingY === undefined) sec.style.paddingY = 'py-16';
 
         if (sec.style.gradientColor1 === undefined) sec.style.gradientColor1 = '#4f46e5';
@@ -1296,15 +1361,15 @@ export class PagesComponent implements OnInit {
           const autoParam = section.style.videoAutoplay !== false ? '&autoplay=1' : '&autoplay=0';
           const muteParam = section.style.videoMuted !== false ? '&mute=1' : '&mute=0';
           videoHtml = `
-            <iframe class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 0; transform: scale(1.2);"
-                    src="https://www.youtube.com/embed/${ytId}?controls=0&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
+            <iframe class="absolute inset-0 w-full h-full" style="z-index: 0; transform: scale(1.2);"
+                    src="https://www.youtube.com/embed/${ytId}?controls=1&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
                     frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
           `;
         } else {
           const autoplay = section.style.videoAutoplay !== false ? 'autoplay' : '';
           const muted = section.style.videoMuted !== false ? 'muted' : '';
           videoHtml = `
-            <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="z-index: 0;">
+            <video ${autoplay} ${muted} loop playsinline controls class="absolute inset-0 w-full h-full object-cover" style="z-index: 0;">
               <source src="${resolveImageUrl(url)}" type="video/mp4">
             </video>
           `;
@@ -1466,15 +1531,15 @@ export class PagesComponent implements OnInit {
                 const autoParam = block.content.videoAutoplay !== false ? '&autoplay=1' : '&autoplay=0';
                 const muteParam = block.content.videoMuted !== false ? '&mute=1' : '&mute=0';
                 videoHtml = `
-                  <iframe class="pointer-events-none" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05); z-index: 0;"
-                          src="https://www.youtube.com/embed/${ytId}?controls=0&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
+                  <iframe class="" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05); z-index: 0;"
+                          src="https://www.youtube.com/embed/${ytId}?controls=1&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
                           frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
                 `;
               } else {
                 const autoplay = block.content.videoAutoplay !== false ? 'autoplay' : '';
                 const muted = block.content.videoMuted !== false ? 'muted' : '';
                 videoHtml = `
-                  <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0">
+                  <video ${autoplay} ${muted} loop playsinline controls class="absolute inset-0 w-full h-full object-cover z-0">
                     <source src="${resolveImageUrl(url)}" type="video/mp4">
                   </video>
                 `;
@@ -1929,7 +1994,6 @@ export class PagesComponent implements OnInit {
             const randId = 'grid-' + Math.random().toString(36).substring(2, 9);
 
             const colsHtml = (block.content.columns || []).map((col: any, colIdx: number) => {
-              const imgUrl = resolveImageUrl(col.imageUrl);
               const align = col.align || 'center';
               const alignClass = align === 'left' ? 'text-left items-start' : (align === 'right' ? 'text-end items-end' : 'text-center items-center');
               
@@ -1969,9 +2033,47 @@ export class PagesComponent implements OnInit {
                                   block.style.imageAspectRatio === '1/1' ? 'aspect-square' :
                                   block.style.imageAspectRatio === '4/3' ? 'aspect-[4/3]' : '';
 
+              let mediaHtml = '';
+              if (col.mediaType === 'video' && col.videoUrl) {
+                const isEmbed = /youtube\.com|youtu\.be|vimeo\.com/.test(col.videoUrl);
+                if (isEmbed) {
+                  let embedSrc = col.videoUrl;
+                  try {
+                    const urlObj = new URL(col.videoUrl);
+                    if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                      let videoId = '';
+                      if (urlObj.hostname.includes('youtu.be')) {
+                          videoId = urlObj.pathname.slice(1);
+                      } else if (urlObj.pathname.includes('/embed/')) {
+                          videoId = urlObj.pathname.split('/embed/')[1];
+                      } else if (urlObj.pathname.includes('/shorts/')) {
+                          videoId = urlObj.pathname.split('/shorts/')[1];
+                      } else if (urlObj.searchParams.has('v')) {
+                          videoId = urlObj.searchParams.get('v') || '';
+                      }
+                      if (videoId) embedSrc = `https://www.youtube.com/embed/${videoId}`;
+                    } else if (urlObj.hostname.includes('vimeo.com')) {
+                      const videoId = urlObj.pathname.split('/').pop();
+                      if (videoId) embedSrc = `https://player.vimeo.com/video/${videoId}`;
+                    }
+                  } catch (e) {}
+                  
+                  mediaHtml = `<div class="aspect-video w-full overflow-hidden rounded-xl mb-4"><iframe src="${embedSrc}" class="w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
+                } else {
+                  const resolvedVidUrl = resolveImageUrl(col.videoUrl);
+                  const posterAttr = col.videoPoster ? `poster="${resolveImageUrl(col.videoPoster)}"` : '';
+                  mediaHtml = `<video src="${resolvedVidUrl}" ${posterAttr} controls class="w-full ${aspectClass || 'h-auto'} object-cover rounded-xl mb-4"></video>`;
+                }
+              } else if (col.mediaType !== 'video') {
+                const imgUrl = resolveImageUrl(col.imageUrl);
+                if (imgUrl) {
+                  mediaHtml = `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full ${aspectClass || 'max-h-48'} object-cover rounded-xl mb-4" />`;
+                }
+              }
+
               return `<div class="flex flex-col ${alignClass} ${cardClass} ${animClass}" ${styleAttr}>
                         ${iconSvg}
-                        ${imgUrl ? `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full ${aspectClass || 'max-h-48'} object-cover rounded-xl mb-4" />` : ''}
+                        ${mediaHtml}
                         <h3 class="text-xl font-bold mb-2 leading-snug">${col.title || ''}</h3>
                         <p class="text-sm opacity-80 leading-relaxed">${col.text || ''}</p>
                         ${col.btnText ? `<a href="${col.btnUrl || '#'}" class="mt-4 px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition-colors inline-block">${col.btnText}</a>` : ''}
@@ -2126,9 +2228,13 @@ export class PagesComponent implements OnInit {
             const arMap: Record<string,string> = { '16:9': 'aspect-video', '4:3': 'aspect-[4/3]', '1:1': 'aspect-square', '9:16': 'aspect-[9/16]' };
             const arClass = arMap[block.content.aspectRatio || '16:9'] || 'aspect-video';
 
-            // Max width class
-            const mwMap: Record<string,string> = { 'Full': 'w-full', 'Large': 'max-w-5xl mx-auto', 'Medium': 'max-w-3xl mx-auto', 'Small': 'max-w-xl mx-auto' };
-            const mwClass = mwMap[block.style.maxWidth || 'Large'] || 'max-w-5xl mx-auto';
+            // Max width class (removed mx-auto so alignment can handle it)
+            const mwMap: Record<string,string> = { 'Full': 'w-full', 'Large': 'max-w-5xl', 'Medium': 'max-w-3xl', 'Small': 'max-w-xl' };
+            const mwClass = mwMap[block.style.maxWidth || 'Large'] || 'max-w-5xl';
+
+            // Alignment class
+            const align = block.content.align || 'center';
+            const alignClass = align === 'left' ? 'mr-auto' : (align === 'right' ? 'ml-auto' : 'mx-auto');
 
             // Border radius class
             const brMap: Record<string,string> = { 'None': 'rounded-none', 'Small': 'rounded-lg', 'Medium': 'rounded-2xl', 'Full': 'rounded-full' };
@@ -2136,9 +2242,25 @@ export class PagesComponent implements OnInit {
 
             // Build iframe src with params
             let iframeSrc = '';
+            let finalEmbedUrl = embedUrl;
             if (videoSource === 'Embed' && embedUrl) {
-              const sep = embedUrl.includes('?') ? '&' : '?';
-              iframeSrc = `${embedUrl}${sep}autoplay=${autoplay}&loop=${loop}&controls=${controls}&mute=${autoplay}`;
+              try {
+                const urlObj = new URL(embedUrl);
+                if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                  let videoId = '';
+                  if (urlObj.hostname.includes('youtu.be')) videoId = urlObj.pathname.slice(1);
+                  else if (urlObj.pathname.includes('/embed/')) videoId = urlObj.pathname.split('/embed/')[1];
+                  else if (urlObj.pathname.includes('/shorts/')) videoId = urlObj.pathname.split('/shorts/')[1];
+                  else if (urlObj.searchParams.has('v')) videoId = urlObj.searchParams.get('v') || '';
+                  if (videoId) finalEmbedUrl = `https://www.youtube.com/embed/${videoId}`;
+                } else if (urlObj.hostname.includes('vimeo.com')) {
+                  const videoId = urlObj.pathname.split('/').pop();
+                  if (videoId && !urlObj.pathname.includes('/video/')) finalEmbedUrl = `https://player.vimeo.com/video/${videoId}`;
+                }
+              } catch (e) {}
+
+              const sep = finalEmbedUrl.includes('?') ? '&' : '?';
+              iframeSrc = `${finalEmbedUrl}${sep}autoplay=${autoplay}&loop=${loop}&controls=${controls}&mute=${autoplay}`;
             }
 
             // Build inner media HTML
@@ -2198,12 +2320,12 @@ export class PagesComponent implements OnInit {
               `;
             }
 
-            const captionHtml = caption ? `<p class="mt-3 text-center text-sm text-gray-500 italic">${caption}</p>` : '';
-
             return `
-              <div class="${mwClass} py-8 ${animClass}">
-                ${mediaHtml}
-                ${captionHtml}
+              <div class="w-full py-8">
+                <div class="${mwClass} ${alignClass} ${animClass} relative">
+                  ${mediaHtml}
+                  ${caption ? `<p class="text-center text-sm text-gray-500 mt-3 italic">${caption}</p>` : ''}
+                </div>
               </div>
             `;
           }
@@ -2214,14 +2336,21 @@ export class PagesComponent implements OnInit {
 
       const isBoxed = section.style.containerWidth !== 'full';
       const containerClass = isBoxed ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' : 'w-full';
+      const blockLayoutClass = section.style.blockLayout === 'row'
+        ? 'flex flex-col md:flex-row items-center gap-8'
+        : '';
 
       return `
-        <section class="relative ${ptClass} ${pbClass} overflow-hidden" style="${secStyle}">
+        <section id="${section.id}" class="relative ${ptClass} ${pbClass} overflow-hidden" style="${secStyle}">
+          <style>
+            #${section.id} .section-content-wrapper { pointer-events: none; }
+            #${section.id} .section-content-wrapper > * { pointer-events: auto; }
+          </style>
           ${videoHtml}
           ${(isImageBg || isVideoBg) && overlayOpacity > 0 ? `
             <div class="absolute inset-0" style="background-color: ${overlayColor}; opacity: ${overlayOpacity}; pointer-events: none; z-index: 1;"></div>
           ` : ''}
-          <div class="relative z-10 ${containerClass} w-full">
+          <div class="section-content-wrapper relative z-10 ${containerClass} ${blockLayoutClass} w-full">
             ${blocksHtml}
           </div>
         </section>

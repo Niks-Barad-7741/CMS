@@ -56,10 +56,12 @@ export class PageViewerComponent implements OnInit {
           // Strip standalone header, nav, and footer elements to prevent overlaying the site layout navbar
           if (cleanedHtml.includes('<header') || cleanedHtml.includes('<nav') || cleanedHtml.includes('<footer') || cleanedHtml.includes('<!DOCTYPE') || cleanedHtml.includes('<html')) {
             try {
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(cleanedHtml, 'text/html');
-              doc.querySelectorAll('header, nav, footer').forEach(el => el.remove());
-              cleanedHtml = doc.body ? doc.body.innerHTML : cleanedHtml;
+              if (typeof DOMParser !== 'undefined') {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(cleanedHtml, 'text/html');
+                doc.querySelectorAll('header, nav, footer').forEach(el => el.remove());
+                cleanedHtml = doc.body ? doc.body.innerHTML : cleanedHtml;
+              }
             } catch (e) {
               console.error('Error stripping layout elements:', e);
             }
@@ -165,15 +167,15 @@ export class PageViewerComponent implements OnInit {
             const autoParam = section.style.videoAutoplay !== false ? '&autoplay=1' : '&autoplay=0';
             const muteParam = section.style.videoMuted !== false ? '&mute=1' : '&mute=0';
             videoHtml = `
-              <iframe class="pointer-events-none" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05); z-index: 0;"
-                      src="https://www.youtube.com/embed/${ytId}?controls=0&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
+              <iframe class="" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05); z-index: 0;"
+                      src="https://www.youtube.com/embed/${ytId}?controls=1&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
                       frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
             `;
           } else {
             const autoplay = section.style.videoAutoplay !== false ? 'autoplay' : '';
             const muted = section.style.videoMuted !== false ? 'muted' : '';
             videoHtml = `
-              <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="z-index: 0;">
+              <video ${autoplay} ${muted} loop playsinline controls class="absolute inset-0 w-full h-full object-cover" style="z-index: 0;">
                 <source src="${resolveImageUrl(url)}" type="video/mp4">
               </video>
             `;
@@ -335,15 +337,15 @@ export class PageViewerComponent implements OnInit {
                   const autoParam = block.content.videoAutoplay !== false ? '&autoplay=1' : '&autoplay=0';
                   const muteParam = block.content.videoMuted !== false ? '&mute=1' : '&mute=0';
                   videoHtml = `
-                    <iframe class="pointer-events-none z-0" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05);"
-                            src="https://www.youtube.com/embed/${ytId}?controls=0&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
+                    <iframe class="z-0" style="position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh; transform: translate(-50%, -50%) scale(1.05);"
+                            src="https://www.youtube.com/embed/${ytId}?controls=1&showinfo=0&rel=0&loop=1&playlist=${ytId}${autoParam}${muteParam}" 
                             frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
                   `;
                 } else {
                   const autoplay = block.content.videoAutoplay !== false ? 'autoplay' : '';
                   const muted = block.content.videoMuted !== false ? 'muted' : '';
                   videoHtml = `
-                    <video ${autoplay} ${muted} loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0">
+                    <video ${autoplay} ${muted} loop playsinline controls class="absolute inset-0 w-full h-full object-cover z-0">
                       <source src="${resolveImageUrl(url)}" type="video/mp4">
                     </video>
                   `;
@@ -780,9 +782,11 @@ export class PageViewerComponent implements OnInit {
               const randId = 'grid-' + Math.random().toString(36).substring(2, 9);
 
               const colsHtml = (block.content.columns || []).map((col: any, colIdx: number) => {
-                const imgUrl = resolveImageUrl(col.imageUrl);
                 const align = col.align || 'center';
                 const alignClass = align === 'left' ? 'text-left items-start' : (align === 'right' ? 'text-end items-end' : 'text-center items-center');
+                const aspectClass = block.style.imageAspectRatio === '16/9' ? 'aspect-video' :
+                                    block.style.imageAspectRatio === '1/1' ? 'aspect-square' :
+                                    block.style.imageAspectRatio === '4/3' ? 'aspect-[4/3]' : '';
                 
                 let cardClass = 'p-6 rounded-2xl transition-all duration-300';
                 if (col.cardLook) {
@@ -816,9 +820,47 @@ export class PageViewerComponent implements OnInit {
                   iconSvg = '<svg class="w-8 h-8 text-indigo-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
                 }
 
+                let mediaHtml = '';
+                if (col.mediaType === 'video' && col.videoUrl) {
+                  const isEmbed = /youtube\.com|youtu\.be|vimeo\.com/.test(col.videoUrl);
+                  if (isEmbed) {
+                    let embedSrc = col.videoUrl;
+                    try {
+                      const urlObj = new URL(col.videoUrl);
+                      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                        let videoId = '';
+                        if (urlObj.hostname.includes('youtu.be')) {
+                            videoId = urlObj.pathname.slice(1);
+                        } else if (urlObj.pathname.includes('/embed/')) {
+                            videoId = urlObj.pathname.split('/embed/')[1];
+                        } else if (urlObj.pathname.includes('/shorts/')) {
+                            videoId = urlObj.pathname.split('/shorts/')[1];
+                        } else if (urlObj.searchParams.has('v')) {
+                            videoId = urlObj.searchParams.get('v') || '';
+                        }
+                        if (videoId) embedSrc = `https://www.youtube.com/embed/${videoId}`;
+                      } else if (urlObj.hostname.includes('vimeo.com')) {
+                        const videoId = urlObj.pathname.split('/').pop();
+                        if (videoId) embedSrc = `https://player.vimeo.com/video/${videoId}`;
+                      }
+                    } catch (e) {}
+                    
+                    mediaHtml = `<div class="aspect-video w-full overflow-hidden rounded-xl mb-4"><iframe src="${embedSrc}" class="w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
+                  } else {
+                    const resolvedVidUrl = resolveImageUrl(col.videoUrl);
+                    const posterAttr = col.videoPoster ? `poster="${resolveImageUrl(col.videoPoster)}"` : '';
+                    mediaHtml = `<video src="${resolvedVidUrl}" ${posterAttr} controls class="w-full ${aspectClass || 'h-auto'} object-cover rounded-xl mb-4"></video>`;
+                  }
+                } else if (col.mediaType !== 'video') {
+                  const imgUrl = resolveImageUrl(col.imageUrl);
+                  if (imgUrl) {
+                    mediaHtml = `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full ${aspectClass || 'max-h-48'} object-cover rounded-xl mb-4" />`;
+                  }
+                }
+
                 return `<div class="flex flex-col ${alignClass} ${cardClass} ${animClass}" ${styleAttr}>
                           ${iconSvg}
-                          ${imgUrl ? `<img src="${imgUrl}" alt="${col.title || 'Image'}" class="w-full max-h-48 object-cover rounded-xl mb-4" />` : ''}
+                          ${mediaHtml}
                           <h3 class="text-xl font-bold mb-2 leading-snug">${col.title || ''}</h3>
                           <p class="text-sm opacity-80 leading-relaxed">${col.text || ''}</p>
                           ${col.btnText ? `<a href="${col.btnUrl || '#'}" class="mt-4 px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition-colors inline-block">${col.btnText}</a>` : ''}
@@ -973,9 +1015,13 @@ export class PageViewerComponent implements OnInit {
               const arMap: Record<string,string> = { '16:9': 'aspect-video', '4:3': 'aspect-[4/3]', '1:1': 'aspect-square', '9:16': 'aspect-[9/16]' };
               const arClass = arMap[block.content.aspectRatio || '16:9'] || 'aspect-video';
 
-              // Max width class
-              const mwMap: Record<string,string> = { 'Full': 'w-full', 'Large': 'max-w-5xl mx-auto', 'Medium': 'max-w-3xl mx-auto', 'Small': 'max-w-xl mx-auto' };
-              const mwClass = mwMap[block.style.maxWidth || 'Large'] || 'max-w-5xl mx-auto';
+              // Max width class (removed mx-auto so alignment can handle it)
+              const mwMap: Record<string,string> = { 'Full': 'w-full', 'Large': 'max-w-5xl', 'Medium': 'max-w-3xl', 'Small': 'max-w-xl' };
+              const mwClass = mwMap[block.style.maxWidth || 'Large'] || 'max-w-5xl';
+
+              // Alignment class
+              const align = block.content.align || 'center';
+              const alignClass = align === 'left' ? 'mr-auto' : (align === 'right' ? 'ml-auto' : 'mx-auto');
 
               // Border radius class
               const brMap: Record<string,string> = { 'None': 'rounded-none', 'Small': 'rounded-lg', 'Medium': 'rounded-2xl', 'Full': 'rounded-full' };
@@ -983,9 +1029,25 @@ export class PageViewerComponent implements OnInit {
 
               // Build iframe src with params
               let iframeSrc = '';
+              let finalEmbedUrl = embedUrl;
               if (videoSource === 'Embed' && embedUrl) {
-                const sep = embedUrl.includes('?') ? '&' : '?';
-                iframeSrc = `${embedUrl}${sep}autoplay=${autoplay}&loop=${loop}&controls=${controls}&mute=${autoplay}`;
+                try {
+                  const urlObj = new URL(embedUrl);
+                  if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                    let videoId = '';
+                    if (urlObj.hostname.includes('youtu.be')) videoId = urlObj.pathname.slice(1);
+                    else if (urlObj.pathname.includes('/embed/')) videoId = urlObj.pathname.split('/embed/')[1];
+                    else if (urlObj.pathname.includes('/shorts/')) videoId = urlObj.pathname.split('/shorts/')[1];
+                    else if (urlObj.searchParams.has('v')) videoId = urlObj.searchParams.get('v') || '';
+                    if (videoId) finalEmbedUrl = `https://www.youtube.com/embed/${videoId}`;
+                  } else if (urlObj.hostname.includes('vimeo.com')) {
+                    const videoId = urlObj.pathname.split('/').pop();
+                    if (videoId && !urlObj.pathname.includes('/video/')) finalEmbedUrl = `https://player.vimeo.com/video/${videoId}`;
+                  }
+                } catch (e) {}
+
+                const sep = finalEmbedUrl.includes('?') ? '&' : '?';
+                iframeSrc = `${finalEmbedUrl}${sep}autoplay=${autoplay}&loop=${loop}&controls=${controls}&mute=${autoplay}`;
               }
 
               // Build inner media HTML
@@ -1044,12 +1106,12 @@ export class PageViewerComponent implements OnInit {
                 `;
               }
 
-              const captionHtml = caption ? `<p class="mt-3 text-center text-sm text-gray-500 italic">${caption}</p>` : '';
-
               return `
-                <div class="${mwClass} py-8 ${animClass}">
-                  ${mediaHtml}
-                  ${captionHtml}
+                <div class="w-full py-8">
+                  <div class="${mwClass} ${alignClass} ${animClass} relative">
+                    ${mediaHtml}
+                    ${caption ? `<p class="text-center text-sm text-gray-500 mt-3 italic">${caption}</p>` : ''}
+                  </div>
                 </div>
               `;
             }
@@ -1060,14 +1122,21 @@ export class PageViewerComponent implements OnInit {
 
         const isBoxed = section.style.containerWidth !== 'full';
         const containerClass = isBoxed ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' : 'w-full';
+        const blockLayoutClass = section.style.blockLayout === 'row'
+          ? 'flex flex-col md:flex-row items-center gap-8'
+          : '';
 
         return `
-          <section class="relative ${ptClass} ${pbClass} overflow-hidden" style="${secStyle}">
+          <section id="${section.id}" class="relative ${ptClass} ${pbClass} overflow-hidden" style="${secStyle}">
+            <style>
+              #${section.id} .section-content-wrapper { pointer-events: none; }
+              #${section.id} .section-content-wrapper > * { pointer-events: auto; }
+            </style>
             ${videoHtml}
             ${(isImageBg || isVideoBg) && overlayOpacity > 0 ? `
               <div class="absolute inset-0" style="background-color: ${overlayColor}; opacity: ${overlayOpacity}; pointer-events: none; z-index: 1;"></div>
             ` : ''}
-            <div class="relative z-10 ${containerClass} w-full">
+            <div class="section-content-wrapper relative z-10 ${containerClass} ${blockLayoutClass} w-full">
               ${blocksHtml}
             </div>
           </section>
@@ -1085,10 +1154,12 @@ export class PageViewerComponent implements OnInit {
 
     if (staticHtml.includes('<header') || staticHtml.includes('<nav') || staticHtml.includes('<footer') || staticHtml.includes('<!DOCTYPE') || staticHtml.includes('<html')) {
       try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(staticHtml, 'text/html');
-        doc.querySelectorAll('header, nav, footer').forEach(el => el.remove());
-        staticHtml = doc.body ? doc.body.innerHTML : staticHtml;
+        if (typeof DOMParser !== 'undefined') {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(staticHtml, 'text/html');
+          doc.querySelectorAll('header, nav, footer').forEach(el => el.remove());
+          staticHtml = doc.body ? doc.body.innerHTML : staticHtml;
+        }
       } catch (e) {}
     }
 

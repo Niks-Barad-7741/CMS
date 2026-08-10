@@ -22,6 +22,9 @@ export class MediaComponent implements OnInit {
   isUploading = false;
   selectedFile: File | null = null;
   
+  toastMessage: string | null = null;
+  errorModalMessage: string | null = null;
+  
   // Replace with the actual URL where images are served by .NET backend
   apiBaseUrl = 'https://localhost:7170'; 
 
@@ -68,6 +71,23 @@ export class MediaComponent implements OnInit {
     }
   }
 
+  showToast(msg: string) {
+    this.toastMessage = msg;
+    // We don't have ChangeDetectorRef injected here but we can rely on standard change detection
+    // or we can inject it. Let's just use standard for now.
+    setTimeout(() => {
+      this.toastMessage = null;
+    }, 4000);
+  }
+
+  showErrorModal(msg: string) {
+    this.errorModalMessage = msg;
+  }
+
+  closeErrorModal() {
+    this.errorModalMessage = null;
+  }
+
   uploadFile() {
     if (!this.selectedOrgId || !this.selectedFile) return;
 
@@ -82,7 +102,7 @@ export class MediaComponent implements OnInit {
         if (fileInput) fileInput.value = '';
       },
       error: () => {
-        alert('Failed to upload file.');
+        this.showErrorModal('Failed to upload file.');
         this.isUploading = false;
       }
     });
@@ -90,6 +110,6 @@ export class MediaComponent implements OnInit {
 
   copyUrl(path: string) {
     const url = `${this.apiBaseUrl}${path}`;
-    navigator.clipboard.writeText(url).then(() => alert('Copied to clipboard!'));
+    navigator.clipboard.writeText(url).then(() => this.showToast('Copied to clipboard!'));
   }
 }

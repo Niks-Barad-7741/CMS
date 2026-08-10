@@ -43,6 +43,7 @@ export class MenusComponent implements OnInit {
 
   // Toast & Modal Notification Properties
   toastMessage: string | null = null;
+  errorModalMessage: string | null = null;
   showDeleteModal = false;
   deleteTargetId: string | null = null;
   deleteTargetTitle = '';
@@ -56,6 +57,20 @@ export class MenusComponent implements OnInit {
       this.toastMessage = null;
       this.cdr.detectChanges();
     }, 4000);
+    setTimeout(() => {
+      this.toastMessage = null;
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
+  showErrorModal(msg: string) {
+    this.errorModalMessage = msg;
+    this.cdr.detectChanges();
+  }
+
+  closeErrorModal() {
+    this.errorModalMessage = null;
+    this.cdr.detectChanges();
   }
 
   confirmDelete(id: string, title: string, type: 'menu' | 'submenu', parentId: string | null = null) {
@@ -143,7 +158,7 @@ export class MenusComponent implements OnInit {
       },
       error: (err) => {
         console.error('Create failed:', err);
-        alert(this.extractErrorMessage(err));
+        this.showErrorModal(this.extractErrorMessage(err));
       }
     });
   }
@@ -391,7 +406,7 @@ export class MenusComponent implements OnInit {
         this.loadSubMenus(menuId);
       },
       error: (err) => {
-        alert(this.extractErrorMessage(err));
+        this.showErrorModal(this.extractErrorMessage(err));
       }
     });
   }
@@ -421,7 +436,7 @@ export class MenusComponent implements OnInit {
         this.editingSubMenuId = null;
         this.loadSubMenus(this.subMenuFormData.menuItemId);
       },
-      error: (err) => alert(this.extractErrorMessage(err))
+      error: (err) => this.showErrorModal(this.extractErrorMessage(err))
     });
   }
 
